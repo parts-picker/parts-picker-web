@@ -1,14 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "2.4.2"
+	id("org.springframework.boot") version "2.4.5"
 	id("io.spring.dependency-management") version "1.0.11.RELEASE"
-	kotlin("jvm") version "1.4.21"
-	kotlin("plugin.spring") version "1.4.21"
+	kotlin("jvm") version "1.5.0"
+	kotlin("plugin.spring") version "1.5.0-RC"
 }
 
 group = "de.parts_picker"
-version = "0.0.1-SNAPSHOT"
+version = "docker-ready"
 java.sourceCompatibility = JavaVersion.VERSION_15
 
 repositories {
@@ -25,10 +25,12 @@ dependencies {
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "1.8"
+		jvmTarget = "15"
 	}
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+
