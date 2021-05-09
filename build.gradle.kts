@@ -9,7 +9,7 @@ plugins {
 
 group = "de.parts_picker"
 version = "docker-ready"
-java.sourceCompatibility = JavaVersion.VERSION_15
+java.sourceCompatibility = JavaVersion.VERSION_16
 
 repositories {
 	mavenCentral()
@@ -25,7 +25,7 @@ dependencies {
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "15"
+		jvmTarget = "16"
 	}
 }
 
