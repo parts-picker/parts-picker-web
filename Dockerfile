@@ -22,7 +22,7 @@ WORKDIR $BUILD_HOME
 RUN gradle bootJar -i
 
 
-FROM adoptopenjdk:16-jre-openj9
+FROM adoptopenjdk/openjdk16-openj9:alpine-jre
 ENV RUN_DIR=/opt/app
 RUN mkdir $RUN_DIR
 COPY --from=BUILD /home/gradle/src/build/libs/*.jar $RUN_DIR/app.jar
