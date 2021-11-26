@@ -6,10 +6,11 @@ import javax.persistence.*
 
 @Entity
 @Indexed
-@Table(name="groups",)
+@Table(name="groups")
 data class GroupEntity (
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "group_gen")
+    @SequenceGenerator(name = "group_gen", sequenceName = "group_seq", allocationSize = 1)
     var id: Long? = null,
 
     @Column(nullable = false)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JpaBuddyIdeaProjectConfig" isDiffGenerationLicenceAccepted="true">
+    <option name="liquibaseDirectory" value="db/changelog" />
+    <option name="sourceModelValue" value="Default" />
+    <option name="targetDbValue" value="2cd9ce65-0d79-4d9a-a2b6-598140a97553" />
+    <option name="isSnapshotDb" value="false" />
+    <option name="snapshotModelValue" value="Default" />
+    <option name="snapshotDirValue" value="M:\MakingSoftware\parts-picker\parts-picker-web\src\main\resources\db\changelog" />
+  </component>
+</project>

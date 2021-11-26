@@ -6,8 +6,8 @@ import javax.persistence.*
 @Table(name="item_types")
 data class ItemTypeEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @SequenceGenerator(name = "ITEM_TYPE_SEQ")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "item_type_gen")
+    @SequenceGenerator(name = "item_type_gen", sequenceName = "item_type_seq", allocationSize = 1)
     val id: Long? = null,
 
     val name: String,

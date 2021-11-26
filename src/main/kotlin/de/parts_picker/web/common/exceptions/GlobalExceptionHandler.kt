@@ -1,5 +1,6 @@
 package de.parts_picker.web.common.exceptions
 
+import de.parts_picker.web.item.business.exceptions.ItemNotFoundException
 import de.parts_picker.web.project.business.exceptions.GroupNotFoundException
 import de.parts_picker.web.project.business.exceptions.ProjectNotFoundException
 import org.springframework.http.HttpHeaders
@@ -14,8 +15,12 @@ import java.time.ZonedDateTime
 @ControllerAdvice
 class GlobalExceptionHandler: ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(value=[GroupNotFoundException::class, ProjectNotFoundException::class])
-    fun handleGroupEntityNotFoundException(
+    @ExceptionHandler(value=[
+        GroupNotFoundException::class,
+        ProjectNotFoundException::class,
+        ItemNotFoundException::class
+    ])
+    fun handleEntityNotFoundException(
         exc: Exception,
         webRequest : ServletWebRequest,
     ): ResponseEntity<Any> {
