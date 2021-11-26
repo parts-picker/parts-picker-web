@@ -4,13 +4,13 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextFi
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed
 import javax.persistence.*
 
-
 @Entity
 @Indexed
 @Table(name="projects")
 data class ProjectEntity (
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_gen")
+    @SequenceGenerator(name = "project_gen", sequenceName = "project_seq", allocationSize = 1)
     var id: Long? = null,
 
     @FullTextField

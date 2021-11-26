@@ -8,12 +8,12 @@ import javax.persistence.*
 @Table(name="items")
 data class ItemEntity(
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE)
-    @SequenceGenerator(name = "ITEM_SEQ")
+    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator = "item_gen")
+    @SequenceGenerator(name = "item_gen", sequenceName = "item_seq", allocationSize = 1)
     val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(foreignKey = ForeignKey(name = "fk_type_of_item"))
+    @JoinColumn(name="type_id", foreignKey = ForeignKey(name = "fk_type_of_item"))
     val type: ItemTypeEntity,
 
     @Enumerated(EnumType.STRING)

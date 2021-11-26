@@ -8,5 +8,6 @@ enum class ItemStatusEntity {
     IN_STOCK,
     RESERVED,
     USED,
-    DISPOSED
+    DISPOSED,
+    UNKNOWN
 }

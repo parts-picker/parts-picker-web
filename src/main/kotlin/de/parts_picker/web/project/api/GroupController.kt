@@ -21,7 +21,7 @@ class GroupController (private val groupService: GroupService) {
 
     @GetMapping("/group")
     fun handleGetAllGroups(): ResponseEntity<GroupIterableResponse> {
-        logger.info("GET request for all groups")
+        logger.info("=> GET request for all groups")
 
         return ResponseEntity(this.groupService.findAll().asResponse(), HttpStatus.OK)
     }

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-5:createGroupSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="group_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-5:createProjectSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="project_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-5:createItemSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="item_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-5:createItemTypeSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="item_type_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-5:createItemTypesTable" author="RobinGuth">
+        <createTable tableName="item_types">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_item_types"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-5:createItemsTable" author="RobinGuth">
+        <createTable tableName="items">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_items"/>
+            </column>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="condition" type="VARCHAR(255)"/>
+            <column name="note" type="VARCHAR(255)"/>
+            <column name="type_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-5:createGroupsTable" author="RobinGuth">
+        <createTable tableName="groups">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_groups"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-5:createProjectsTable" author="RobinGuth">
+        <createTable tableName="projects">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_projects"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="group_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-5:createItemsOnTypeConstraint" author="RobinGuth">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="items" constraintName="FK_ITEMS_ON_TYPE"
+                                 referencedColumnNames="id" referencedTableName="item_types"/>
+    </changeSet>
+
+    <changeSet id="PICK-5:createProjectOnGroupConstraint" author="RobinGuth">
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="projects" constraintName="FK_PROJECTS_ON_GROUP"
+                                 referencedColumnNames="id" referencedTableName="groups"/>
+    </changeSet>
+</databaseChangeLog>

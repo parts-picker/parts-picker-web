@@ -5,5 +5,6 @@ enum class ItemConditionEntity {
     NEW,
     USED,
     REPAIRABLE,
-    BROKEN
+    BROKEN,
+    UNKNOWN
 }
