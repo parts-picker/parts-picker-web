@@ -1,25 +1,20 @@
-# This is a basic workflow to help you get started with Actions
+name: Run tests & checks for PRs on main
 
-name: Run tests for PRs on main
-
-# Controls when the action will run. 
 on:
   pull_request:
     branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  testing:
+  verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 16
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: '16'
-          distribution: 'adopt'
+          java-version: '17'
+          distribution: 'temurin'
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
@@ -31,12 +26,20 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
-      - name: Build with Gradle
+      - name: Run detekt with Gradle
+        if: success() || failure()
+        run: ./gradlew detekt
+      - name: Upload detekt results
+        uses: github/codeql-action/upload-sarif@v1
+        if: success() || failure()
+        with:
+         sarif_file: build/reports/detekt/detekt.sarif
+      - name: Build & test with Gradle
         run: ./gradlew test
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
+        if: success() || failure()
         # Restoring these files from a GitHub Actions cache might cause problems for future builds.
         run: |
           rm -f ~/.gradle/caches/modules-2/modules-2.lock
           rm -f ~/.gradle/caches/modules-2/gc.properties
-

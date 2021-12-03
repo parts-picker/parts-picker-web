@@ -1,6 +1,8 @@
 # parts-picker-web
 
-An easy, accessible part management system for makers.
+parts-picker is an easy, accessible part & inventory management system for makers.
+
+*Notice: Please be aware that this is a training project in a really early stage of development* 
 
 ## Features
 to do
@@ -43,6 +45,18 @@ Backend
 
 This will be extended along the way.
 
+### Utilities
+
+#### Githooks
+
+This project uses Githooks to manage git hooks inside the repository.
+The hooks will automatically run by Githooks.
+For more information on how to install & use Githooks, visit its [repository](https://github.com/gabyx/Githooks).  
+To install the existing hooks, install Githooks & set up a fresh clone or run the following command inside your repo:
+```
+git hooks install
+```
+
 ### Testing
 
 Tests are using the ShouldSpec from Kotest. 
@@ -55,4 +69,27 @@ Example:
 ```
 should return status 200 when endpoint called
 ```
+
+### Code Quality
+#### detekt
+
+This project uses detekt for static code analysis. 
+The analysis is integrated into gradle. You can find more information about detekt in its [repository](https://github.com/detekt/detekt).
+
+
+You can run the check by running the following command:
+
+```
+./gradlew detekt
+```
+
+Reports in different formats can be found at ```./build/reports/detekt```.
+
+#### ktlint
+
+This project uses ktlint as a linter & formatter.
+It is integrated in in detekt and will be automatically run along detekt.
+If possible, linting errors will be corrected automatically.
+More information about ktlint can be found in its [repository](https://github.com/pinterest/ktlint).
+
 
