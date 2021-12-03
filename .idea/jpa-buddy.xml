@@ -2,6 +2,7 @@
 <project version="4">
   <component name="JpaBuddyIdeaProjectConfig" isDiffGenerationLicenceAccepted="true">
     <option name="liquibaseDirectory" value="db/changelog" />
+    <option name="defaultUnitInitialized" value="true" />
     <option name="sourceModelValue" value="Default" />
     <option name="targetDbValue" value="2cd9ce65-0d79-4d9a-a2b6-598140a97553" />
     <option name="isSnapshotDb" value="false" />
