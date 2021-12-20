@@ -1,6 +1,7 @@
 package de.partspicker.web.common.exceptions
 
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
+import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import org.springframework.http.HttpHeaders
@@ -19,7 +20,8 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         value = [
             GroupNotFoundException::class,
             ProjectNotFoundException::class,
-            ItemNotFoundException::class
+            ItemNotFoundException::class,
+            ItemTypeNotFoundException::class
         ]
     )
     fun handleEntityNotFoundException(

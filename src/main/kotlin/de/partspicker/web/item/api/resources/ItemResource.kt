@@ -25,10 +25,10 @@ class ItemResource(
 
             return ItemResource(
                 id = item.id,
-                links = combinedLinks,
                 status = ItemStatusResponse.from(item.status),
                 condition = ItemConditionResponse.from(item.condition),
-                note = item.note
+                note = item.note,
+                links = combinedLinks
             )
         }
 
