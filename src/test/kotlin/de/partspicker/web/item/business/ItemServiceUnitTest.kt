@@ -34,7 +34,7 @@ class ItemServiceUnitTest : ShouldSpec({
             val returnedItems = cut.getItems()
 
             // then
-            returnedItems shouldBe Item.List.from(itemEntities)
+            returnedItems shouldBe Item.AsList.from(itemEntities)
         }
 
         should("return empty list when no items available") {

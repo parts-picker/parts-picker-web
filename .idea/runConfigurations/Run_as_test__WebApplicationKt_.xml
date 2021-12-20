@@ -2,7 +2,7 @@
   <configuration default="false" name="Run as test: WebApplicationKt " type="JetRunConfigurationType">
     <option name="ALTERNATIVE_JRE_PATH" value="temurin-17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <option name="MAIN_CLASS_NAME" value="de.parts_picker.web.WebApplicationKt" />
+    <option name="MAIN_CLASS_NAME" value="de.partspicker.web.WebApplicationKt" />
     <module name="web.main" />
     <shortenClasspath name="NONE" />
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=test" />

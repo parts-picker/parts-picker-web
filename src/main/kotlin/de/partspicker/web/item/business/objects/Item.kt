@@ -19,7 +19,7 @@ data class Item(
         )
     }
 
-    object List {
+    object AsList {
         fun from(itemEntities: Iterable<ItemEntity>) = itemEntities.map { from(it) }
     }
 }

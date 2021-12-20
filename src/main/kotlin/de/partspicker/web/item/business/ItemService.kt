@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 class ItemService(
     private val itemRepository: ItemRepository
 ) {
-    fun getItems() = Item.List.from(this.itemRepository.findAll())
+    fun getItems() = Item.AsList.from(this.itemRepository.findAll())
 
     fun getItemById(id: Long): Item {
         val itemEntity = this.itemRepository.findById(id)
