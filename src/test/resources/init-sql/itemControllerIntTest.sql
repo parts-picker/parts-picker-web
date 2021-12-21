@@ -1,5 +1,13 @@
-INSERT INTO item_types VALUES(1, 'Small 8 Ohm Speaker', 'Small Speaker');
+INSERT INTO item_types VALUES(1, 'Small Speaker', 'Small 8 Ohm Speaker');
 
 INSERT INTO items VALUES(4, 'IN_STOCK', 'USED', 'Salvaged Speaker', 1);
 INSERT INTO items VALUES(5, 'IN_STOCK', 'USED', 'Salvaged Speaker', 1);
 INSERT INTO items VALUES(6, 'IN_STOCK', 'USED', 'Salvaged Speaker', 1);
+
+INSERT INTO item_types VALUES(2, 'ITEMTYPE WITHOUT ITEMS', 'THIS TYPE SHOULD NOT HAVE ITEMS');
+
+
+INSERT INTO item_types VALUES(3, 'ITEMTYPE WITH TWO ITEMS', 'THIS TYPE SHOULD HAVE TWO ITEMS');
+
+INSERT INTO items VALUES(7, 'IN_STOCK', 'USED', 'ITEM ONE', 3);
+INSERT INTO items VALUES(8, 'IN_STOCK', 'USED', 'ITEM TWO', 3);

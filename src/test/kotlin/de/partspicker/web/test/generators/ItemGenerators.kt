@@ -9,8 +9,7 @@ import io.kotest.property.arbitrary.enum
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.string
 
-class ItemGenerators {
-    private constructor()
+class ItemGenerators private constructor() {
 
     companion object {
         val randomStatusGen = Arb.enum<ItemStatus>()
@@ -19,12 +18,14 @@ class ItemGenerators {
 
         val randomGen: Arb<Item> = Arb.bind(
             Arb.long(0),
+            ItemTypeGenerators.generator,
             randomStatusGen,
             randomConditionGen,
             Arb.string()
-        ) { id, status, condition, note ->
+        ) { id, type, status, condition, note ->
             Item(
                 id = id,
+                type = type,
                 status = status,
                 condition = condition,
                 note = note

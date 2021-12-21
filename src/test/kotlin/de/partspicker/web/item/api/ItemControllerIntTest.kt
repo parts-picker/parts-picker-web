@@ -74,7 +74,42 @@ class ItemControllerIntTest(
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(2))
                     jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.itemResourceList", hasSize<Any>(3))
+                    jsonPath("$._embedded.items", hasSize<Any>(5))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+    }
+
+    context("GET all items by itemTypeId") {
+
+        should("return status 200 & all items belonging to the type with the given id when called") {
+            mockMvc.get("/item-types/3/items")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(2))
+                    jsonPath("$._embedded", notNullValue())
+                    jsonPath("$._embedded.items", hasSize<Any>(2))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 200 & no items when called with itemType without linked items") {
+            mockMvc.get("/item-types/2/items")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(1))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 200 & no items when called with non-existent itemType") {
+            mockMvc.get("/item-types/666/items")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(1))
                     jsonPath("$._links", notNullValue())
                 }
         }

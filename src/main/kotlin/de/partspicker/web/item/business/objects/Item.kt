@@ -6,6 +6,7 @@ import de.partspicker.web.item.persistance.entities.ItemEntity
 
 data class Item(
     val id: Long? = null,
+    val type: ItemType,
     val status: ItemStatus,
     val condition: ItemCondition,
     val note: String?
@@ -13,6 +14,7 @@ data class Item(
     companion object {
         fun from(itemEntity: ItemEntity) = Item(
             id = itemEntity.id,
+            type = ItemType.from(itemEntity.type),
             status = ItemStatus.from(itemEntity.status),
             condition = ItemCondition.from(itemEntity.condition),
             note = itemEntity.note
