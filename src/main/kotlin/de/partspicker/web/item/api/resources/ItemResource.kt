@@ -2,15 +2,18 @@ package de.partspicker.web.item.api.resources
 
 import de.partspicker.web.common.hal.withMethods
 import de.partspicker.web.item.api.ItemController
+import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.Item
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
+import org.springframework.hateoas.server.core.Relation
 import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.http.HttpMethod
 
+@Relation(collectionRelation = ItemResource.collectionRelationName)
 class ItemResource(
     val id: Long,
     val status: ItemStatusResponse,
@@ -20,8 +23,13 @@ class ItemResource(
 ) : RepresentationModel<ItemResource>(links) {
 
     companion object {
+        const val collectionRelationName = "items"
+
         fun from(item: Item, vararg links: Link): ItemResource {
-            val combinedLinks = generateDefaultLinks(itemId = item.id!!) + links
+            val combinedLinks = generateDefaultLinks(
+                itemId = item.id!!,
+                itemTypeId = item.type.id!!
+            ) + links
 
             return ItemResource(
                 id = item.id,
@@ -32,11 +40,13 @@ class ItemResource(
             )
         }
 
-        private fun generateDefaultLinks(itemId: Long): List<Link> {
+        private fun generateDefaultLinks(itemId: Long, itemTypeId: Long): List<Link> {
             return listOf(
+                linkTo<ItemController> { handleGetItemById(itemId) }.withSelfRel()
+                    .withMethods(HttpMethod.GET),
                 linkTo<ItemController> { handleGetAllItems() }.withRel(IanaLinkRelations.COLLECTION)
                     .withMethods(HttpMethod.GET),
-                linkTo<ItemController> { handleGetItemById(itemId) }.withSelfRel()
+                linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withRel(IanaLinkRelations.DESCRIBED_BY)
                     .withMethods(HttpMethod.GET)
             )
         }

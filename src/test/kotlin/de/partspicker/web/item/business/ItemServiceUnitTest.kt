@@ -76,4 +76,25 @@ class ItemServiceUnitTest : ShouldSpec({
             exception.message shouldBe "Item with id $randomId could not be found"
         }
     }
+
+    context("getItemsForItemType") {
+
+        should("return all items with given itemType") {
+            // given
+            val itemTypeId = Arb.long(min = 1).next()
+
+            val itemEntities = listOf(
+                ItemEntityGenerators.generator.next(),
+                ItemEntityGenerators.generator.next()
+            )
+
+            every { itemRepository.findAllByTypeId(itemTypeId) } returns itemEntities
+
+            // when
+            val returnedItems = cut.getItemsForItemType(itemTypeId)
+
+            // then
+            returnedItems shouldBe Item.AsList.from(itemEntities)
+        }
+    }
 })

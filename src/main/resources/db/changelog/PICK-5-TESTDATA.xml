@@ -14,15 +14,15 @@
         </preConditions>
 
         <sql dbms="postgresql" splitStatements="true">
-            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'Small 8 Ohm Speaker', 'Small Speaker');
+            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'Small Speaker', 'Small 8 Ohm Speaker');
 
             INSERT INTO items VALUES(nextval('item_seq'), 'IN_STOCK', 'USED', 'Salvaged Speaker', currval('item_type_seq'));
             INSERT INTO items VALUES(nextval('item_seq'), 'IN_STOCK', 'USED', 'Salvaged Speaker', currval('item_type_seq'));
             INSERT INTO items VALUES(nextval('item_seq'), 'IN_STOCK', 'USED', 'Salvaged Speaker', currval('item_type_seq'));
 
-            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'A small motor', 'Small Motor');
+            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'Small Motor', 'A small motor');
 
-            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'A 1/4 W Resistor with 220 Ohm', 'Resistor 220 Ohm');
+            INSERT INTO item_types VALUES(nextval('item_type_seq'), 'Resistor 220 Ohm', 'A 1/4 W Resistor with 220 Ohm');
 
             INSERT INTO items VALUES(nextval('item_seq'), 'NEEDED', 'NEW', 'Some notes about this item', currval('item_type_seq'));
             INSERT INTO items VALUES(nextval('item_seq'), 'NEEDED', 'NEW', 'Some notes about this item', currval('item_type_seq'));

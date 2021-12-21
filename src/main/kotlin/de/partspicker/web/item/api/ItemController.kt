@@ -1,11 +1,13 @@
 package de.partspicker.web.item.api
 
+import de.partspicker.web.common.hal.withMethods
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.business.ItemService
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.server.mvc.linkTo
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -39,5 +41,20 @@ class ItemController(
         val itemResource = ItemResource.from(this.itemService.getItemById(id))
 
         return ResponseEntity(itemResource, HttpStatus.OK)
+    }
+
+    @GetMapping("/item-types/{id}/items")
+    fun handleGetItemsByItemTypeId(@PathVariable id: Long): ResponseEntity<Iterable<ItemResource>> {
+        logger.info("=> GET request for all items with itemTypeId $id")
+
+        val selfLink = linkTo<ItemController> { handleGetItemsByItemTypeId(id) }
+            .withSelfRel()
+            .withMethods(HttpMethod.GET)
+
+        val itemResources = this.itemService.getItemsForItemType(id).map { ItemResource.from(it) }
+
+        val collectionModel = CollectionModel.of(itemResources, selfLink)
+
+        return ResponseEntity(collectionModel, HttpStatus.OK)
     }
 }

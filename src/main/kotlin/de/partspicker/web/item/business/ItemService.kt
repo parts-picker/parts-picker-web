@@ -20,4 +20,6 @@ class ItemService(
 
         return Item.from(itemEntity.get())
     }
+
+    fun getItemsForItemType(itemTypeId: Long) = Item.AsList.from(this.itemRepository.findAllByTypeId(itemTypeId))
 }
