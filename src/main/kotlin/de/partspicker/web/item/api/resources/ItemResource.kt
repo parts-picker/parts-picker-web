@@ -19,7 +19,7 @@ class ItemResource(
     val status: ItemStatusResponse,
     val condition: ItemConditionResponse,
     val note: String?,
-    links: Iterable<Link>
+    links: Iterable<Link> = emptyList()
 ) : RepresentationModel<ItemResource>(links) {
 
     companion object {

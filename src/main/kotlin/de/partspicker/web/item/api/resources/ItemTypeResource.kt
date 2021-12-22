@@ -14,7 +14,7 @@ import org.springframework.http.HttpMethod
 class ItemTypeResource(
     val name: String,
     val description: String,
-    links: Iterable<Link>
+    links: Iterable<Link> = emptyList()
 ) : RepresentationModel<ItemTypeResource>(links) {
     companion object {
         const val collectionRelationName = "itemTypes"

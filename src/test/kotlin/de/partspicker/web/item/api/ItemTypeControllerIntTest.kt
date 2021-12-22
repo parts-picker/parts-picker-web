@@ -9,6 +9,7 @@ import org.hamcrest.Matchers.notNullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
@@ -32,13 +33,11 @@ class ItemTypeControllerIntTest(
             mockMvc.get("/item-types/$id")
                 .andExpect {
                     status { isOk() }
-                    content {
-                        contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(3))
-                        jsonPath("$.name", `is`("A screw"))
-                        jsonPath("$.description", `is`("A small screw"))
-                        jsonPath("$._links", notNullValue())
-                    }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$.name", `is`("A screw"))
+                    jsonPath("$.description", `is`("A small screw"))
+                    jsonPath("$._links", notNullValue())
                 }
         }
 
@@ -49,15 +48,14 @@ class ItemTypeControllerIntTest(
             mockMvc.get(path)
                 .andExpect {
                     status { isNotFound() }
-                    content {
-                        jsonPath("$.*", hasSize<Any>(6))
-                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
-                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
-                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
-                        jsonPath("$.message", `is`("ItemType with id $nonExistentId could not be found"))
-                        jsonPath("$.path", `is`(path))
-                        jsonPath("$.timestamp", notNullValue())
-                    }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("ItemType with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }
