@@ -12,6 +12,7 @@ import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import java.util.Optional
 
 class ItemServiceUnitTest : ShouldSpec({
@@ -95,6 +96,25 @@ class ItemServiceUnitTest : ShouldSpec({
 
             // then
             returnedItems shouldBe Item.AsList.from(itemEntities)
+        }
+    }
+
+    context("deleteItemsForItemType") {
+
+        should("delete all items belonging to the given type & return the number of deleted items") {
+            // given
+            val itemTypeId = Arb.long(min = 1).next()
+            val amountOfItems = Arb.long(min = 1).next()
+            every { itemRepository.deleteAllByTypeId(itemTypeId) } returns amountOfItems
+
+            // when
+            val amountDeleted = cut.deleteItemsForItemType(itemTypeId)
+
+            // then
+            verify(exactly = 1) {
+                itemRepository.deleteAllByTypeId(itemTypeId)
+            }
+            amountDeleted shouldBe amountOfItems
         }
     }
 })

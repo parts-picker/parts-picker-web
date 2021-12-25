@@ -22,4 +22,6 @@ class ItemService(
     }
 
     fun getItemsForItemType(itemTypeId: Long) = Item.AsList.from(this.itemRepository.findAllByTypeId(itemTypeId))
+
+    fun deleteItemsForItemType(itemTypeId: Long) = this.itemRepository.deleteAllByTypeId(itemTypeId)
 }
