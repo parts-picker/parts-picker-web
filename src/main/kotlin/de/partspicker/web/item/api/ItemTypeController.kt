@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 
@@ -36,10 +37,19 @@ class ItemTypeController(
 
     @GetMapping("/item-types/{id}")
     fun handleGetItemTypeById(@PathVariable id: Long): ResponseEntity<ItemTypeResource> {
-        logger.info("=> GET request for item with id $id")
+        logger.info("=> GET request for item type with id $id")
 
         val itemTypeResource = ItemTypeResource.from(this.itemTypeService.getItemTypeById(id))
 
         return ResponseEntity(itemTypeResource, HttpStatus.OK)
+    }
+
+    @DeleteMapping("/item-types/{id}")
+    fun handleDeleteItemTypeById(@PathVariable id: Long): ResponseEntity<Unit> {
+        logger.info("=> DELETE request for item type with id $id")
+
+        this.itemTypeService.deleteItemTypeById(id)
+
+        return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 }

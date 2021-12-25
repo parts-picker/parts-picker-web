@@ -4,10 +4,12 @@ import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ItemTypeService(
-    private val itemTypeRepository: ItemTypeRepository
+    private val itemTypeRepository: ItemTypeRepository,
+    private val itemService: ItemService
 ) {
     fun getItemTypes() = ItemType.AsList.from(this.itemTypeRepository.findAll())
 
@@ -19,5 +21,17 @@ class ItemTypeService(
         }
 
         return ItemType.from(itemTypeEntity.get())
+    }
+
+    @Transactional
+    fun deleteItemTypeById(id: Long): Long {
+        if (!this.itemTypeRepository.existsById(id)) {
+            throw ItemTypeNotFoundException(itemTypeId = id)
+        }
+
+        val amountOfdeletedItems = this.itemService.deleteItemsForItemType(id)
+        this.itemTypeRepository.deleteById(id)
+
+        return amountOfdeletedItems
     }
 }

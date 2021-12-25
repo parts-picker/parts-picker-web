@@ -13,6 +13,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
 
@@ -71,6 +72,34 @@ class ItemTypeControllerIntTest(
                     jsonPath("$._embedded", notNullValue())
                     jsonPath("$._embedded.${ItemTypeResource.collectionRelationName}", hasSize<Any>(3))
                     jsonPath("$._links", notNullValue())
+                }
+        }
+    }
+
+    context("DELETE itemType") {
+
+        should("return status 204") {
+            mockMvc.delete("/item-types/1")
+                .andExpect {
+                    status { isNoContent() }
+                }
+        }
+
+        should("return status 404 when no itemType with the requested id exists") {
+            val nonExistentId = 666
+            val path = "/item-types/$nonExistentId"
+
+            mockMvc.delete(path)
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("ItemType with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }

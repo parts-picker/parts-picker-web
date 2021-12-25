@@ -12,13 +12,16 @@ import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import java.util.Optional
 
 class ItemTypeServiceUnitTest : ShouldSpec({
 
     val itemTypeRepository = mockk<ItemTypeRepository>()
+    val itemService = mockk<ItemService>()
     val cut = ItemTypeService(
-        itemTypeRepository = itemTypeRepository
+        itemTypeRepository = itemTypeRepository,
+        itemService = itemService
     )
 
     context("getItemTypes") {
@@ -50,7 +53,7 @@ class ItemTypeServiceUnitTest : ShouldSpec({
         }
     }
 
-    context("getItemType") {
+    context("getItemTypeId") {
         should("return correct itemType when given existent id") {
             // given
             val itemTypeEntity = ItemTypeEntityGenerators.generator.next()
@@ -75,6 +78,43 @@ class ItemTypeServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe "ItemType with id $randomId could not be found"
+        }
+    }
+
+    context("deleteItemTypeById") {
+
+        should("delete the itemType with the given id & all items & return the amount of items deleted") {
+            // given
+            val id = Arb.long(min = 1).next()
+            every { itemTypeRepository.existsById(id) } returns true
+
+            val amountOfItemsDeleted = Arb.long(min = 1).next()
+            every { itemService.deleteItemsForItemType(id) } returns amountOfItemsDeleted
+            every { itemTypeRepository.deleteById(id) } returns Unit
+
+            // when
+            val returnedAmountOfDeletedItems = cut.deleteItemTypeById(id)
+
+            // then
+            verify(exactly = 1) {
+                itemService.deleteItemsForItemType(id)
+                itemTypeRepository.deleteById(id)
+            }
+            returnedAmountOfDeletedItems shouldBe amountOfItemsDeleted
+        }
+
+        should("throw ItemTypeNotFoundException when given non-existent id") {
+            // given
+            val nonExistingId = Arb.long(min = 1).next()
+            every { itemTypeRepository.existsById(nonExistingId) } returns false
+
+            // when
+            val exception = shouldThrow<ItemTypeNotFoundException> {
+                cut.deleteItemTypeById(nonExistingId)
+            }
+
+            // then
+            exception.message shouldBe "ItemType with id $nonExistingId could not be found"
         }
     }
 })
