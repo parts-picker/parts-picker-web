@@ -3,6 +3,7 @@ package de.partspicker.web.item.business
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -11,6 +12,13 @@ class ItemTypeService(
     private val itemTypeRepository: ItemTypeRepository,
     private val itemService: ItemService
 ) {
+
+    fun create(itemTypeToCreate: ItemType): ItemType {
+        val createdItemType = this.itemTypeRepository.save(ItemTypeEntity.from(itemTypeToCreate))
+
+        return ItemType.from(createdItemType)
+    }
+
     fun getItemTypes() = ItemType.AsList.from(this.itemTypeRepository.findAll())
 
     fun getItemTypeById(id: Long): ItemType {

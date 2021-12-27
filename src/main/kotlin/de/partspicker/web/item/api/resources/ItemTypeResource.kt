@@ -34,7 +34,7 @@ class ItemTypeResource(
                 linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withSelfRel()
                     .withMethods(HttpMethod.GET, HttpMethod.DELETE),
                 linkTo<ItemTypeController> { handleGetAllItemTypes() }.withRel(IanaLinkRelations.COLLECTION)
-                    .withMethods(HttpMethod.GET)
+                    .withMethods(HttpMethod.GET, HttpMethod.POST)
             )
         }
     }

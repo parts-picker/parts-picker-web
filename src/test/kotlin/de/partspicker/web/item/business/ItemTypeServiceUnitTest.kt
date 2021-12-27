@@ -3,6 +3,7 @@ package de.partspicker.web.item.business
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
@@ -17,12 +18,35 @@ import java.util.Optional
 
 class ItemTypeServiceUnitTest : ShouldSpec({
 
-    val itemTypeRepository = mockk<ItemTypeRepository>()
-    val itemService = mockk<ItemService>()
+    val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
+    val itemServiceMock = mockk<ItemService>()
     val cut = ItemTypeService(
-        itemTypeRepository = itemTypeRepository,
-        itemService = itemService
+        itemTypeRepository = itemTypeRepositoryMock,
+        itemService = itemServiceMock
     )
+
+    context("create") {
+
+        should("create new itemType & return it") {
+            // given
+            val typeToCreate = ItemType(
+                id = 0,
+                name = "A name",
+                description = "A description"
+            )
+            val typeEntityToReturn = ItemTypeEntity.from(typeToCreate).copy(id = 1)
+            every { itemTypeRepositoryMock.save(ItemTypeEntity.from(typeToCreate)) } returns typeEntityToReturn
+
+            // when
+            val returnedItemType = cut.create(typeToCreate)
+
+            // then
+            verify(exactly = 1) {
+                itemTypeRepositoryMock.save(any())
+            }
+            returnedItemType shouldBe ItemType.from(typeEntityToReturn)
+        }
+    }
 
     context("getItemTypes") {
         should("return all itemTypes") {
@@ -32,7 +56,7 @@ class ItemTypeServiceUnitTest : ShouldSpec({
                 ItemTypeEntityGenerators.generator.next(),
                 ItemTypeEntityGenerators.generator.next(),
             )
-            every { itemTypeRepository.findAll() } returns itemTypeEntities
+            every { itemTypeRepositoryMock.findAll() } returns itemTypeEntities
 
             // when
             val returnedItemTypes = cut.getItemTypes()
@@ -43,7 +67,7 @@ class ItemTypeServiceUnitTest : ShouldSpec({
 
         should("return empty list when no itemTypes available") {
             // given
-            every { itemTypeRepository.findAll() } returns emptyList()
+            every { itemTypeRepositoryMock.findAll() } returns emptyList()
 
             // when
             val returnedItemTypes = cut.getItemTypes()
@@ -57,10 +81,10 @@ class ItemTypeServiceUnitTest : ShouldSpec({
         should("return correct itemType when given existent id") {
             // given
             val itemTypeEntity = ItemTypeEntityGenerators.generator.next()
-            every { itemTypeRepository.findById(itemTypeEntity.id!!) } returns Optional.of(itemTypeEntity)
+            every { itemTypeRepositoryMock.findById(itemTypeEntity.id) } returns Optional.of(itemTypeEntity)
 
             // when
-            val returnedItemType = cut.getItemTypeById(itemTypeEntity.id!!)
+            val returnedItemType = cut.getItemTypeById(itemTypeEntity.id)
 
             // then
             returnedItemType shouldBe ItemType.from(itemTypeEntity)
@@ -69,7 +93,7 @@ class ItemTypeServiceUnitTest : ShouldSpec({
         should("throw ItemTypeNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { itemTypeRepository.findById(randomId) } returns Optional.empty()
+            every { itemTypeRepositoryMock.findById(randomId) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
@@ -86,19 +110,19 @@ class ItemTypeServiceUnitTest : ShouldSpec({
         should("delete the itemType with the given id & all items & return the amount of items deleted") {
             // given
             val id = Arb.long(min = 1).next()
-            every { itemTypeRepository.existsById(id) } returns true
+            every { itemTypeRepositoryMock.existsById(id) } returns true
 
             val amountOfItemsDeleted = Arb.long(min = 1).next()
-            every { itemService.deleteItemsForItemType(id) } returns amountOfItemsDeleted
-            every { itemTypeRepository.deleteById(id) } returns Unit
+            every { itemServiceMock.deleteItemsForItemType(id) } returns amountOfItemsDeleted
+            every { itemTypeRepositoryMock.deleteById(id) } returns Unit
 
             // when
             val returnedAmountOfDeletedItems = cut.deleteItemTypeById(id)
 
             // then
             verify(exactly = 1) {
-                itemService.deleteItemsForItemType(id)
-                itemTypeRepository.deleteById(id)
+                itemServiceMock.deleteItemsForItemType(id)
+                itemTypeRepositoryMock.deleteById(id)
             }
             returnedAmountOfDeletedItems shouldBe amountOfItemsDeleted
         }
@@ -106,7 +130,7 @@ class ItemTypeServiceUnitTest : ShouldSpec({
         should("throw ItemTypeNotFoundException when given non-existent id") {
             // given
             val nonExistingId = Arb.long(min = 1).next()
-            every { itemTypeRepository.existsById(nonExistingId) } returns false
+            every { itemTypeRepositoryMock.existsById(nonExistingId) } returns false
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {

@@ -1,17 +1,24 @@
 package de.partspicker.web.item.business.objects
 
+import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 
 data class ItemType(
-    val id: Long? = null,
+    val id: Long = 0,
     val name: String,
     val description: String
 ) {
     companion object {
         fun from(itemTypeEntity: ItemTypeEntity) = ItemType(
-            id = itemTypeEntity.id!!,
+            id = itemTypeEntity.id,
             name = itemTypeEntity.name,
             description = itemTypeEntity.description
+        )
+
+        fun from(itemTypePostRequest: ItemTypePostRequest) = ItemType(
+            id = 0,
+            name = itemTypePostRequest.name,
+            description = itemTypePostRequest.description
         )
     }
 
