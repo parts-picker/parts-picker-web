@@ -1,6 +1,7 @@
 package de.partspicker.web.item.api.resources
 
 import de.partspicker.web.common.hal.withMethods
+import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.business.objects.ItemType
 import org.springframework.hateoas.IanaLinkRelations
@@ -20,7 +21,7 @@ class ItemTypeResource(
         const val collectionRelationName = "itemTypes"
 
         fun from(itemType: ItemType, vararg links: Link): ItemTypeResource {
-            val combinedLinks = generateDefaultLinks(itemTypeId = itemType.id!!) + links
+            val combinedLinks = generateDefaultLinks(itemTypeId = itemType.id) + links
 
             return ItemTypeResource(
                 name = itemType.name,
@@ -34,7 +35,9 @@ class ItemTypeResource(
                 linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withSelfRel()
                     .withMethods(HttpMethod.GET, HttpMethod.DELETE),
                 linkTo<ItemTypeController> { handleGetAllItemTypes() }.withRel(IanaLinkRelations.COLLECTION)
-                    .withMethods(HttpMethod.GET, HttpMethod.POST)
+                    .withMethods(HttpMethod.GET, HttpMethod.POST),
+                linkTo<ItemController> { handleGetItemsByItemTypeId(itemTypeId) }.withRel(IanaLinkRelations.DESCRIBES)
+                    .withMethods(HttpMethod.GET)
             )
         }
     }
