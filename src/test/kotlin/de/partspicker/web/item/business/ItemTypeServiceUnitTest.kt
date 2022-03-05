@@ -3,7 +3,6 @@ package de.partspicker.web.item.business
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
-import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
@@ -26,25 +25,19 @@ class ItemTypeServiceUnitTest : ShouldSpec({
     )
 
     context("create") {
-
         should("create new itemType & return it") {
             // given
-            val typeToCreate = ItemType(
-                id = 0,
-                name = "A name",
-                description = "A description"
-            )
-            val typeEntityToReturn = ItemTypeEntity.from(typeToCreate).copy(id = 1)
-            every { itemTypeRepositoryMock.save(ItemTypeEntity.from(typeToCreate)) } returns typeEntityToReturn
+            val entity = ItemTypeEntityGenerators.generator.next()
+            every { itemTypeRepositoryMock.save(entity) } returns entity
 
             // when
-            val returnedItemType = cut.create(typeToCreate)
+            val returnedItemType = cut.create(ItemType.from(entity))
 
             // then
             verify(exactly = 1) {
                 itemTypeRepositoryMock.save(any())
             }
-            returnedItemType shouldBe ItemType.from(typeEntityToReturn)
+            returnedItemType shouldBe ItemType.from(entity)
         }
     }
 
