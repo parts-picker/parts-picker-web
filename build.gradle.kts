@@ -28,7 +28,8 @@ detekt {
 
 group = "de.parts_picker"
 version = "docker-ready"
-java.sourceCompatibility = JavaVersion.VERSION_16
+java.sourceCompatibility = JavaVersion.VERSION_17
+extra["kotlin-coroutines.version"] = "1.6.0"
 
 repositories {
     mavenCentral()
@@ -51,9 +52,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-hateoas:2.5.6")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.0.0")
-    testImplementation("io.kotest:kotest-assertions-core:5.0.0")
-    testImplementation("io.kotest:kotest-property:5.0.0")
+    testImplementation("io.kotest:kotest-runner-junit5:5.1.0")
+    testImplementation("io.kotest:kotest-assertions-core:5.1.0")
+    testImplementation("io.kotest:kotest-property:5.1.0")
     testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.0")
 
     testImplementation("org.springframework:spring-test")
@@ -63,7 +64,7 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:1.16.2")
 
-    testImplementation("io.mockk:mockk:1.12.1")
+    testImplementation("io.mockk:mockk:1.12.3")
 
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.19.0")
 }
@@ -71,7 +72,7 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "16"
+        jvmTarget = "17"
     }
 }
 
