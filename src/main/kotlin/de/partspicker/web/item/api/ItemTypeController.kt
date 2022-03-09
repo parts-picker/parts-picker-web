@@ -4,6 +4,7 @@ import de.partspicker.web.common.hal.withMethods
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
+import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.api.resources.ItemTypeResource
 import de.partspicker.web.item.business.ItemTypeService
 import de.partspicker.web.item.business.objects.ItemType
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 
 @Controller
@@ -55,6 +57,19 @@ class ItemTypeController(
         val itemTypeResource = ItemTypeResource.from(this.itemTypeService.getItemTypeById(id))
 
         return ResponseEntity(itemTypeResource, HttpStatus.OK)
+    }
+
+    @PutMapping("/item-types/{id}")
+    fun handlePutItemTypeById(
+        @PathVariable id: Long,
+        @RequestBody body: ItemTypePutRequest
+    ): ResponseEntity<ItemTypeResource> {
+        logger.info("=> PUT request for item type with id $id")
+
+        val itemType = ItemType.from(body, id)
+        val updatedResource = ItemTypeResource.from(this.itemTypeService.update(itemType))
+
+        return ResponseEntity(updatedResource, HttpStatus.OK)
     }
 
     @DeleteMapping("/item-types/{id}")

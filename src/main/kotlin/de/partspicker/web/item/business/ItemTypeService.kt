@@ -31,6 +31,16 @@ class ItemTypeService(
         return ItemType.from(itemTypeEntity.get())
     }
 
+    fun update(itemTypeToUpdate: ItemType): ItemType {
+        if (!this.itemTypeRepository.existsById(itemTypeToUpdate.id)) {
+            throw ItemTypeNotFoundException(itemTypeId = itemTypeToUpdate.id)
+        }
+
+        var updatedItemType = this.itemTypeRepository.save(ItemTypeEntity.from(itemTypeToUpdate))
+
+        return ItemType.from(updatedItemType)
+    }
+
     @Transactional
     fun deleteItemTypeById(id: Long): Long {
         if (!this.itemTypeRepository.existsById(id)) {

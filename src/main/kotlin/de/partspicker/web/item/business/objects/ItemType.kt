@@ -1,6 +1,7 @@
 package de.partspicker.web.item.business.objects
 
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
+import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 
 data class ItemType(
@@ -19,6 +20,12 @@ data class ItemType(
             id = 0,
             name = itemTypePostRequest.name,
             description = itemTypePostRequest.description
+        )
+
+        fun from(itemTypePutRequest: ItemTypePutRequest, id: Long) = ItemType(
+            id = id,
+            name = itemTypePutRequest.name,
+            description = itemTypePutRequest.description
         )
     }
 

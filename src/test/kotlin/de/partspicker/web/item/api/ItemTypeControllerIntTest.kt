@@ -3,6 +3,7 @@ package de.partspicker.web.item.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
+import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.api.resources.ItemTypeResource
 import io.kotest.core.spec.style.ShouldSpec
 import org.hamcrest.Matchers.hasSize
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -103,9 +105,57 @@ class ItemTypeControllerIntTest(
         }
     }
 
+    context("PUT itemType") {
+        should("return status 200 & the updated itemType when called") {
+            val putRequestBody = ItemTypePutRequest(
+                name = "updated test name",
+                description = "updated test description"
+            )
+
+            mockMvc.put("/item-types/3") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$.name", `is`(putRequestBody.name))
+                    jsonPath("$.description", `is`(putRequestBody.description))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 404 when no itemType with the requested id exists") {
+            val putRequestBody = ItemTypePutRequest(
+                name = "updated test name",
+                description = "updated test description"
+            )
+
+            val nonExistentId = 666
+            val path = "/item-types/$nonExistentId"
+
+            mockMvc.put(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("ItemType with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+    }
+
     context("DELETE itemType") {
 
-        should("return status 204 when called & successfully deleted the itemType belonging to the given id") {
+        should("return status 204 when called & successfully delete the itemType belonging to the given id") {
             mockMvc.delete("/item-types/1")
                 .andExpect {
                     status { isNoContent() }

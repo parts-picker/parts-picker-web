@@ -4,6 +4,7 @@ import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
+import de.partspicker.web.test.generators.ItemTypeGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -91,6 +92,45 @@ class ItemTypeServiceUnitTest : ShouldSpec({
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
                 cut.getItemTypeById(randomId)
+            }
+
+            // then
+            exception.message shouldBe "ItemType with id $randomId could not be found"
+        }
+    }
+
+    context("update") {
+
+        should("update the itemType with the given id & return it") {
+            // given
+            val id = 12L
+            every { itemTypeRepositoryMock.existsById(id) } returns true
+
+            val entity = ItemTypeEntityGenerators.generator.next().copy(id = id)
+            val itemType = ItemType.from(entity)
+            every { itemTypeRepositoryMock.save(entity) } returns entity
+
+            // when
+            val updatedType = cut.update(itemType)
+
+            // then
+            updatedType shouldBe itemType
+
+            verify(exactly = 1) {
+                itemTypeRepositoryMock.save(entity)
+            }
+        }
+
+        should("throw ItemTypeNotFoundException when given non-existent id") {
+            // given
+            val randomId = Arb.long(min = 1).next()
+            every { itemTypeRepositoryMock.existsById(randomId) } returns false
+
+            val itemType = ItemTypeGenerators.generator.next().copy(id = randomId)
+
+            // when
+            val exception = shouldThrow<ItemTypeNotFoundException> {
+                cut.update(itemType)
             }
 
             // then
