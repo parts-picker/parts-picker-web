@@ -27,7 +27,7 @@ class EntryLinksResource(
                 linkTo<ItemController> { handleGetAllItems() }.withRel(ITEMS_RELATION)
                     .withMethods(HttpMethod.GET),
                 linkTo<ItemTypeController> { handleGetAllItemTypes() }.withRel(ITEM_TYPES_RELATION)
-                    .withMethods(HttpMethod.GET)
+                    .withMethods(HttpMethod.GET, HttpMethod.POST)
             )
         )
     }

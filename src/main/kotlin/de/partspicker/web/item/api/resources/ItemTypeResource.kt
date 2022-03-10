@@ -33,7 +33,7 @@ class ItemTypeResource(
         private fun generateDefaultLinks(itemTypeId: Long): List<Link> {
             return listOf(
                 linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withSelfRel()
-                    .withMethods(HttpMethod.GET, HttpMethod.DELETE),
+                    .withMethods(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE),
                 linkTo<ItemTypeController> { handleGetAllItemTypes() }.withRel(IanaLinkRelations.COLLECTION)
                     .withMethods(HttpMethod.GET, HttpMethod.POST),
                 linkTo<ItemController> { handleGetItemsByItemTypeId(itemTypeId) }.withRel(IanaLinkRelations.DESCRIBES)
