@@ -3,6 +3,7 @@ package de.partspicker.web.item.business.objects
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
+import org.springframework.data.domain.Page
 
 data class ItemType(
     val id: Long = 0,
@@ -31,5 +32,9 @@ data class ItemType(
 
     object AsList {
         fun from(itemTypeEntities: Iterable<ItemTypeEntity>) = itemTypeEntities.map { from(it) }
+    }
+
+    object AsPage {
+        fun from(pagedItemTypeEntities: Page<ItemTypeEntity>) = pagedItemTypeEntities.map { from(it) }
     }
 }

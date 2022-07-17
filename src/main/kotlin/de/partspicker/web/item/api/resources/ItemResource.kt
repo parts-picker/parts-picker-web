@@ -1,6 +1,7 @@
 package de.partspicker.web.item.api.resources
 
-import de.partspicker.web.common.hal.withMethods
+import de.partspicker.web.common.hal.DefaultName.READ
+import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.responses.ItemConditionResponse
@@ -11,7 +12,6 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 import org.springframework.hateoas.server.mvc.linkTo
-import org.springframework.http.HttpMethod
 
 @Relation(collectionRelation = ItemResource.collectionRelationName)
 class ItemResource(
@@ -42,12 +42,15 @@ class ItemResource(
 
         private fun generateDefaultLinks(itemId: Long, itemTypeId: Long): List<Link> {
             return listOf(
-                linkTo<ItemController> { handleGetItemById(itemId) }.withSelfRel()
-                    .withMethods(HttpMethod.GET),
-                linkTo<ItemController> { handleGetAllItems() }.withRel(IanaLinkRelations.COLLECTION)
-                    .withMethods(HttpMethod.GET),
-                linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withRel(IanaLinkRelations.DESCRIBED_BY)
-                    .withMethods(HttpMethod.GET)
+                linkTo<ItemController> { handleGetItemById(itemId) }
+                    .withSelfRel()
+                    .withName(READ),
+                linkTo<ItemController> { handleGetAllItems() }
+                    .withRel(IanaLinkRelations.COLLECTION)
+                    .withName(READ),
+                linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
+                    .withRel(IanaLinkRelations.DESCRIBED_BY)
+                    .withName(READ)
             )
         }
     }

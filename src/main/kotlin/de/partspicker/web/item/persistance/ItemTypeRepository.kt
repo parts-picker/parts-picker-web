@@ -1,6 +1,6 @@
 package de.partspicker.web.item.persistance
 
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
-import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.PagingAndSortingRepository
 
-interface ItemTypeRepository : JpaRepository<ItemTypeEntity, Long>
+interface ItemTypeRepository : PagingAndSortingRepository<ItemTypeEntity, Long>

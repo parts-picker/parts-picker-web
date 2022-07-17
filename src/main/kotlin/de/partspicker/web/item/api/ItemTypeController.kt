@@ -1,16 +1,16 @@
 package de.partspicker.web.item.api
 
-import de.partspicker.web.common.hal.withMethods
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.api.resources.ItemTypeResource
+import de.partspicker.web.item.api.resources.ItemTypeResourceAssembler
 import de.partspicker.web.item.business.ItemTypeService
 import de.partspicker.web.item.business.objects.ItemType
-import org.springframework.hateoas.CollectionModel
-import org.springframework.hateoas.server.mvc.linkTo
-import org.springframework.http.HttpMethod
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedResourcesAssembler
+import org.springframework.hateoas.PagedModel
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody
 
 @Controller
 class ItemTypeController(
-    private val itemTypeService: ItemTypeService
+    private val itemTypeService: ItemTypeService,
+    private val pagedResourcesAssembler: PagedResourcesAssembler<ItemType>,
+    private val itemTypeResourceAssembler: ItemTypeResourceAssembler
 ) {
     companion object : LoggingUtil {
         val logger = logger()
@@ -35,26 +37,24 @@ class ItemTypeController(
 
         val createdItemType = this.itemTypeService.create(ItemType.from(body))
 
-        return ResponseEntity(ItemTypeResource.from(createdItemType), HttpStatus.OK)
+        return ResponseEntity(itemTypeResourceAssembler.toModel(createdItemType), HttpStatus.OK)
     }
 
     @GetMapping("/item-types")
-    fun handleGetAllItemTypes(): ResponseEntity<Iterable<ItemTypeResource>> {
+    fun handleGetAllItemTypes(pageable: Pageable): ResponseEntity<PagedModel<ItemTypeResource>> {
         logger.info("=> GET request for all item types")
 
-        val itemTypeResource = ItemTypeResource.AsList.from(this.itemTypeService.getItemTypes())
+        val itemType = this.itemTypeService.getItemTypes(pageable)
+        val pagedModel = pagedResourcesAssembler.toModel(itemType, itemTypeResourceAssembler)
 
-        val selfLink = linkTo<ItemTypeController> { handleGetAllItemTypes() }.withSelfRel().withMethods(HttpMethod.GET)
-        val collectionModel = CollectionModel.of(itemTypeResource, selfLink)
-
-        return ResponseEntity(collectionModel, HttpStatus.OK)
+        return ResponseEntity(pagedModel, HttpStatus.OK)
     }
 
     @GetMapping("/item-types/{id}")
     fun handleGetItemTypeById(@PathVariable id: Long): ResponseEntity<ItemTypeResource> {
         logger.info("=> GET request for item type with id $id")
 
-        val itemTypeResource = ItemTypeResource.from(this.itemTypeService.getItemTypeById(id))
+        val itemTypeResource = itemTypeResourceAssembler.toModel(this.itemTypeService.getItemTypeById(id))
 
         return ResponseEntity(itemTypeResource, HttpStatus.OK)
     }
@@ -67,7 +67,7 @@ class ItemTypeController(
         logger.info("=> PUT request for item type with id $id")
 
         val itemType = ItemType.from(body, id)
-        val updatedResource = ItemTypeResource.from(this.itemTypeService.update(itemType))
+        val updatedResource = itemTypeResourceAssembler.toModel(this.itemTypeService.update(itemType))
 
         return ResponseEntity(updatedResource, HttpStatus.OK)
     }
