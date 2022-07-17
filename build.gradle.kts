@@ -2,7 +2,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.6.1"
+    id("org.springframework.boot") version "2.6.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("io.gitlab.arturbosch.detekt") version "1.19.0"
     kotlin("jvm") version "1.6.0"
@@ -50,7 +50,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("org.springframework.boot:spring-boot-starter-hateoas:2.5.6")
+    implementation("org.springframework.boot:spring-boot-starter-hateoas:2.6.4")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.1.0")
     testImplementation("io.kotest:kotest-assertions-core:5.1.0")

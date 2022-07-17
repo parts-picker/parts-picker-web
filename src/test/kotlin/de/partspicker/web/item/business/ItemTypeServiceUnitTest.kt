@@ -3,6 +3,7 @@ package de.partspicker.web.item.business
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import de.partspicker.web.test.generators.ItemTypeGenerators
 import io.kotest.assertions.throwables.shouldThrow
@@ -14,6 +15,9 @@ import io.kotest.property.arbitrary.next
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import java.util.Optional
 
 class ItemTypeServiceUnitTest : ShouldSpec({
@@ -45,29 +49,31 @@ class ItemTypeServiceUnitTest : ShouldSpec({
     context("getItemTypes") {
         should("return all itemTypes") {
             // given
-            val itemTypeEntities = listOf(
-                ItemTypeEntityGenerators.generator.next(),
-                ItemTypeEntityGenerators.generator.next(),
-                ItemTypeEntityGenerators.generator.next(),
+            val itemTypePage: Page<ItemTypeEntity> = PageImpl(
+                listOf(
+                    ItemTypeEntityGenerators.generator.next(),
+                    ItemTypeEntityGenerators.generator.next(),
+                    ItemTypeEntityGenerators.generator.next(),
+                )
             )
-            every { itemTypeRepositoryMock.findAll() } returns itemTypeEntities
+            every { itemTypeRepositoryMock.findAll(Pageable.unpaged()) } returns itemTypePage
 
             // when
-            val returnedItemTypes = cut.getItemTypes()
+            val returnedItemTypes = cut.getItemTypes(Pageable.unpaged())
 
             // then
-            returnedItemTypes shouldBe ItemType.AsList.from(itemTypeEntities)
+            returnedItemTypes.content shouldBe ItemType.AsList.from(itemTypePage.content)
         }
 
         should("return empty list when no itemTypes available") {
             // given
-            every { itemTypeRepositoryMock.findAll() } returns emptyList()
+            every { itemTypeRepositoryMock.findAll(Pageable.unpaged()) } returns Page.empty()
 
             // when
-            val returnedItemTypes = cut.getItemTypes()
+            val returnedItemTypes = cut.getItemTypes(Pageable.unpaged())
 
             // then
-            returnedItemTypes shouldBe emptyList()
+            returnedItemTypes.content shouldBe emptyList()
         }
     }
 

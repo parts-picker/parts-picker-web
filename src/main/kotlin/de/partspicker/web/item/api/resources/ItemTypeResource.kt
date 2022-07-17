@@ -1,15 +1,8 @@
 package de.partspicker.web.item.api.resources
 
-import de.partspicker.web.common.hal.withMethods
-import de.partspicker.web.item.api.ItemController
-import de.partspicker.web.item.api.ItemTypeController
-import de.partspicker.web.item.business.objects.ItemType
-import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
-import org.springframework.hateoas.server.mvc.linkTo
-import org.springframework.http.HttpMethod
 
 @Relation(collectionRelation = ItemTypeResource.collectionRelationName)
 class ItemTypeResource(
@@ -19,31 +12,6 @@ class ItemTypeResource(
 ) : RepresentationModel<ItemTypeResource>(links) {
     companion object {
         const val collectionRelationName = "itemTypes"
-
-        fun from(itemType: ItemType, vararg links: Link): ItemTypeResource {
-            val combinedLinks = generateDefaultLinks(itemTypeId = itemType.id) + links
-
-            return ItemTypeResource(
-                name = itemType.name,
-                description = itemType.description,
-                links = combinedLinks
-            )
-        }
-
-        private fun generateDefaultLinks(itemTypeId: Long): List<Link> {
-            return listOf(
-                linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }.withSelfRel()
-                    .withMethods(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE),
-                linkTo<ItemTypeController> { handleGetAllItemTypes() }.withRel(IanaLinkRelations.COLLECTION)
-                    .withMethods(HttpMethod.GET, HttpMethod.POST),
-                linkTo<ItemController> { handleGetItemsByItemTypeId(itemTypeId) }.withRel(IanaLinkRelations.DESCRIBES)
-                    .withMethods(HttpMethod.GET)
-            )
-        }
-    }
-
-    object AsList {
-        fun from(itemTypes: Iterable<ItemType>) = itemTypes.map { from(it) }
     }
 
     override fun equals(other: Any?): Boolean {

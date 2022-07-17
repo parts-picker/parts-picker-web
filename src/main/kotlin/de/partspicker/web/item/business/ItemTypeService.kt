@@ -4,6 +4,7 @@ import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,7 +20,7 @@ class ItemTypeService(
         return ItemType.from(createdItemType)
     }
 
-    fun getItemTypes() = ItemType.AsList.from(this.itemTypeRepository.findAll())
+    fun getItemTypes(pageable: Pageable) = ItemType.AsPage.from(this.itemTypeRepository.findAll(pageable))
 
     fun getItemTypeById(id: Long): ItemType {
         val itemTypeEntity = this.itemTypeRepository.findById(id)

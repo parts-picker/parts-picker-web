@@ -97,10 +97,33 @@ class ItemTypeControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
+                    jsonPath("$.*", hasSize<Any>(3))
                     jsonPath("$._embedded", notNullValue())
                     jsonPath("$._embedded.${ItemTypeResource.collectionRelationName}", hasSize<Any>(3))
                     jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(20))
+                    jsonPath("$.page.totalPages", `is`(1))
+                    jsonPath("$.page.totalElements", `is`(3))
+                    jsonPath("$.page.number", `is`(0))
+                }
+        }
+
+        should("return status 200 & all itemTypes on the specified page when called") {
+            val size = 2
+            val page = 1
+
+            mockMvc.get("/item-types?page=$page&size=$size")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$._embedded", notNullValue())
+                    jsonPath("$._embedded.${ItemTypeResource.collectionRelationName}", hasSize<Any>(1))
+                    jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(size))
+                    jsonPath("$.page.totalPages", `is`(2))
+                    jsonPath("$.page.totalElements", `is`(3))
+                    jsonPath("$.page.number", `is`(page))
                 }
         }
     }
