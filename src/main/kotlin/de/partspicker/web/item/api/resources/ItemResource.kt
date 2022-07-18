@@ -1,9 +1,11 @@
 package de.partspicker.web.item.api.resources
 
+import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
+import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.Item
@@ -50,7 +52,10 @@ class ItemResource(
                     .withName(READ),
                 linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                     .withRel(IanaLinkRelations.DESCRIBED_BY)
-                    .withName(READ)
+                    .withName(READ),
+                linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
+                    .withRel(IanaLinkRelations.COLLECTION)
+                    .withName(CREATE)
             )
         }
     }

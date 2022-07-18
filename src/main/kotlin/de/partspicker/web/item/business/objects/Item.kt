@@ -1,11 +1,12 @@
 package de.partspicker.web.item.business.objects
 
+import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.item.persistance.entities.ItemEntity
 
 data class Item(
-    val id: Long? = null,
+    val id: Long = 0,
     val type: ItemType,
     val status: ItemStatus,
     val condition: ItemCondition,
@@ -18,6 +19,14 @@ data class Item(
             status = ItemStatus.from(itemEntity.status),
             condition = ItemCondition.from(itemEntity.condition),
             note = itemEntity.note
+        )
+
+        fun from(itemPostRequest: ItemPostRequest) = Item(
+            id = 0,
+            type = ItemType(id = itemPostRequest.typeId),
+            status = ItemStatus.from(itemPostRequest.status),
+            condition = ItemCondition.from(itemPostRequest.condition),
+            note = itemPostRequest.note
         )
     }
 

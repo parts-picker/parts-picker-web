@@ -1,9 +1,12 @@
 package de.partspicker.web.item.business
 
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
+import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.persistance.ItemRepository
+import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.test.generators.ItemEntityGenerators
+import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -17,10 +20,47 @@ import java.util.Optional
 
 class ItemServiceUnitTest : ShouldSpec({
 
-    val itemRepository = mockk<ItemRepository>()
+    val itemRepositoryMock = mockk<ItemRepository>()
+    val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
     val cut = ItemService(
-        itemRepository = itemRepository
+        itemRepository = itemRepositoryMock,
+        itemTypeRepository = itemTypeRepositoryMock
     )
+
+    context("create") {
+        should("create new item & return it") {
+            // given
+            val typeEntity = ItemTypeEntityGenerators.generator.next()
+            val entity = ItemEntityGenerators.generator.next().copy(type = typeEntity)
+            every { itemRepositoryMock.save(entity) } returns entity
+            every { itemTypeRepositoryMock.existsById(typeEntity.id) } returns true
+
+            // when
+            val returnedItem = cut.create(Item.from(entity))
+
+            // then
+            verify(exactly = 1) {
+                itemRepositoryMock.save(any())
+                itemTypeRepositoryMock.existsById(typeEntity.id)
+            }
+            returnedItem shouldBe Item.from(entity)
+        }
+
+        should("throw ItemTypeNotFoundException when given non-existent type") {
+            // given
+            val typeEntity = ItemTypeEntityGenerators.generator.next()
+            val entity = ItemEntityGenerators.generator.next().copy(type = typeEntity)
+            every { itemTypeRepositoryMock.existsById(typeEntity.id) } returns false
+
+            // when
+            val exception = shouldThrow<ItemTypeNotFoundException> {
+                cut.create(Item.from(entity))
+            }
+
+            // then
+            exception.message shouldBe "ItemType with id ${typeEntity.id} could not be found"
+        }
+    }
 
     context("getItems") {
         should("return all items") {
@@ -29,7 +69,7 @@ class ItemServiceUnitTest : ShouldSpec({
                 ItemEntityGenerators.generator.next(),
                 ItemEntityGenerators.generator.next()
             )
-            every { itemRepository.findAll() } returns itemEntities
+            every { itemRepositoryMock.findAll() } returns itemEntities
 
             // when
             val returnedItems = cut.getItems()
@@ -40,7 +80,7 @@ class ItemServiceUnitTest : ShouldSpec({
 
         should("return empty list when no items available") {
             // given
-            every { itemRepository.findAll() } returns emptyList()
+            every { itemRepositoryMock.findAll() } returns emptyList()
 
             // when
             val returnedItems = cut.getItems()
@@ -54,10 +94,10 @@ class ItemServiceUnitTest : ShouldSpec({
         should("return correct item when given existent id") {
             // given
             val itemEntity = ItemEntityGenerators.generator.next()
-            every { itemRepository.findById(itemEntity.id!!) } returns Optional.of(itemEntity)
+            every { itemRepositoryMock.findById(itemEntity.id) } returns Optional.of(itemEntity)
 
             // when
-            val returnedItem = cut.getItemById(itemEntity.id!!)
+            val returnedItem = cut.getItemById(itemEntity.id)
 
             // then
             returnedItem shouldBe Item.from(itemEntity)
@@ -66,7 +106,7 @@ class ItemServiceUnitTest : ShouldSpec({
         should("throw ItemNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { itemRepository.findById(randomId) } returns Optional.empty()
+            every { itemRepositoryMock.findById(randomId) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
@@ -89,7 +129,7 @@ class ItemServiceUnitTest : ShouldSpec({
                 ItemEntityGenerators.generator.next()
             )
 
-            every { itemRepository.findAllByTypeId(itemTypeId) } returns itemEntities
+            every { itemRepositoryMock.findAllByTypeId(itemTypeId) } returns itemEntities
 
             // when
             val returnedItems = cut.getItemsForItemType(itemTypeId)
@@ -105,14 +145,14 @@ class ItemServiceUnitTest : ShouldSpec({
             // given
             val itemTypeId = Arb.long(min = 1).next()
             val amountOfItems = Arb.long(min = 1).next()
-            every { itemRepository.deleteAllByTypeId(itemTypeId) } returns amountOfItems
+            every { itemRepositoryMock.deleteAllByTypeId(itemTypeId) } returns amountOfItems
 
             // when
             val amountDeleted = cut.deleteItemsForItemType(itemTypeId)
 
             // then
             verify(exactly = 1) {
-                itemRepository.deleteAllByTypeId(itemTypeId)
+                itemRepositoryMock.deleteAllByTypeId(itemTypeId)
             }
             amountDeleted shouldBe amountOfItems
         }

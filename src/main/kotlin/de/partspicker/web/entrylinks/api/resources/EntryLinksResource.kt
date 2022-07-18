@@ -1,11 +1,12 @@
 package de.partspicker.web.entrylinks.api.resources
 
-import de.partspicker.web.common.hal.DefaultName
+import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
+import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
@@ -29,10 +30,13 @@ class EntryLinksResource(
             listOf(
                 linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
                     .withRel(ITEM_TYPES_RELATION)
-                    .withName(DefaultName.CREATE),
+                    .withName(CREATE),
                 linkTo<ItemController> { handleGetAllItems() }
                     .withRel(ITEMS_RELATION)
                     .withName(READ),
+                linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
+                    .withRel(ITEMS_RELATION)
+                    .withName(CREATE),
                 generateGetAllItemTypesLink(ITEM_TYPES_RELATION),
             )
         )

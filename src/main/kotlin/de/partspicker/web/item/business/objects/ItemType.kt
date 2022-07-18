@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page
 
 data class ItemType(
     val id: Long = 0,
-    val name: String,
-    val description: String
+    val name: String? = null,
+    val description: String? = null
 ) {
     companion object {
         fun from(itemTypeEntity: ItemTypeEntity) = ItemType(
