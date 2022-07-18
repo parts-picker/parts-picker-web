@@ -6,4 +6,5 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
     <include file="db/changelog/PICK-5.xml"/>
     <include file="db/changelog/PICK-5-TESTDATA.xml"/>
+    <include file="db/changelog/PICK-41.xml"/>
 </databaseChangeLog>

@@ -21,8 +21,8 @@ import org.springframework.stereotype.Component
 class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTypeResource> {
     override fun toModel(itemType: ItemType): ItemTypeResource {
         return ItemTypeResource(
-            name = itemType.name,
-            description = itemType.description,
+            name = itemType.name!!,
+            description = itemType.description!!,
             links = generateDefaultLinks(itemTypeId = itemType.id)
         )
     }
