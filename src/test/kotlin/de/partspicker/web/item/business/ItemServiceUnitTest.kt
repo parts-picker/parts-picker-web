@@ -139,6 +139,38 @@ class ItemServiceUnitTest : ShouldSpec({
         }
     }
 
+    context("delete") {
+
+        should("delete the item with the given id") {
+            // given
+            val itemId = Arb.long(min = 1).next()
+            every { itemRepositoryMock.existsById(itemId) } returns true
+            every { itemRepositoryMock.deleteById(itemId) } returns Unit
+
+            // when
+            cut.delete(itemId)
+
+            // then
+            verify(exactly = 1) {
+                itemRepositoryMock.deleteById(itemId)
+            }
+        }
+
+        should("throw ItemNotFoundException when given non-existent id") {
+            // given
+            val itemId = Arb.long(min = 1).next()
+            every { itemRepositoryMock.existsById(itemId) } returns false
+
+            // when
+            val exception = shouldThrow<ItemNotFoundException> {
+                cut.delete(itemId)
+            }
+
+            // then
+            exception.message shouldBe "Item with id $itemId could not be found"
+        }
+    }
+
     context("deleteItemsForItemType") {
 
         should("delete all items belonging to the given type & return the number of deleted items") {
