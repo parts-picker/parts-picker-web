@@ -10,6 +10,7 @@ import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -66,5 +67,14 @@ class ItemController(
         val collectionModel = CollectionModel.of(itemResources, selfLink)
 
         return ResponseEntity(collectionModel, HttpStatus.OK)
+    }
+
+    @DeleteMapping("/items/{id}")
+    fun handleDeleteItemById(@PathVariable id: Long): ResponseEntity<Unit> {
+        logger.info("=> DELETE request for item with id $id")
+
+        this.itemService.delete(id)
+
+        return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 }

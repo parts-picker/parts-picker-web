@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
@@ -137,7 +138,7 @@ class ItemControllerIntTest(
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(2))
                     jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.items", hasSize<Any>(5))
+                    jsonPath("$._embedded.items", hasSize<Any>(6))
                     jsonPath("$._links", notNullValue())
                 }
         }
@@ -174,6 +175,34 @@ class ItemControllerIntTest(
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(1))
                     jsonPath("$._links", notNullValue())
+                }
+        }
+    }
+
+    context("DELETE item") {
+
+        should("return status 204 when called & successfully delete the item belonging to the given id") {
+            mockMvc.delete("/items/9")
+                .andExpect {
+                    status { isNoContent() }
+                }
+        }
+
+        should("return status 404 when called & no item with the requested id exists") {
+            val nonExistentId = 666
+            val path = "/items/$nonExistentId"
+
+            mockMvc.delete(path)
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("Item with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }

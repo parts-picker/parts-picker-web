@@ -1,6 +1,7 @@
 package de.partspicker.web.item.api.resources
 
 import de.partspicker.web.common.hal.DefaultName.CREATE
+import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
@@ -55,7 +56,10 @@ class ItemResource(
                     .withName(READ),
                 linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
                     .withRel(IanaLinkRelations.COLLECTION)
-                    .withName(CREATE)
+                    .withName(CREATE),
+                linkTo<ItemController> { handleDeleteItemById(itemId) }
+                    .withSelfRel()
+                    .withName(DELETE)
             )
         }
     }
