@@ -6,6 +6,7 @@ import de.partspicker.web.item.api.requests.ItemConditionRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.requests.ItemPutRequest
 import de.partspicker.web.item.api.requests.ItemStatusRequest
+import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.enums.ItemCondition
@@ -140,10 +141,31 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
-                    jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.items", hasSize<Any>(6))
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(6))
                     jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(20))
+                    jsonPath("$.page.totalPages", `is`(1))
+                    jsonPath("$.page.totalElements", `is`(6))
+                    jsonPath("$.page.number", `is`(0))
+                }
+        }
+
+        should("return status 200 & all items on the specified page when called") {
+            val size = 2
+            val page = 1
+
+            mockMvc.get("/items?page=$page&size=$size")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(2))
+                    jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(size))
+                    jsonPath("$.page.totalPages", `is`(3))
+                    jsonPath("$.page.totalElements", `is`(6))
+                    jsonPath("$.page.number", `is`(1))
                 }
         }
     }
@@ -155,10 +177,13 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
-                    jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.items", hasSize<Any>(2))
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(20))
+                    jsonPath("$.page.totalPages", `is`(1))
+                    jsonPath("$.page.totalElements", `is`(2))
+                    jsonPath("$.page.number", `is`(0))
                 }
         }
 
@@ -167,8 +192,12 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(1))
+                    jsonPath("$.*", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(20))
+                    jsonPath("$.page.totalPages", `is`(0))
+                    jsonPath("$.page.totalElements", `is`(0))
+                    jsonPath("$.page.number", `is`(0))
                 }
         }
 
@@ -177,8 +206,12 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(1))
+                    jsonPath("$.*", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
+                    jsonPath("$.page.size", `is`(20))
+                    jsonPath("$.page.totalPages", `is`(0))
+                    jsonPath("$.page.totalElements", `is`(0))
+                    jsonPath("$.page.number", `is`(0))
                 }
         }
     }
