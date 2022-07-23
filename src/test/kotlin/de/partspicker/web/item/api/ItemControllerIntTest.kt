@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.item.api.requests.ItemConditionRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
+import de.partspicker.web.item.api.requests.ItemPutRequest
 import de.partspicker.web.item.api.requests.ItemStatusRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
+import de.partspicker.web.item.business.objects.enums.ItemCondition
+import de.partspicker.web.item.business.objects.enums.ItemStatus
 import io.kotest.core.spec.style.ShouldSpec
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -175,6 +179,58 @@ class ItemControllerIntTest(
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(1))
                     jsonPath("$._links", notNullValue())
+                }
+        }
+    }
+
+    context("UPDATE item") {
+
+        should("return status 200 & the updated item when called") {
+            val putRequestBody = ItemPutRequest(
+                ItemStatusRequest.ORDERED,
+                ItemConditionRequest.NEW,
+                "The updated note"
+            )
+
+            mockMvc.put("/items/7") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(5))
+                    jsonPath("$.status", `is`(ItemStatus.ORDERED.name))
+                    jsonPath("$.condition", `is`(ItemCondition.NEW.name))
+                    jsonPath("$.note", `is`(putRequestBody.note))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 404 when no item with the requested id exists") {
+            val putRequestBody = ItemPutRequest(
+                ItemStatusRequest.ORDERED,
+                ItemConditionRequest.NEW,
+                "The updated note"
+            )
+
+            val nonExistentId = 666
+            val path = "/items/$nonExistentId"
+
+            mockMvc.put(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("Item with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }

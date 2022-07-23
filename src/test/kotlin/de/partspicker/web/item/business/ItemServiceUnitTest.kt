@@ -6,6 +6,7 @@ import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.test.generators.ItemEntityGenerators
+import de.partspicker.web.test.generators.ItemGenerators
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
@@ -136,6 +137,45 @@ class ItemServiceUnitTest : ShouldSpec({
 
             // then
             returnedItems shouldBe Item.AsList.from(itemEntities)
+        }
+    }
+
+    context("update") {
+
+        should("update the item with the given id & return it") {
+            // given
+            val id = 42L
+            every { itemRepositoryMock.existsById(id) } returns true
+
+            val entity = ItemEntityGenerators.generator.next().copy(id = id)
+            every { itemRepositoryMock.getById(id) } returns entity
+            every { itemRepositoryMock.save(entity) } returns entity
+
+            val item = Item.from(entity)
+
+            // when
+            val updatedItem = cut.update(id = id, item.status, item.condition, item.note)
+
+            // then
+            updatedItem shouldBe item
+
+            verify(exactly = 1) {
+                itemRepositoryMock.save(entity)
+            }
+        }
+
+        should("throw ItemNotFoundException when given non-existent id") {
+            // given
+            val randomId = Arb.long(min = 1).next()
+            every { itemRepositoryMock.existsById(randomId) } returns false
+
+            // when
+            val exception = shouldThrow<ItemNotFoundException> {
+                cut.update(randomId, ItemGenerators.randomStatusGen.next(), ItemGenerators.randomConditionGen.next())
+            }
+
+            // then
+            exception.message shouldBe "Item with id $randomId could not be found"
         }
     }
 
