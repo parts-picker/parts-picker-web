@@ -1,8 +1,8 @@
 package de.partspicker.web.entrylinks.api.resources
 
 import de.partspicker.web.common.hal.DefaultName.CREATE
-import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
+import de.partspicker.web.common.hal.generateGetAllItemsLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
@@ -28,16 +28,14 @@ class EntryLinksResource(
     private fun generateDefaultLinks() {
         this.add(
             listOf(
+                generateGetAllItemTypesLink(ITEM_TYPES_RELATION),
                 linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
                     .withRel(ITEM_TYPES_RELATION)
                     .withName(CREATE),
-                linkTo<ItemController> { handleGetAllItems() }
-                    .withRel(ITEMS_RELATION)
-                    .withName(READ),
+                generateGetAllItemsLink(ITEMS_RELATION),
                 linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
                     .withRel(ITEMS_RELATION)
                     .withName(CREATE),
-                generateGetAllItemTypesLink(ITEM_TYPES_RELATION),
             )
         )
     }

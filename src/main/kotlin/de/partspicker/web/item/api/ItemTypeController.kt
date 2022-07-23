@@ -44,8 +44,8 @@ class ItemTypeController(
     fun handleGetAllItemTypes(pageable: Pageable): ResponseEntity<PagedModel<ItemTypeResource>> {
         logger.info("=> GET request for all item types")
 
-        val itemType = this.itemTypeService.getItemTypes(pageable)
-        val pagedModel = pagedResourcesAssembler.toModel(itemType, itemTypeResourceAssembler)
+        val itemTypes = this.itemTypeService.getItemTypes(pageable)
+        val pagedModel = pagedResourcesAssembler.toModel(itemTypes, itemTypeResourceAssembler)
 
         return ResponseEntity(pagedModel, HttpStatus.OK)
     }

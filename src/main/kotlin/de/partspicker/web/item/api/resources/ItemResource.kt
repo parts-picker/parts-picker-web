@@ -1,22 +1,10 @@
 package de.partspicker.web.item.api.resources
 
-import de.partspicker.web.common.hal.DefaultName.CREATE
-import de.partspicker.web.common.hal.DefaultName.DELETE
-import de.partspicker.web.common.hal.DefaultName.READ
-import de.partspicker.web.common.hal.DefaultName.UPDATE
-import de.partspicker.web.common.hal.withName
-import de.partspicker.web.item.api.ItemController
-import de.partspicker.web.item.api.ItemTypeController
-import de.partspicker.web.item.api.requests.ItemPostRequest
-import de.partspicker.web.item.api.requests.ItemPutRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
-import de.partspicker.web.item.business.objects.Item
-import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
-import org.springframework.hateoas.server.mvc.linkTo
 
 @Relation(collectionRelation = ItemResource.collectionRelationName)
 class ItemResource(
@@ -29,44 +17,6 @@ class ItemResource(
 
     companion object {
         const val collectionRelationName = "items"
-
-        fun from(item: Item, vararg links: Link): ItemResource {
-            val combinedLinks = generateDefaultLinks(
-                itemId = item.id!!,
-                itemTypeId = item.type.id!!
-            ) + links
-
-            return ItemResource(
-                id = item.id,
-                status = ItemStatusResponse.from(item.status),
-                condition = ItemConditionResponse.from(item.condition),
-                note = item.note,
-                links = combinedLinks
-            )
-        }
-
-        private fun generateDefaultLinks(itemId: Long, itemTypeId: Long): List<Link> {
-            return listOf(
-                linkTo<ItemController> { handleGetItemById(itemId) }
-                    .withSelfRel()
-                    .withName(READ),
-                linkTo<ItemController> { handleGetAllItems() }
-                    .withRel(IanaLinkRelations.COLLECTION)
-                    .withName(READ),
-                linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
-                    .withRel(IanaLinkRelations.DESCRIBED_BY)
-                    .withName(READ),
-                linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
-                    .withRel(IanaLinkRelations.COLLECTION)
-                    .withName(CREATE),
-                linkTo<ItemController> { handleDeleteItemById(itemId) }
-                    .withSelfRel()
-                    .withName(DELETE),
-                linkTo<ItemController> { handlePutItemById(itemId, ItemPutRequest.DUMMY) }
-                    .withSelfRel()
-                    .withName(UPDATE)
-            )
-        }
     }
 
     override fun equals(other: Any?): Boolean {

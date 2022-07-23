@@ -5,8 +5,8 @@ import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
+import de.partspicker.web.common.hal.generateGetAllItemsByItemTypeIdLink
 import de.partspicker.web.common.hal.withName
-import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
@@ -36,16 +36,14 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withSelfRel()
                 .withName(READ),
-            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION.toString()),
+            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION),
             linkTo<ItemTypeController> { handlePutItemTypeById(itemTypeId, ItemTypePutRequest.DUMMY) }
                 .withSelfRel()
                 .withName(UPDATE),
             linkTo<ItemTypeController> { handleDeleteItemTypeById(itemTypeId) }
                 .withSelfRel()
                 .withName(DELETE),
-            linkTo<ItemController> { handleGetItemsByItemTypeId(itemTypeId) }
-                .withRel(IanaLinkRelations.DESCRIBES)
-                .withName(READ),
+            generateGetAllItemsByItemTypeIdLink(IanaLinkRelations.DESCRIBES, itemTypeId)
         )
     }
 }

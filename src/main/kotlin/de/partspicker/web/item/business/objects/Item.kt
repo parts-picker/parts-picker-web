@@ -4,6 +4,7 @@ import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.item.persistance.entities.ItemEntity
+import org.springframework.data.domain.Page
 
 data class Item(
     val id: Long = 0,
@@ -32,5 +33,9 @@ data class Item(
 
     object AsList {
         fun from(itemEntities: Iterable<ItemEntity>) = itemEntities.map { from(it) }
+    }
+
+    object AsPage {
+        fun from(pagedItemEntities: Page<ItemEntity>) = pagedItemEntities.map { from(it) }
     }
 }

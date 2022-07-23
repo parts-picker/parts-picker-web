@@ -10,6 +10,7 @@ import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 @Service
@@ -28,7 +29,7 @@ class ItemService(
         return Item.from(createdItem)
     }
 
-    fun getItems() = Item.AsList.from(this.itemRepository.findAll())
+    fun getItems(pageable: Pageable) = Item.AsPage.from(this.itemRepository.findAll(pageable))
 
     fun getItemById(id: Long): Item {
         val itemEntity = this.itemRepository.findById(id)
@@ -40,7 +41,8 @@ class ItemService(
         return Item.from(itemEntity.get())
     }
 
-    fun getItemsForItemType(itemTypeId: Long) = Item.AsList.from(this.itemRepository.findAllByTypeId(itemTypeId))
+    fun getItemsForItemType(itemTypeId: Long, pageable: Pageable = Pageable.unpaged()) =
+        Item.AsPage.from(this.itemRepository.findAllByTypeId(itemTypeId, pageable))
 
     fun update(id: Long, status: ItemStatus, condition: ItemCondition, note: String? = null): Item {
         if (!this.itemRepository.existsById(id)) {
