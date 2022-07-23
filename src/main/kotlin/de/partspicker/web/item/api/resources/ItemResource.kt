@@ -3,10 +3,12 @@ package de.partspicker.web.item.api.resources
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
+import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.requests.ItemPostRequest
+import de.partspicker.web.item.api.requests.ItemPutRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.Item
@@ -59,7 +61,10 @@ class ItemResource(
                     .withName(CREATE),
                 linkTo<ItemController> { handleDeleteItemById(itemId) }
                     .withSelfRel()
-                    .withName(DELETE)
+                    .withName(DELETE),
+                linkTo<ItemController> { handlePutItemById(itemId, ItemPutRequest.DUMMY) }
+                    .withSelfRel()
+                    .withName(UPDATE)
             )
         }
     }

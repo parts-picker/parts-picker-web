@@ -16,7 +16,7 @@ class ItemGenerators private constructor() {
 
         val randomConditionGen = Arb.enum<ItemCondition>()
 
-        val randomGen: Arb<Item> = Arb.bind(
+        val generator: Arb<Item> = Arb.bind(
             Arb.long(0),
             ItemTypeGenerators.generator,
             randomStatusGen,

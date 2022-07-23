@@ -29,12 +29,12 @@ data class ItemEntity(
     val type: ItemTypeEntity,
 
     @Enumerated(EnumType.STRING)
-    val status: ItemStatusEntity,
+    var status: ItemStatusEntity,
 
     @Enumerated(EnumType.STRING)
-    val condition: ItemConditionEntity,
+    var condition: ItemConditionEntity,
 
-    val note: String?
+    var note: String?
 ) {
     companion object {
         fun from(item: Item) = ItemEntity(
