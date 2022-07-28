@@ -162,7 +162,7 @@ class ItemServiceUnitTest : ShouldSpec({
             val item = Item.from(entity)
 
             // when
-            val updatedItem = cut.update(id = id, item.status, item.condition, item.note)
+            val updatedItem = cut.update(id = id, item.condition, item.note)
 
             // then
             updatedItem shouldBe item
@@ -179,7 +179,7 @@ class ItemServiceUnitTest : ShouldSpec({
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
-                cut.update(randomId, ItemGenerators.randomStatusGen.next(), ItemGenerators.randomConditionGen.next())
+                cut.update(randomId, ItemGenerators.randomConditionGen.next())
             }
 
             // then
