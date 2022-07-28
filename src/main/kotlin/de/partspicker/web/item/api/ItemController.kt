@@ -9,7 +9,6 @@ import de.partspicker.web.item.api.resources.ItemResourceAssembler
 import de.partspicker.web.item.business.ItemService
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.business.objects.enums.ItemCondition
-import de.partspicker.web.item.business.objects.enums.ItemStatus
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.PagedModel
@@ -33,11 +32,14 @@ class ItemController(
         val logger = logger()
     }
 
-    @PostMapping("/items")
-    fun handlePostItem(@RequestBody body: ItemPostRequest): ResponseEntity<ItemResource> {
+    @PostMapping("/item-types/{itemTypeId}/items")
+    fun handlePostItem(
+        @PathVariable itemTypeId: Long,
+        @RequestBody body: ItemPostRequest
+    ): ResponseEntity<ItemResource> {
         logger.info("=> POST request for new item")
 
-        val createdItem = this.itemService.create(Item.from(body))
+        val createdItem = this.itemService.create(Item.from(body, itemTypeId))
 
         return ResponseEntity(itemResourceAssembler.toModel(createdItem), HttpStatus.OK)
     }
@@ -80,7 +82,6 @@ class ItemController(
 
         val updatedItem = this.itemService.update(
             id,
-            ItemStatus.from(body.status),
             ItemCondition.from(body.condition),
             body.note
         )

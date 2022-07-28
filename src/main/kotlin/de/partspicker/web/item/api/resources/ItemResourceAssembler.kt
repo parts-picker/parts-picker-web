@@ -40,7 +40,7 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withRel(IanaLinkRelations.DESCRIBED_BY)
                 .withName(DefaultName.READ),
-            linkTo<ItemController> { handlePostItem(ItemPostRequest.DUMMY) }
+            linkTo<ItemController> { handlePostItem(itemTypeId, ItemPostRequest.DUMMY) }
                 .withRel(IanaLinkRelations.COLLECTION)
                 .withName(DefaultName.CREATE),
             linkTo<ItemController> { handleDeleteItemById(itemId) }

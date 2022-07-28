@@ -42,13 +42,12 @@ class ItemControllerIntTest(
 
         should("return status 200 & the resource with the newly create item when called") {
             val postRequestBody = ItemPostRequest(
-                typeId = 4,
                 ItemStatusRequest.IN_STOCK,
                 ItemConditionRequest.NEW,
                 note = "A newly created item"
             )
 
-            mockMvc.post("/items") {
+            mockMvc.post("/item-types/4/items") {
                 contentType = MediaType.APPLICATION_JSON
                 content = mapper.writeValueAsString(postRequestBody)
             }
@@ -66,10 +65,9 @@ class ItemControllerIntTest(
 
         should("return status 404 & when no itemType with the requested id exists") {
             val nonExistentId = 666L
-            val path = "/items"
+            val path = "/item-types/$nonExistentId/items"
 
             val postRequestBody = ItemPostRequest(
-                typeId = nonExistentId,
                 ItemStatusRequest.IN_STOCK,
                 ItemConditionRequest.NEW,
                 note = "A newly created item"
@@ -220,7 +218,6 @@ class ItemControllerIntTest(
 
         should("return status 200 & the updated item when called") {
             val putRequestBody = ItemPutRequest(
-                ItemStatusRequest.ORDERED,
                 ItemConditionRequest.NEW,
                 "The updated note"
             )
@@ -233,7 +230,7 @@ class ItemControllerIntTest(
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(5))
-                    jsonPath("$.status", `is`(ItemStatus.ORDERED.name))
+                    jsonPath("$.status", `is`(ItemStatus.IN_STOCK.name))
                     jsonPath("$.condition", `is`(ItemCondition.NEW.name))
                     jsonPath("$.note", `is`(putRequestBody.note))
                     jsonPath("$._links", notNullValue())
@@ -242,7 +239,6 @@ class ItemControllerIntTest(
 
         should("return status 404 when no item with the requested id exists") {
             val putRequestBody = ItemPutRequest(
-                ItemStatusRequest.ORDERED,
                 ItemConditionRequest.NEW,
                 "The updated note"
             )

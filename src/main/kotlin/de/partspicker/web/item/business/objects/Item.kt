@@ -22,9 +22,9 @@ data class Item(
             note = itemEntity.note
         )
 
-        fun from(itemPostRequest: ItemPostRequest) = Item(
+        fun from(itemPostRequest: ItemPostRequest, itemTypeId: Long) = Item(
             id = 0,
-            type = ItemType(id = itemPostRequest.typeId),
+            type = ItemType(id = itemTypeId),
             status = ItemStatus.from(itemPostRequest.status),
             condition = ItemCondition.from(itemPostRequest.condition),
             note = itemPostRequest.note

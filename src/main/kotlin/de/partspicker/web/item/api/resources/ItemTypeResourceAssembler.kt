@@ -7,7 +7,9 @@ import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
 import de.partspicker.web.common.hal.generateGetAllItemsByItemTypeIdLink
 import de.partspicker.web.common.hal.withName
+import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
+import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.business.objects.ItemType
@@ -43,7 +45,10 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
             linkTo<ItemTypeController> { handleDeleteItemTypeById(itemTypeId) }
                 .withSelfRel()
                 .withName(DELETE),
-            generateGetAllItemsByItemTypeIdLink(IanaLinkRelations.DESCRIBES, itemTypeId)
+            generateGetAllItemsByItemTypeIdLink(IanaLinkRelations.DESCRIBES, itemTypeId),
+            linkTo<ItemController> { handlePostItem(itemTypeId, ItemPostRequest.DUMMY) }
+                .withRel(IanaLinkRelations.DESCRIBES)
+                .withName(CREATE)
         )
     }
 }
