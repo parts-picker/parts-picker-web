@@ -76,7 +76,7 @@ class ItemController(
         return ResponseEntity(itemResources, HttpStatus.OK)
     }
 
-    @PutMapping("items/{id}")
+    @PutMapping("/items/{id}")
     fun handlePutItemById(@PathVariable id: Long, @RequestBody body: ItemPutRequest): ResponseEntity<ItemResource> {
         logger.info("=> PUT request for item with id $id")
 
