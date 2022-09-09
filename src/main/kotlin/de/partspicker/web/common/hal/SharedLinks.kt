@@ -11,6 +11,7 @@ import org.springframework.hateoas.server.mvc.linkTo
 
 const val SIZE_PARAM_NAME = "size"
 const val PAGE_PARAM_NAME = "page"
+const val SORT_PARAM_NAME = "sort"
 
 fun generateGetAllItemTypesLink(relation: LinkRelation) = generateGetAllItemTypesLink(relation.toString())
 
@@ -21,6 +22,7 @@ fun generateGetAllItemTypesLink(relation: String): Link {
     )
         .with(TemplateVariable(SIZE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
         .with(TemplateVariable(PAGE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
+        .with(TemplateVariable(SORT_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM).composite())
 
     return Link.of(uriTemplate, relation).withName(DefaultName.READ)
 }
@@ -34,6 +36,7 @@ fun generateGetAllItemsLink(relation: String): Link {
     )
         .with(TemplateVariable(SIZE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
         .with(TemplateVariable(PAGE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
+        .with(TemplateVariable(SORT_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM).composite())
 
     return Link.of(uriTemplate, relation).withName(DefaultName.READ)
 }
@@ -48,6 +51,7 @@ fun generateGetAllItemsByItemTypeIdLink(relation: String, itemTypeId: Long): Lin
     )
         .with(TemplateVariable(SIZE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
         .with(TemplateVariable(PAGE_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM))
+        .with(TemplateVariable(SORT_PARAM_NAME, TemplateVariable.VariableType.REQUEST_PARAM).composite())
 
     return Link.of(uriTemplate, relation).withName(DefaultName.READ)
 }
