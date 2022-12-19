@@ -6,12 +6,12 @@ import de.partspicker.web.project.persistance.entities.ProjectEntity
 data class PostProjectRequest(
     val name: String,
     val description: String?,
-    var groupId: Long?,
+    var groupId: Long
 )
 
 fun PostProjectRequest.asEntity() = ProjectEntity(
-    id = null,
+    id = 0,
     name = name,
     description = description,
-    group = if (groupId != null) GroupEntity(id = groupId) else null
+    group = if (groupId != 0L) GroupEntity(id = groupId) else null
 )

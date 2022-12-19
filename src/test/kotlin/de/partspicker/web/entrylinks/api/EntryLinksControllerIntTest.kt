@@ -25,9 +25,10 @@ class EntryLinksControllerIntTest(
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(1))
-                    jsonPath("$._links.*", hasSize<Any>(2))
+                    jsonPath("$._links.*", hasSize<Any>(3))
                     jsonPath("$._links.${EntryLinksResource.ITEMS_RELATION}", notNullValue())
                     jsonPath("$._links.${EntryLinksResource.ITEM_TYPES_RELATION}", notNullValue())
+                    jsonPath("$._links.${EntryLinksResource.PROJECTS_RELATION}", notNullValue())
                 }
         }
     }

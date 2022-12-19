@@ -1,5 +1,8 @@
 package de.partspicker.web.common.hal
 
+import de.partspicker.web.common.hal.ParamNames.Companion.PAGE_PARAM_NAME
+import de.partspicker.web.common.hal.ParamNames.Companion.SIZE_PARAM_NAME
+import de.partspicker.web.common.hal.ParamNames.Companion.SORT_PARAM_NAME
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import org.springframework.data.domain.Pageable
@@ -8,10 +11,6 @@ import org.springframework.hateoas.LinkRelation
 import org.springframework.hateoas.TemplateVariable
 import org.springframework.hateoas.UriTemplate
 import org.springframework.hateoas.server.mvc.linkTo
-
-const val SIZE_PARAM_NAME = "size"
-const val PAGE_PARAM_NAME = "page"
-const val SORT_PARAM_NAME = "sort"
 
 fun generateGetAllItemTypesLink(relation: LinkRelation) = generateGetAllItemTypesLink(relation.toString())
 

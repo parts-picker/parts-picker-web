@@ -8,8 +8,7 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.enum
 import io.kotest.property.arbitrary.long
 
-class ItemEntityGenerators {
-    private constructor()
+class ItemEntityGenerators private constructor() {
 
     companion object {
         val randomStatusGen = Arb.enum<ItemStatusEntity>()

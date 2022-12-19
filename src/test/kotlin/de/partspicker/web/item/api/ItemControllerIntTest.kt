@@ -163,7 +163,7 @@ class ItemControllerIntTest(
                     jsonPath("$.page.size", `is`(size))
                     jsonPath("$.page.totalPages", `is`(3))
                     jsonPath("$.page.totalElements", `is`(6))
-                    jsonPath("$.page.number", `is`(1))
+                    jsonPath("$.page.number", `is`(page))
                 }
         }
     }

@@ -3,6 +3,7 @@ indexes/
 
 .DS_Store
 .idea/shelf
+.idea/ktlint.xml
 /confluence/target
 /dependencies/repo
 /android.tests.dependencies
