@@ -2,61 +2,61 @@ package de.partspicker.web.project.business
 
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.persistance.GroupRepository
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.ProjectEntity
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectService(
-    private val projectRepo: ProjectRepository,
+    private val projectRepository: ProjectRepository,
     private val groupRepository: GroupRepository
 ) {
-    fun existsById(id: Long) = this.projectRepo.existsById(id)
+    fun exists(id: Long) = this.projectRepository.existsById(id)
 
-    fun findAll(): Iterable<ProjectEntity> = this.projectRepo.findAll()
+    fun readAll(pageable: Pageable = Pageable.unpaged()) = Project.AsPage.from(this.projectRepository.findAll(pageable))
 
-    fun findById(projectId: Long): ProjectEntity {
-        val project = projectRepo.findById(projectId)
+    fun read(id: Long): Project {
+        val projectEntity = projectRepository.findById(id)
 
-        if (project.isEmpty) {
-            throw ProjectNotFoundException(projectId)
+        if (projectEntity.isEmpty) {
+            throw ProjectNotFoundException(projectId = id)
         }
 
-        return project.get()
+        return Project.from(projectEntity.get())
     }
-
-    fun findAllByGroupId(groupId: Long) = this.projectRepo.findAllByGroupId(groupId)
 
     fun save(projectEntity: ProjectEntity): ProjectEntity {
         if (!this.groupRepository.existsById(projectEntity.group?.id!!)) {
             throw GroupNotFoundException(projectEntity.group?.id!!)
         }
 
-        return projectRepo.save(projectEntity)
+        return projectRepository.save(projectEntity)
     }
 
     fun update(projectEntity: ProjectEntity): ProjectEntity {
-        if (!this.existsById(projectEntity.id!!)) {
-            throw ProjectNotFoundException(projectEntity.id!!)
+        if (!this.exists(projectEntity.id)) {
+            throw ProjectNotFoundException(projectEntity.id)
         }
 
         return this.save(projectEntity)
     }
 
     fun deleteById(id: Long) {
-        if (!this.existsById(id)) {
+        if (!this.exists(id)) {
             throw ProjectNotFoundException(id)
         }
 
-        this.projectRepo.deleteById(id)
+        this.projectRepository.deleteById(id)
     }
 
     fun removeGroupForAllById(groupId: Long) {
-        val projects = this.findAllByGroupId(groupId).map { project ->
+        val projects = this.projectRepository.findAllByGroupId(groupId).map { project ->
             project.copy(group = null)
         }
 
-        this.projectRepo.saveAll(projects)
+        this.projectRepository.saveAll(projects)
     }
 }

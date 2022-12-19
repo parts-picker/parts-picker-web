@@ -3,6 +3,7 @@ package de.partspicker.web.entrylinks.api.resources
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
 import de.partspicker.web.common.hal.generateGetAllItemsLink
+import de.partspicker.web.common.hal.generateGetAllProjectsLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
@@ -17,6 +18,7 @@ class EntryLinksResource(
     companion object {
         const val ITEMS_RELATION = "items"
         const val ITEM_TYPES_RELATION = "itemTypes"
+        const val PROJECTS_RELATION = "projects"
     }
 
     init {
@@ -30,7 +32,8 @@ class EntryLinksResource(
                 linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
                     .withRel(ITEM_TYPES_RELATION)
                     .withName(CREATE),
-                generateGetAllItemsLink(ITEMS_RELATION)
+                generateGetAllItemsLink(ITEMS_RELATION),
+                generateGetAllProjectsLink(PROJECTS_RELATION)
             )
         )
     }

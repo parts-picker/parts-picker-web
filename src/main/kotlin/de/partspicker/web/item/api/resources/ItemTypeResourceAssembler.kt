@@ -30,7 +30,6 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
     }
 
     private fun generateDefaultLinks(itemTypeId: Long): List<Link> {
-
         return listOf(
             linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
                 .withRel(IanaLinkRelations.COLLECTION)

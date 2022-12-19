@@ -5,10 +5,15 @@ import de.partspicker.web.common.util.logger
 import de.partspicker.web.project.api.requests.PostProjectRequest
 import de.partspicker.web.project.api.requests.PutProjectRequest
 import de.partspicker.web.project.api.requests.asEntity
-import de.partspicker.web.project.api.responses.ProjectIterableResponse
+import de.partspicker.web.project.api.resources.ProjectResource
+import de.partspicker.web.project.api.resources.ProjectResourceAssembler
 import de.partspicker.web.project.api.responses.ProjectResponse
 import de.partspicker.web.project.api.responses.asResponse
 import de.partspicker.web.project.business.ProjectService
+import de.partspicker.web.project.business.objects.Project
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PagedResourcesAssembler
+import org.springframework.hateoas.PagedModel
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -20,23 +25,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class ProjectController(private val projectService: ProjectService) {
+class ProjectController(
+    private val projectService: ProjectService,
+    private val pagedResourcesAssembler: PagedResourcesAssembler<Project>,
+    private val projectResourceAssembler: ProjectResourceAssembler
+) {
     companion object : LoggingUtil {
         val logger = logger()
-    }
-
-    @GetMapping("/project")
-    fun handleGetAllProjects(): ResponseEntity<ProjectIterableResponse> {
-        logger.info("=> GET request for all projects")
-
-        return ResponseEntity(this.projectService.findAll().asResponse(), HttpStatus.OK)
-    }
-
-    @GetMapping("/project/{id}")
-    fun handleGetProjectById(@PathVariable id: Long): ResponseEntity<ProjectResponse> {
-        logger.info("=> GET request for project with id $id")
-
-        return ResponseEntity(projectService.findById(id).asResponse(), HttpStatus.OK)
     }
 
     @PostMapping("/project")
@@ -44,6 +39,25 @@ class ProjectController(private val projectService: ProjectService) {
         logger.info("=> POST request for new project")
 
         return ResponseEntity(projectService.save(body.asEntity()).asResponse(), HttpStatus.OK)
+    }
+
+    @GetMapping("/projects")
+    fun handleGetAllProjects(pageable: Pageable): ResponseEntity<PagedModel<ProjectResource>> {
+        logger.info("=> GET request for all projects")
+
+        val projects = this.projectService.readAll(pageable)
+        val pagedResource = this.pagedResourcesAssembler.toModel(projects, projectResourceAssembler)
+
+        return ResponseEntity(pagedResource, HttpStatus.OK)
+    }
+
+    @GetMapping("/projects/{id}")
+    fun handleGetProjectById(@PathVariable id: Long): ResponseEntity<ProjectResource> {
+        logger.info("=> GET request for project with id $id")
+
+        val projectResource = projectResourceAssembler.toModel(this.projectService.read(id))
+
+        return ResponseEntity(projectResource, HttpStatus.OK)
     }
 
     @PutMapping("/project/{id}")

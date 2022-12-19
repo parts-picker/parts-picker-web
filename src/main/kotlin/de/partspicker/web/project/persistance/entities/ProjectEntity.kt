@@ -21,7 +21,7 @@ data class ProjectEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_gen")
     @SequenceGenerator(name = "project_gen", sequenceName = "project_seq", allocationSize = 1)
-    var id: Long? = null,
+    var id: Long = 0,
 
     @FullTextField
     @Column(nullable = false)
@@ -32,5 +32,5 @@ data class ProjectEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
-    var group: GroupEntity?,
+    var group: GroupEntity?
 )

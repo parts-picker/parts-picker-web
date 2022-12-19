@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 class ItemController(
     private val itemService: ItemService,
     private val pagedResourcesAssembler: PagedResourcesAssembler<Item>,
-    private val itemResourceAssembler: ItemResourceAssembler,
+    private val itemResourceAssembler: ItemResourceAssembler
 ) {
     companion object : LoggingUtil {
         val logger = logger()
