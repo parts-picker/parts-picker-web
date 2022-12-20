@@ -10,7 +10,7 @@ data class ErrorInfo(
     val message: String = "",
     val errorCode: ErrorCode,
     val path: String,
-    val timestamp: ZonedDateTime,
+    val timestamp: ZonedDateTime
 ) {
     val statusCode: Int = status.value()
 }

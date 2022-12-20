@@ -37,7 +37,7 @@ class ItemTypeService(
             throw ItemTypeNotFoundException(itemTypeId = itemTypeToUpdate.id)
         }
 
-        var updatedItemType = this.itemTypeRepository.save(ItemTypeEntity.from(itemTypeToUpdate))
+        val updatedItemType = this.itemTypeRepository.save(ItemTypeEntity.from(itemTypeToUpdate))
 
         return ItemType.from(updatedItemType)
     }

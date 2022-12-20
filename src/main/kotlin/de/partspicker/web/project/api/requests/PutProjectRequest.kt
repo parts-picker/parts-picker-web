@@ -6,7 +6,7 @@ import de.partspicker.web.project.persistance.entities.ProjectEntity
 data class PutProjectRequest(
     val name: String,
     val description: String?,
-    var groupId: Long?,
+    val groupId: Long?
 )
 
 fun PutProjectRequest.asEntity(id: Long) = ProjectEntity(

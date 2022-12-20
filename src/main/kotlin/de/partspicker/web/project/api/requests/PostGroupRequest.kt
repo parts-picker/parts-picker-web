@@ -8,7 +8,7 @@ data class PostGroupRequest(
 )
 
 fun PostGroupRequest.asEntity() = GroupEntity(
-    id = null,
+    id = 0,
     name = name,
     description = description
 )

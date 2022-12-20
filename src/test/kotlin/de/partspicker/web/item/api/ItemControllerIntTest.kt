@@ -40,7 +40,7 @@ class ItemControllerIntTest(
 
     context("POST item") {
 
-        should("return status 200 & the resource with the newly create item when called") {
+        should("return status 200 & the resource with the newly created item when called") {
             val postRequestBody = ItemPostRequest(
                 ItemStatusRequest.IN_STOCK,
                 ItemConditionRequest.NEW,

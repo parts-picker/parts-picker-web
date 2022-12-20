@@ -1,5 +1,6 @@
 package de.partspicker.web.project.persistance.entities
 
+import de.partspicker.web.project.business.objects.Project
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed
 import javax.persistence.Column
@@ -33,4 +34,13 @@ data class ProjectEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
     var group: GroupEntity?
-)
+) {
+    companion object {
+        fun from(project: Project) = ProjectEntity(
+            id = project.id,
+            name = project.name,
+            description = project.description,
+            group = project.group?.let { group -> GroupEntity.from(group) }
+        )
+    }
+}

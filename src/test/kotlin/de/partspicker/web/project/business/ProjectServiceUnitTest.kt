@@ -1,5 +1,6 @@
 package de.partspicker.web.project.business
 
+import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.persistance.GroupRepository
@@ -14,6 +15,7 @@ import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -26,6 +28,38 @@ class ProjectServiceUnitTest : ShouldSpec({
         projectRepository = projectRepositoryMock,
         groupRepository = groupRespositoryMock
     )
+
+    context("create") {
+        should("create new project & return it") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { groupRespositoryMock.existsById(projectEntity.group?.id!!) } returns true
+            every { projectRepositoryMock.save(projectEntity) } returns projectEntity
+
+            // when
+            val returnedProject = cut.create(Project.from(projectEntity))
+
+            verify(exactly = 1) {
+                projectRepositoryMock.save(any())
+            }
+
+            returnedProject shouldBe Project.from(projectEntity)
+        }
+
+        should("throw GroupNotFoundException when given non-existent group") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { groupRespositoryMock.existsById(projectEntity.group?.id!!) } returns false
+
+            // when
+            val exception = shouldThrow<GroupNotFoundException> {
+                cut.create(Project.from(projectEntity))
+            }
+
+            // then
+            exception.message shouldBe "Group with id ${projectEntity.group?.id!!} could not be found"
+        }
+    }
 
     context("readAll") {
         should("return all items") {
