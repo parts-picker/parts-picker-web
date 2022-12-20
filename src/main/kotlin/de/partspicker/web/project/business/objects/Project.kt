@@ -1,6 +1,7 @@
 package de.partspicker.web.project.business.objects
 
 import de.partspicker.web.project.api.requests.ProjectPostRequest
+import de.partspicker.web.project.api.requests.ProjectPutRequest
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import org.springframework.data.domain.Page
 
@@ -25,6 +26,13 @@ data class Project(
             group = projectPostRequest.groupId?.let { groupId ->
                 if (groupId != 0L) Group(id = groupId) else null
             }
+        )
+
+        fun from(projectPutRequest: ProjectPutRequest, id: Long) = Project(
+            id = id,
+            name = projectPutRequest.name,
+            description = projectPutRequest.description,
+            group = projectPutRequest.groupId?.let { groupId -> Group(id = groupId) }
         )
     }
 

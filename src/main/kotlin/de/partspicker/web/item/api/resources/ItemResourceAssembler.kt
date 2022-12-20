@@ -36,7 +36,7 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             linkTo<ItemController> { handleGetItemById(itemId) }
                 .withSelfRel()
                 .withName(DefaultName.READ),
-            generateGetAllItemsLink(IanaLinkRelations.SELF),
+            generateGetAllItemsLink(IanaLinkRelations.COLLECTION),
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withRel(IanaLinkRelations.DESCRIBED_BY)
                 .withName(DefaultName.READ),
