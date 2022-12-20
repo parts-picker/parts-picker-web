@@ -56,7 +56,7 @@ class ProjectService(
         return Project.from(updatedProject)
     }
 
-    fun deleteById(id: Long) {
+    fun delete(id: Long) {
         if (!this.exists(id)) {
             throw ProjectNotFoundException(id)
         }

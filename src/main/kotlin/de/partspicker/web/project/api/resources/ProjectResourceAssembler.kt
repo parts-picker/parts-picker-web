@@ -1,6 +1,7 @@
 package de.partspicker.web.project.api.resources
 
 import de.partspicker.web.common.hal.DefaultName.CREATE
+import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
@@ -36,9 +37,12 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             linkTo<ProjectController> { handleGetProjectById(projectId) }
                 .withSelfRel()
                 .withName(READ),
-            linkTo<ProjectController> { handlePutRequest(projectId, ProjectPutRequest.DUMMY) }
+            linkTo<ProjectController> { handlePutProject(projectId, ProjectPutRequest.DUMMY) }
                 .withSelfRel()
-                .withName(UPDATE)
+                .withName(UPDATE),
+            linkTo<ProjectController> { handleDeleteProject(projectId) }
+                .withSelfRel()
+                .withName(DELETE)
         )
     }
 }

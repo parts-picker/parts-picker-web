@@ -60,7 +60,7 @@ class ProjectController(
     }
 
     @PutMapping("/projects/{id}")
-    fun handlePutRequest(
+    fun handlePutProject(
         @PathVariable id: Long,
         @RequestBody body: ProjectPutRequest
     ): ResponseEntity<ProjectResource> {
@@ -72,11 +72,11 @@ class ProjectController(
         return ResponseEntity(projectResource, HttpStatus.OK)
     }
 
-    @DeleteMapping("/project/{id}")
+    @DeleteMapping("/projects/{id}")
     fun handleDeleteProject(@PathVariable id: Long): ResponseEntity<Unit> {
         logger.info("=> DELETE request for project with id $id")
 
-        this.projectService.deleteById(id)
+        this.projectService.delete(id)
 
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }

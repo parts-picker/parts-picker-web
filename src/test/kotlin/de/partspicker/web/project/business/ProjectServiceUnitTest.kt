@@ -212,4 +212,41 @@ class ProjectServiceUnitTest : ShouldSpec({
             exception.message shouldBe "Group with id ${project.group!!.id} could not be found"
         }
     }
+
+    context("delete") {
+        should("delete the project with the given id") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+
+            every { projectRepositoryMock.existsById(projectId) } returns true
+            every { projectRepositoryMock.deleteById(projectId) } returns Unit
+
+            // when
+            cut.delete(projectId)
+
+            // then
+            verify(exactly = 1) {
+                projectRepositoryMock.deleteById(projectId)
+            }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+
+            every { projectRepositoryMock.existsById(projectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.delete(projectId)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $projectId could not be found"
+
+            verify(exactly = 0) {
+                projectRepositoryMock.deleteById(projectId)
+            }
+        }
+    }
 })
