@@ -3,6 +3,7 @@ package de.partspicker.web.project.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.project.api.requests.ProjectPostRequest
+import de.partspicker.web.project.api.requests.ProjectPutRequest
 import de.partspicker.web.project.api.resources.ProjectResource
 import io.kotest.core.spec.style.ShouldSpec
 import org.hamcrest.Matchers.hasSize
@@ -17,6 +18,7 @@ import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -125,6 +127,60 @@ class ProjectControllerIntTest(
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
+                }
+        }
+    }
+
+    context("UPDATE project") {
+        should("return status 200 & the updated item when called") {
+            val putRequestBody = ProjectPutRequest(
+                name = "Updated name",
+                description = "Updated description",
+                groupId = 2
+            )
+
+            val id = 3
+
+            mockMvc.put("/projects/$id") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(5))
+                    jsonPath("$.id", `is`(id))
+                    jsonPath("$.name", `is`(putRequestBody.name))
+                    jsonPath("$.description", `is`(putRequestBody.description))
+                    jsonPath("$.groupId", `is`(2))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 404 when no project with the requested id exists") {
+            val putRequestBody = ProjectPutRequest(
+                name = "Updated name",
+                description = "Updated description",
+                groupId = null
+            )
+
+            val nonExistentId = 666
+            val path = "/projects/$nonExistentId"
+
+            mockMvc.put(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(putRequestBody)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("Project with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }

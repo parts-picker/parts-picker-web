@@ -40,16 +40,20 @@ class ProjectService(
         return Project.from(projectEntity.get())
     }
 
-    fun update(projectEntity: ProjectEntity): ProjectEntity {
-        if (!this.exists(projectEntity.id)) {
-            throw ProjectNotFoundException(projectEntity.id)
+    fun update(project: Project): Project {
+        if (!this.exists(project.id)) {
+            throw ProjectNotFoundException(project.id)
         }
 
-        if (!this.groupRepository.existsById(projectEntity.group?.id!!)) {
-            throw GroupNotFoundException(projectEntity.group?.id!!)
+        project.group?.let { group ->
+            if (!this.groupRepository.existsById(group.id)) {
+                throw GroupNotFoundException(group.id)
+            }
         }
 
-        return this.projectRepository.save(projectEntity)
+        val updatedProject = this.projectRepository.save(ProjectEntity.from(project))
+
+        return Project.from(updatedProject)
     }
 
     fun deleteById(id: Long) {

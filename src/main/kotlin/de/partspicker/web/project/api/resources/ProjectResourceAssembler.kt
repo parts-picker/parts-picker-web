@@ -2,10 +2,12 @@ package de.partspicker.web.project.api.resources
 
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.READ
+import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.project.api.ProjectController
 import de.partspicker.web.project.api.requests.ProjectPostRequest
+import de.partspicker.web.project.api.requests.ProjectPutRequest
 import de.partspicker.web.project.business.objects.Project
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
@@ -33,7 +35,10 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             generateGetAllProjectsLink(IanaLinkRelations.COLLECTION),
             linkTo<ProjectController> { handleGetProjectById(projectId) }
                 .withSelfRel()
-                .withName(READ)
+                .withName(READ),
+            linkTo<ProjectController> { handlePutRequest(projectId, ProjectPutRequest.DUMMY) }
+                .withSelfRel()
+                .withName(UPDATE)
         )
     }
 }

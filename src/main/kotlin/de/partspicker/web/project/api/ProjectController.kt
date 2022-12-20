@@ -3,12 +3,9 @@ package de.partspicker.web.project.api
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
 import de.partspicker.web.project.api.requests.ProjectPostRequest
-import de.partspicker.web.project.api.requests.PutProjectRequest
-import de.partspicker.web.project.api.requests.asEntity
+import de.partspicker.web.project.api.requests.ProjectPutRequest
 import de.partspicker.web.project.api.resources.ProjectResource
 import de.partspicker.web.project.api.resources.ProjectResourceAssembler
-import de.partspicker.web.project.api.responses.ProjectResponse
-import de.partspicker.web.project.api.responses.asResponse
 import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.Project
 import org.springframework.data.domain.Pageable
@@ -62,16 +59,17 @@ class ProjectController(
         return ResponseEntity(projectResource, HttpStatus.OK)
     }
 
-    @PutMapping("/project/{id}")
-    fun handleModifyProject(
+    @PutMapping("/projects/{id}")
+    fun handlePutRequest(
         @PathVariable id: Long,
-        @RequestBody body: PutProjectRequest
-    ): ResponseEntity<ProjectResponse> {
+        @RequestBody body: ProjectPutRequest
+    ): ResponseEntity<ProjectResource> {
         logger.info("=> PUT request to modify project with $id")
 
-        val project = this.projectService.update(body.asEntity(id))
+        val updatedProject = this.projectService.update(Project.from(body, id))
+        val projectResource = this.projectResourceAssembler.toModel(updatedProject)
 
-        return ResponseEntity(project.asResponse(), HttpStatus.OK)
+        return ResponseEntity(projectResource, HttpStatus.OK)
     }
 
     @DeleteMapping("/project/{id}")
