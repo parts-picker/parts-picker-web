@@ -19,13 +19,15 @@ class ItemGenerators private constructor() {
         val generator: Arb<Item> = Arb.bind(
             Arb.long(0),
             ItemTypeGenerators.generator,
+            ProjectGenerators.generator,
             randomStatusGen,
             randomConditionGen,
             Arb.string()
-        ) { id, type, status, condition, note ->
+        ) { id, type, assignedProject, status, condition, note ->
             Item(
                 id = id,
                 type = type,
+                assignedProject = assignedProject,
                 status = status,
                 condition = condition,
                 note = note

@@ -17,13 +17,15 @@ class ItemEntityGenerators private constructor() {
 
         val generator: Arb<ItemEntity> = Arb.bind(
             Arb.long(0),
+            ProjectEntityGenerators.generator,
             ItemTypeEntityGenerators.generator,
             randomStatusGen,
             randomConditionGen,
             Arb.descriptionLikeString()
-        ) { id, type, status, condition, note ->
+        ) { id, project, type, status, condition, note ->
             ItemEntity(
                 id = id,
+                assignedProject = project,
                 type = type,
                 status = status,
                 condition = condition,

@@ -44,6 +44,6 @@ class ItemResource(
     }
 
     override fun toString(): String {
-        return "ItemResource(id=$id, status=$status, condition=$condition, note=$note, links=$links)"
+        return "ItemResource(id=$id, status=$status, condition=$condition, note=$note)"
     }
 }

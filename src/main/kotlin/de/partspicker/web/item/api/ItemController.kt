@@ -2,7 +2,9 @@ package de.partspicker.web.item.api
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
+import de.partspicker.web.item.api.requests.ItemGeneralPutRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
+import de.partspicker.web.item.api.requests.ItemProjectPutRequest
 import de.partspicker.web.item.api.requests.ItemPutRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.resources.ItemResourceAssembler
@@ -16,9 +18,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
@@ -76,15 +78,24 @@ class ItemController(
         return ResponseEntity(itemResources, HttpStatus.OK)
     }
 
-    @PutMapping("/items/{id}")
-    fun handlePutItemById(@PathVariable id: Long, @RequestBody body: ItemPutRequest): ResponseEntity<ItemResource> {
-        logger.info("=> PUT request for item with id $id")
+    @PatchMapping("/items/{id}")
+    fun handlePatchItemById(@PathVariable id: Long, @RequestBody body: ItemPutRequest): ResponseEntity<ItemResource> {
+        logger.info("=> PUT request of type ${body.javaClass.simpleName} for item with id $id")
 
-        val updatedItem = this.itemService.update(
-            id,
-            ItemCondition.from(body.condition),
-            body.note
-        )
+        val updatedItem = when (body) {
+            is ItemGeneralPutRequest ->
+                this.itemService.update(
+                    id,
+                    ItemCondition.from(body.condition),
+                    body.note
+                )
+            is ItemProjectPutRequest ->
+                this.itemService.updateAssignedProject(
+                    id,
+                    body.assignedProjectId
+                )
+        }
+
         val itemResource = itemResourceAssembler.toModel(updatedItem)
 
         return ResponseEntity(itemResource, HttpStatus.OK)

@@ -3,6 +3,7 @@ package de.partspicker.web.item.persistance.entities
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.project.persistance.entities.ProjectEntity
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
@@ -28,6 +29,10 @@ data class ItemEntity(
     @JoinColumn(name = "type_id", foreignKey = ForeignKey(name = "fk_type_of_item"))
     val type: ItemTypeEntity,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_project_id", foreignKey = ForeignKey(name = "fk_assigned_project"))
+    var assignedProject: ProjectEntity?,
+
     @Enumerated(EnumType.STRING)
     var status: ItemStatusEntity,
 
@@ -39,6 +44,7 @@ data class ItemEntity(
     companion object {
         fun from(item: Item) = ItemEntity(
             id = item.id,
+            assignedProject = item.assignedProject?.let { project -> ProjectEntity.from(project) },
             type = ItemTypeEntity.from(item.type),
             status = ItemStatusEntity.from(item.status),
             condition = ItemConditionEntity.from(item.condition),

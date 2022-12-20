@@ -5,11 +5,11 @@ plugins {
     id("org.springframework.boot") version "2.6.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("io.gitlab.arturbosch.detekt") version "1.19.0"
-    kotlin("jvm") version "1.6.0"
-    kotlin("plugin.spring") version "1.6.0"
-    kotlin("plugin.noarg") version "1.6.0"
-    kotlin("plugin.allopen") version "1.6.0"
-    kotlin("plugin.jpa") version "1.6.0"
+    kotlin("jvm") version "1.7.21"
+    kotlin("plugin.spring") version "1.7.21"
+    kotlin("plugin.noarg") version "1.7.21"
+    kotlin("plugin.allopen") version "1.7.21"
+    kotlin("plugin.jpa") version "1.7.21"
 }
 
 allOpen {
@@ -29,7 +29,7 @@ detekt {
 group = "de.parts_picker"
 version = "docker-ready"
 java.sourceCompatibility = JavaVersion.VERSION_17
-extra["kotlin-coroutines.version"] = "1.6.0"
+extra["kotlin-coroutines.version"] = "1.6.4"
 
 repositories {
     mavenCentral()
@@ -52,10 +52,10 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-hateoas:2.6.4")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.1.0")
-    testImplementation("io.kotest:kotest-assertions-core:5.1.0")
-    testImplementation("io.kotest:kotest-property:5.1.0")
-    testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.0")
+    testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
+    testImplementation("io.kotest:kotest-assertions-core:5.5.4")
+    testImplementation("io.kotest:kotest-property:5.5.4")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.2")
 
     testImplementation("org.springframework:spring-test")
     testImplementation("org.springframework.boot:spring-boot-test")

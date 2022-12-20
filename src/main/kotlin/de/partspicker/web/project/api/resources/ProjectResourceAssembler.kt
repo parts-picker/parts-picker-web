@@ -21,7 +21,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
     override fun toModel(project: Project): ProjectResource {
         return ProjectResource(
             id = project.id,
-            name = project.name,
+            name = project.name!!,
             description = project.description,
             groupId = project.group?.id,
             links = generateDefaultLinks(project.id)

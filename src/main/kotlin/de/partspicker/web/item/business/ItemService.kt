@@ -8,13 +8,17 @@ import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.project.persistance.entities.ProjectEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 @Service
 class ItemService(
     private val itemRepository: ItemRepository,
-    private val itemTypeRepository: ItemTypeRepository
+    private val itemTypeRepository: ItemTypeRepository,
+    private val projectRepository: ProjectRepository
 ) {
 
     fun create(itemToCreate: Item): Item {
@@ -42,14 +46,27 @@ class ItemService(
     fun getItemsForItemType(itemTypeId: Long, pageable: Pageable = Pageable.unpaged()) =
         Item.AsPage.from(this.itemRepository.findAllByTypeId(itemTypeId, pageable))
 
-    fun update(id: Long, condition: ItemCondition, note: String? = null): Item {
-        if (!this.itemRepository.existsById(id)) {
-            throw ItemNotFoundException(itemId = id)
-        }
+    fun update(id: Long, condition: ItemCondition, note: String?): Item {
+        val itemToUpdate = this.itemRepository.findById(id).orElseThrow { ItemNotFoundException(id) }
 
-        val itemToUpdate = this.itemRepository.getById(id)
         itemToUpdate.condition = ItemConditionEntity.from(condition)
         itemToUpdate.note = note
+
+        return Item.from(this.itemRepository.save(itemToUpdate))
+    }
+
+    fun updateAssignedProject(id: Long, assignedProjectId: Long?): Item {
+        val itemToUpdate = this.itemRepository.findById(id).orElseThrow { ItemNotFoundException(id) }
+
+        if (assignedProjectId != null) {
+            if (this.projectRepository.existsById(assignedProjectId)) {
+                itemToUpdate.assignedProject = ProjectEntity(id = assignedProjectId)
+            } else {
+                throw ProjectNotFoundException(projectId = assignedProjectId)
+            }
+        } else {
+            itemToUpdate.assignedProject = null
+        }
 
         return Item.from(this.itemRepository.save(itemToUpdate))
     }

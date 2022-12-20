@@ -3,9 +3,13 @@ package de.partspicker.web.item.business
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.Item
+import de.partspicker.web.item.business.objects.enums.ItemCondition
+import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.test.generators.ItemEntityGenerators
 import de.partspicker.web.test.generators.ItemGenerators
 import de.partspicker.web.test.generators.ItemTypeEntityGenerators
@@ -27,9 +31,11 @@ class ItemServiceUnitTest : ShouldSpec({
 
     val itemRepositoryMock = mockk<ItemRepository>()
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
+    val projectRepositoryMock = mockk<ProjectRepository>()
     val cut = ItemService(
         itemRepository = itemRepositoryMock,
-        itemTypeRepository = itemTypeRepositoryMock
+        itemTypeRepository = itemTypeRepositoryMock,
+        projectRepository = projectRepositoryMock
     )
 
     context("create") {
@@ -149,14 +155,11 @@ class ItemServiceUnitTest : ShouldSpec({
     }
 
     context("update") {
-
         should("update the item with the given id & return it") {
             // given
             val id = 42L
-            every { itemRepositoryMock.existsById(id) } returns true
-
             val entity = ItemEntityGenerators.generator.next().copy(id = id)
-            every { itemRepositoryMock.getById(id) } returns entity
+            every { itemRepositoryMock.findById(id) } returns Optional.of(entity)
             every { itemRepositoryMock.save(entity) } returns entity
 
             val item = Item.from(entity)
@@ -175,15 +178,94 @@ class ItemServiceUnitTest : ShouldSpec({
         should("throw ItemNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { itemRepositoryMock.existsById(randomId) } returns false
+            every { itemRepositoryMock.findById(randomId) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
-                cut.update(randomId, ItemGenerators.randomConditionGen.next())
+                cut.update(randomId, ItemGenerators.randomConditionGen.next(), null)
             }
 
             // then
             exception.message shouldBe "Item with id $randomId could not be found"
+        }
+    }
+
+    context("updateAssignedProject") {
+        should("update the assignedProjectId of the item with the given id & return it") {
+            // given
+            val id = 42L
+            val entity = ItemEntityGenerators.generator.next().copy(id = id)
+            every { itemRepositoryMock.findById(id) } returns Optional.of(entity)
+            every { itemRepositoryMock.save(entity) } returnsArgument 0
+
+            val projectId = 4L
+            every { projectRepositoryMock.existsById(projectId) } returns true
+
+            // when
+            val updatedItem = cut.updateAssignedProject(id, projectId)
+
+            // then
+            updatedItem.assignedProject!!.id shouldBe projectId
+            updatedItem.status shouldBe ItemStatus.from(entity.status)
+            updatedItem.condition shouldBe ItemCondition.from(entity.condition)
+            updatedItem.note shouldBe entity.note
+
+            verify(exactly = 1) {
+                itemRepositoryMock.save(entity)
+            }
+        }
+
+        should("update the assignedProjectId of the item with the given id to null & return it") {
+            // given
+            val id = 42L
+            val entity = ItemEntityGenerators.generator.next().copy(id = id)
+            every { itemRepositoryMock.findById(id) } returns Optional.of(entity)
+            every { itemRepositoryMock.save(entity) } returnsArgument 0
+
+            // when
+            val updatedItem = cut.updateAssignedProject(id, null)
+
+            // then
+            updatedItem.assignedProject shouldBe null
+            updatedItem.status shouldBe ItemStatus.from(entity.status)
+            updatedItem.condition shouldBe ItemCondition.from(entity.condition)
+            updatedItem.note shouldBe entity.note
+
+            verify(exactly = 1) {
+                itemRepositoryMock.save(entity)
+            }
+        }
+
+        should("throw ItemNotFoundException when given non-existent id") {
+            // given
+            val randomId = Arb.long(min = 1).next()
+            every { itemRepositoryMock.findById(randomId) } returns Optional.empty()
+
+            // when
+            val exception = shouldThrow<ItemNotFoundException> {
+                cut.updateAssignedProject(randomId, null)
+            }
+
+            // then
+            exception.message shouldBe "Item with id $randomId could not be found"
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val id = 42L
+            val entity = ItemEntityGenerators.generator.next().copy(id = id)
+            every { itemRepositoryMock.findById(id) } returns Optional.of(entity)
+
+            val nonExistentProjectId = 666L
+            every { projectRepositoryMock.existsById(nonExistentProjectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.updateAssignedProject(id, nonExistentProjectId)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $nonExistentProjectId could not be found"
         }
     }
 
