@@ -26,14 +26,14 @@ data class ProjectEntity(
 
     @FullTextField
     @Column(nullable = false)
-    var name: String,
+    var name: String? = null,
 
     @FullTextField
-    var description: String?,
+    var description: String? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
-    var group: GroupEntity?
+    var group: GroupEntity? = null
 ) {
     companion object {
         fun from(project: Project) = ProjectEntity(

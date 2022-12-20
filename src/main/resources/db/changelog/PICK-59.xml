@@ -4,8 +4,12 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
-    <include file="db/changelog/PICK-5.xml"/>
-    <include file="db/changelog/PICK-5-TESTDATA.xml"/>
-    <include file="db/changelog/PICK-41.xml"/>
-    <include file="db/changelog/PICK-59.xml"/>
+
+    <changeSet id="PICK-59:addProjectForeignKeyColumnToItemTable" author="RobinGuth">
+        <addColumn tableName="items">
+            <column name="assigned_project_id" type="BIGINT">
+                <constraints foreignKeyName="fk_assigned_project" references="projects(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

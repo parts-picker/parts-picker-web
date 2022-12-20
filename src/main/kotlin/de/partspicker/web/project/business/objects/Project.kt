@@ -7,9 +7,9 @@ import org.springframework.data.domain.Page
 
 data class Project(
     val id: Long,
-    val name: String,
-    val description: String?,
-    var group: Group?
+    val name: String? = null,
+    val description: String? = null,
+    var group: Group? = null
 ) {
     companion object {
         fun from(projectEntity: ProjectEntity) = Project(
