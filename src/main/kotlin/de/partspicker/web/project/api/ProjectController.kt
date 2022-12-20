@@ -2,7 +2,7 @@ package de.partspicker.web.project.api
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
-import de.partspicker.web.project.api.requests.PostProjectRequest
+import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.requests.PutProjectRequest
 import de.partspicker.web.project.api.requests.asEntity
 import de.partspicker.web.project.api.resources.ProjectResource
@@ -34,11 +34,13 @@ class ProjectController(
         val logger = logger()
     }
 
-    @PostMapping("/project")
-    fun handleAddProject(@RequestBody body: PostProjectRequest): ResponseEntity<ProjectResponse> {
+    @PostMapping("/projects")
+    fun handlePostProject(@RequestBody body: ProjectPostRequest): ResponseEntity<ProjectResource> {
         logger.info("=> POST request for new project")
 
-        return ResponseEntity(projectService.save(body.asEntity()).asResponse(), HttpStatus.OK)
+        val createdProject = this.projectService.create(Project.from(body))
+
+        return ResponseEntity(projectResourceAssembler.toModel(createdProject), HttpStatus.OK)
     }
 
     @GetMapping("/projects")

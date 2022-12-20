@@ -9,7 +9,7 @@ data class GroupResponse(
 )
 
 fun GroupEntity.asResponse() = GroupResponse(
-    id = id!!,
+    id = id,
     name = name!!,
     description = description
 )

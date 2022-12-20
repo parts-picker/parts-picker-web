@@ -6,8 +6,7 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.string
 
-class ItemTypeEntityGenerators {
-    private constructor()
+class ItemTypeEntityGenerators private constructor() {
 
     companion object {
 

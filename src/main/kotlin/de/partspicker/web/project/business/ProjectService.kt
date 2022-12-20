@@ -14,6 +14,18 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
     private val groupRepository: GroupRepository
 ) {
+
+    fun create(project: Project): Project {
+        project.group?.let { group ->
+            if (!this.groupRepository.existsById(group.id)) {
+                throw GroupNotFoundException(group.id)
+            }
+        }
+
+        val createdProject = this.projectRepository.save(ProjectEntity.from(project))
+        return Project.from(createdProject)
+    }
+
     fun exists(id: Long) = this.projectRepository.existsById(id)
 
     fun readAll(pageable: Pageable = Pageable.unpaged()) = Project.AsPage.from(this.projectRepository.findAll(pageable))
@@ -28,20 +40,16 @@ class ProjectService(
         return Project.from(projectEntity.get())
     }
 
-    fun save(projectEntity: ProjectEntity): ProjectEntity {
-        if (!this.groupRepository.existsById(projectEntity.group?.id!!)) {
-            throw GroupNotFoundException(projectEntity.group?.id!!)
-        }
-
-        return projectRepository.save(projectEntity)
-    }
-
     fun update(projectEntity: ProjectEntity): ProjectEntity {
         if (!this.exists(projectEntity.id)) {
             throw ProjectNotFoundException(projectEntity.id)
         }
 
-        return this.save(projectEntity)
+        if (!this.groupRepository.existsById(projectEntity.group?.id!!)) {
+            throw GroupNotFoundException(projectEntity.group?.id!!)
+        }
+
+        return this.projectRepository.save(projectEntity)
     }
 
     fun deleteById(id: Long) {

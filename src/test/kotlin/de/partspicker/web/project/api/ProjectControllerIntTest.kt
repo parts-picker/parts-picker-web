@@ -1,6 +1,8 @@
 package de.partspicker.web.project.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.resources.ProjectResource
 import io.kotest.core.spec.style.ShouldSpec
 import org.hamcrest.Matchers.hasSize
@@ -9,10 +11,12 @@ import org.hamcrest.Matchers.notNullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -21,8 +25,35 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 @Sql("classpath:/init-sql/projectControllerIntTest.sql")
 class ProjectControllerIntTest(
-    private val mockMvc: MockMvc
+    private val mockMvc: MockMvc,
+    private val mapper: ObjectMapper
 ) : ShouldSpec({
+
+    context("POST project") {
+        should("return status 200 & the resource with the newly created project when called") {
+            val postRequestBody = ProjectPostRequest(
+                name = "Project name",
+                description = "Project description",
+                groupId = 1L
+            )
+
+            mockMvc.post("/projects") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(postRequestBody)
+            }.andExpect {
+                status { isOk() }
+                content {
+                    contentType("application/hal+json")
+                    jsonPath("$.*", hasSize<Any>(5))
+                    jsonPath("$.id", notNullValue())
+                    jsonPath("$.name", `is`(postRequestBody.name))
+                    jsonPath("$.description", `is`(postRequestBody.description))
+                    jsonPath("$.groupId", `is`(1))
+                    jsonPath("$._links", notNullValue())
+                }
+            }
+        }
+    }
 
     context("GET all projects") {
         should("return status 200 & all projects when called") {

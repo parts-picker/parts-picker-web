@@ -28,8 +28,8 @@ class GroupService(
     fun save(groupEntity: GroupEntity) = this.groupRepository.save(groupEntity)
 
     fun update(groupEntity: GroupEntity): GroupEntity {
-        if (!this.existsById(groupEntity.id!!)) {
-            throw GroupNotFoundException(groupEntity.id!!)
+        if (!this.existsById(groupEntity.id)) {
+            throw GroupNotFoundException(groupEntity.id)
         }
 
         return this.groupRepository.save(groupEntity)

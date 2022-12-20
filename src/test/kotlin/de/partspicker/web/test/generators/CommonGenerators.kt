@@ -6,8 +6,7 @@ import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.string
 
-class CommonGenerators {
-    private constructor()
+class CommonGenerators private constructor() {
 
     companion object {
 
