@@ -3,9 +3,9 @@ package de.partspicker.web.item.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.item.api.requests.ItemConditionRequest
-import de.partspicker.web.item.api.requests.ItemGeneralPutRequest
+import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
-import de.partspicker.web.item.api.requests.ItemProjectPutRequest
+import de.partspicker.web.item.api.requests.ItemProjectPatchRequest
 import de.partspicker.web.item.api.requests.ItemStatusRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.responses.ItemConditionResponse
@@ -222,7 +222,7 @@ class ItemControllerIntTest(
     context("UPDATE item") {
         context("general fields body") {
             should("return status 200 & the updated item when called") {
-                val putRequestBody = ItemGeneralPutRequest(
+                val putRequestBody = ItemGeneralPatchRequest(
                     ItemConditionRequest.NEW,
                     "The updated note"
                 )
@@ -245,7 +245,7 @@ class ItemControllerIntTest(
             }
 
             should("return status 404 when no item with the requested id exists") {
-                val putRequestBody = ItemGeneralPutRequest(
+                val putRequestBody = ItemGeneralPatchRequest(
                     ItemConditionRequest.NEW,
                     "The updated note"
                 )
@@ -273,7 +273,7 @@ class ItemControllerIntTest(
 
         context("assigned projectId body") {
             should("return status 200 & the updated item when called") {
-                val body = ItemProjectPutRequest(
+                val body = ItemProjectPatchRequest(
                     assignedProjectId = 1L
                 )
 
@@ -295,7 +295,7 @@ class ItemControllerIntTest(
             }
 
             should("return status 404 when no item with the requested id exists") {
-                val putRequestBody = ItemProjectPutRequest(
+                val putRequestBody = ItemProjectPatchRequest(
                     assignedProjectId = 1L
                 )
 
@@ -321,7 +321,7 @@ class ItemControllerIntTest(
 
             should("return status 404 when no project with the given id exists") {
                 val nonExistentId = 666L
-                val putRequestBody = ItemProjectPutRequest(
+                val putRequestBody = ItemProjectPatchRequest(
                     assignedProjectId = nonExistentId
                 )
                 val path = "/items/7"

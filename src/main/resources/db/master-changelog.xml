@@ -8,4 +8,5 @@
     <include file="db/changelog/PICK-5-TESTDATA.xml"/>
     <include file="db/changelog/PICK-41.xml"/>
     <include file="db/changelog/PICK-59.xml"/>
+    <include file="db/changelog/PICK-60.xml"/>
 </databaseChangeLog>
