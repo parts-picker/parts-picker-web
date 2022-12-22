@@ -7,7 +7,7 @@ import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
-import de.partspicker.web.item.api.requests.ItemGeneralPutRequest
+import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
@@ -50,7 +50,7 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             linkTo<ItemController> { handleDeleteItemById(itemId) }
                 .withSelfRel()
                 .withName(DefaultName.DELETE),
-            linkTo<ItemController> { handlePatchItemById(itemId, ItemGeneralPutRequest.DUMMY) }
+            linkTo<ItemController> { handlePatchItemById(itemId, ItemGeneralPatchRequest.DUMMY) }
                 .withSelfRel()
                 .withName(DefaultName.UPDATE)
         )

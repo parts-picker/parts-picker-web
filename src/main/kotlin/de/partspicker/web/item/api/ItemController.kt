@@ -2,10 +2,10 @@ package de.partspicker.web.item.api
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
-import de.partspicker.web.item.api.requests.ItemGeneralPutRequest
+import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
+import de.partspicker.web.item.api.requests.ItemPatchRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
-import de.partspicker.web.item.api.requests.ItemProjectPutRequest
-import de.partspicker.web.item.api.requests.ItemPutRequest
+import de.partspicker.web.item.api.requests.ItemProjectPatchRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.resources.ItemResourceAssembler
 import de.partspicker.web.item.business.ItemService
@@ -79,17 +79,17 @@ class ItemController(
     }
 
     @PatchMapping("/items/{id}")
-    fun handlePatchItemById(@PathVariable id: Long, @RequestBody body: ItemPutRequest): ResponseEntity<ItemResource> {
+    fun handlePatchItemById(@PathVariable id: Long, @RequestBody body: ItemPatchRequest): ResponseEntity<ItemResource> {
         logger.info("=> PUT request of type ${body.javaClass.simpleName} for item with id $id")
 
         val updatedItem = when (body) {
-            is ItemGeneralPutRequest ->
+            is ItemGeneralPatchRequest ->
                 this.itemService.update(
                     id,
                     ItemCondition.from(body.condition),
                     body.note
                 )
-            is ItemProjectPutRequest ->
+            is ItemProjectPatchRequest ->
                 this.itemService.updateAssignedProject(
                     id,
                     body.assignedProjectId

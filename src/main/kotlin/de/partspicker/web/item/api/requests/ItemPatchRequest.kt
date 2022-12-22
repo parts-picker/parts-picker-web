@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @JsonSubTypes(
-    Type(value = ItemProjectPutRequest::class, name = "ItemProjectPutRequest"),
-    Type(value = ItemGeneralPutRequest::class, name = "ItemGeneralPutRequest")
+    Type(value = ItemProjectPatchRequest::class, name = "ItemProjectPatchRequest"),
+    Type(value = ItemGeneralPatchRequest::class, name = "ItemGeneralPatchRequest")
 )
 // must be a sealed class, so that when() can be exhausted without an else-branch
-sealed class ItemPutRequest
+sealed class ItemPatchRequest

@@ -16,9 +16,9 @@ data class ItemTypeEntity(
     @SequenceGenerator(name = "item_type_gen", sequenceName = "item_type_seq", allocationSize = 1)
     val id: Long = 0,
 
-    val name: String?,
+    val name: String? = null,
 
-    val description: String?
+    val description: String? = null
 ) {
     companion object {
         fun from(itemType: ItemType) = ItemTypeEntity(
