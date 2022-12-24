@@ -222,14 +222,14 @@ class ItemControllerIntTest(
     context("UPDATE item") {
         context("general fields body") {
             should("return status 200 & the updated item when called") {
-                val putRequestBody = ItemGeneralPatchRequest(
+                val patchRequestBody = ItemGeneralPatchRequest(
                     ItemConditionRequest.NEW,
                     "The updated note"
                 )
 
                 mockMvc.patch("/items/7") {
                     contentType = MediaType.APPLICATION_JSON
-                    content = mapper.writeValueAsString(putRequestBody)
+                    content = mapper.writeValueAsString(patchRequestBody)
                 }
                     .andExpect {
                         status { isOk() }
@@ -238,7 +238,7 @@ class ItemControllerIntTest(
                         jsonPath("$.id", `is`(7))
                         jsonPath("$.status", `is`(ItemStatus.IN_STOCK.name))
                         jsonPath("$.condition", `is`(ItemCondition.NEW.name))
-                        jsonPath("$.note", `is`(putRequestBody.note))
+                        jsonPath("$.note", `is`(patchRequestBody.note))
                         jsonPath("$._links", notNullValue())
                         jsonPath("$._links.assignedTo") { notNullValue() }
                     }

@@ -80,7 +80,7 @@ class ItemController(
 
     @PatchMapping("/items/{id}")
     fun handlePatchItemById(@PathVariable id: Long, @RequestBody body: ItemPatchRequest): ResponseEntity<ItemResource> {
-        logger.info("=> PUT request of type ${body.javaClass.simpleName} for item with id $id")
+        logger.info("=> PATCH request of type ${body.javaClass.simpleName} for item with id $id")
 
         val updatedItem = when (body) {
             is ItemGeneralPatchRequest ->

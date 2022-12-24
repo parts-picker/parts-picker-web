@@ -33,8 +33,8 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
         itemTypeRepository = itemTypeRepositoryMock
     )
 
-    context("create") {
-        should("create a new required item type & return it") {
+    context("createOrUpdate") {
+        should("create or update a required item type & return it") {
             // given
             val requiredItemType = RequiredItemTypeGenerators.generator.next()
 
@@ -43,7 +43,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             every { requiredItemTypeRepositoryMock.save(any()) } returnsArgument 0
 
             // when
-            val returnedRequiredItemType = cut.create(requiredItemType)
+            val returnedRequiredItemType = cut.createOrUpdate(requiredItemType)
 
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.save(any())
@@ -62,7 +62,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
-                cut.create(requiredItemType)
+                cut.createOrUpdate(requiredItemType)
             }
 
             // then
@@ -78,7 +78,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
-                cut.create(requiredItemType)
+                cut.createOrUpdate(requiredItemType)
             }
 
             // then
