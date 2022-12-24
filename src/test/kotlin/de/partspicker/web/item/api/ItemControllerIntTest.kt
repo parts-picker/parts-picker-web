@@ -66,7 +66,7 @@ class ItemControllerIntTest(
                 }
         }
 
-        should("return status 404 & when no itemType with the requested id exists") {
+        should("return status 404 when no itemType with the requested id exists") {
             val nonExistentId = 666L
             val path = "/item-types/$nonExistentId/items"
 
@@ -84,7 +84,7 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isNotFound() }
                     content {
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
@@ -125,7 +125,7 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isNotFound() }
                     content {
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
@@ -260,7 +260,7 @@ class ItemControllerIntTest(
                     .andExpect {
                         status { isNotFound() }
                         content { contentType(MediaType.APPLICATION_JSON) }
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
@@ -309,7 +309,7 @@ class ItemControllerIntTest(
                     .andExpect {
                         status { isNotFound() }
                         content { contentType(MediaType.APPLICATION_JSON) }
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
@@ -333,7 +333,7 @@ class ItemControllerIntTest(
                     .andExpect {
                         status { isNotFound() }
                         content { contentType(MediaType.APPLICATION_JSON) }
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
@@ -362,7 +362,7 @@ class ItemControllerIntTest(
                 .andExpect {
                     status { isNotFound() }
                     content { contentType(MediaType.APPLICATION_JSON) }
-                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.*", hasSize<Any>(7))
                     jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
                     jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                     jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
