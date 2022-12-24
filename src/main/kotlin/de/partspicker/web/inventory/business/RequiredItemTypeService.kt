@@ -2,6 +2,7 @@ package de.partspicker.web.inventory.business
 
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.inventory.persitance.RequiredItemTypeRepository
+import de.partspicker.web.inventory.persitance.embeddableIds.RequiredItemTypeId
 import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
@@ -35,5 +36,17 @@ class RequiredItemTypeService(
 
     fun readAllByProjectId(projectId: Long, pageable: Pageable): Page<RequiredItemType> {
         return RequiredItemType.AsPage.from(this.requiredItemTypeRepository.findAllByProjectId(projectId, pageable))
+    }
+
+    fun delete(projectId: Long, itemTypeId: Long) {
+        if (!this.projectRepository.existsById(projectId)) {
+            throw ProjectNotFoundException(projectId = projectId)
+        }
+
+        if (!this.itemTypeRepository.existsById(itemTypeId)) {
+            throw ItemTypeNotFoundException(itemTypeId)
+        }
+
+        this.requiredItemTypeRepository.deleteById(RequiredItemTypeId(projectId, itemTypeId))
     }
 }

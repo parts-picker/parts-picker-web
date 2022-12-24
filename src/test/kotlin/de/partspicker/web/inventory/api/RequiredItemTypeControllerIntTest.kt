@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
@@ -290,6 +291,66 @@ class RequiredItemTypeControllerIntTest(
                         )
                         jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
                         jsonPath("$.errors.requiredAmount", `is`("must be greater than or equal to 1"))
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+    }
+
+    context("DELETE requiredItemType") {
+        should(
+            "return status 204 when called & successfully deleted" +
+                " the requiredItemType belonging to the given ids"
+        ) {
+            mockMvc.delete("/projects/1/required/1")
+                .andExpect {
+                    status { isNoContent() }
+                }
+        }
+
+        should("return status 404 when called & no project with the requested id exists") {
+            val nonExistentProjectId = 666L
+            val path = "/projects/$nonExistentProjectId/required/1"
+
+            mockMvc.delete(path)
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath(
+                            "$.message",
+                            `is`(
+                                "Project with id $nonExistentProjectId could not be found"
+                            )
+                        )
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+
+        should("return status 404 when called & no itemType with the requested id exists") {
+            val nonExistentItemTypeId = 666L
+            val path = "/projects/1/required/$nonExistentItemTypeId"
+
+            mockMvc.delete(path)
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath(
+                            "$.message",
+                            `is`(
+                                "ItemType with id $nonExistentItemTypeId could not be found"
+                            )
+                        )
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
