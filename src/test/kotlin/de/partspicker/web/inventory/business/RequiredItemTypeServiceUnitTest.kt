@@ -2,6 +2,7 @@ package de.partspicker.web.inventory.business
 
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.inventory.persitance.RequiredItemTypeRepository
+import de.partspicker.web.inventory.persitance.embeddableIds.RequiredItemTypeId
 import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
@@ -15,6 +16,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,6 +34,10 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
         projectRepository = projectRepositoryMock,
         itemTypeRepository = itemTypeRepositoryMock
     )
+
+    afterTest {
+        clearMocks(requiredItemTypeRepositoryMock)
+    }
 
     context("createOrUpdate") {
         should("create or update a required item type & return it") {
@@ -108,6 +114,67 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
             // then
             returnedRequiredItemTypes shouldBe RequiredItemType.AsPage.from(requiredItemTypesPage)
+        }
+    }
+
+    context("delete") {
+        should("delete the requiredItemType with the given projectId & itemTypeId") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+
+            every { projectRepositoryMock.existsById(projectId) } returns true
+            every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
+            every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
+
+            // when
+            cut.delete(projectId, itemTypeId)
+
+            // then
+            verify(exactly = 1) {
+                requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId))
+            }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+
+            every { projectRepositoryMock.existsById(projectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.delete(projectId, itemTypeId)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $projectId could not be found"
+
+            verify(exactly = 0) {
+                requiredItemTypeRepositoryMock.deleteById(any())
+            }
+        }
+
+        should("throw ItemTypeNotFoundException when given non-existent id") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+
+            every { projectRepositoryMock.existsById(projectId) } returns true
+            every { itemTypeRepositoryMock.existsById(itemTypeId) } returns false
+
+            // when
+            val exception = shouldThrow<ItemTypeNotFoundException> {
+                cut.delete(projectId, itemTypeId)
+            }
+
+            // then
+            exception.message shouldBe "ItemType with id $itemTypeId could not be found"
+
+            verify(exactly = 0) {
+                requiredItemTypeRepositoryMock.deleteById(any())
+            }
         }
     }
 })
