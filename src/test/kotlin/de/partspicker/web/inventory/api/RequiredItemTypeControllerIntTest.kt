@@ -2,6 +2,7 @@ package de.partspicker.web.inventory.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.collectionRelationName
 import io.kotest.core.spec.style.ShouldSpec
@@ -18,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 
@@ -188,6 +190,109 @@ class RequiredItemTypeControllerIntTest(
                     jsonPath("$.page.totalPages", `is`(0))
                     jsonPath("$.page.totalElements", `is`(0))
                     jsonPath("$.page.number", `is`(0))
+                }
+        }
+    }
+
+    context("PATCH requiredItemType by projectId & itemTypeId") {
+        should("return status 200 & the updated required item type when called") {
+            val patchRequestBody = RequiredItemTypePatchRequest(5)
+
+            mockMvc.patch("/projects/1/required/1") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(patchRequestBody)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$.itemTypeName", `is`("Small 8 Ohm Speaker"))
+                    jsonPath("$.requiredAmount", `is`(5))
+                    jsonPath("$._links", notNullValue())
+                    jsonPath("$._links.assignedTo") { endsWith("/projects/1") }
+                    jsonPath("$._links.describedBy") { endsWith("/item-types/1") }
+                }
+        }
+
+        should("return status 404 when no project with the requested id exists") {
+            val nonExistentId = 666L
+            val path = "/projects/$nonExistentId/required/1"
+
+            val body = RequiredItemTypePatchRequest(5)
+
+            mockMvc.patch(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(body)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath("$.message", `is`("Project with id $nonExistentId could not be found"))
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+
+        should("return status 404 when no itemType with the requested id exists") {
+            val nonExistentItemTypeId = 666
+            val path = "/projects/2/required/666"
+
+            val body = RequiredItemTypePatchRequest(5)
+
+            mockMvc.patch(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(body)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath(
+                            "$.message",
+                            `is`(
+                                "ItemType with id $nonExistentItemTypeId could not be found"
+                            )
+                        )
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+
+        should("return status 422 when requiredAmount is smaller than one") {
+            val path = "/projects/1/required/1"
+
+            val body = RequiredItemTypePatchRequest(0)
+
+            mockMvc.patch(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(body)
+            }
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                        jsonPath(
+                            "$.message",
+                            `is`(
+                                "Validation for object requiredItemTypePatchRequest failed with 1 error(s)"
+                            )
+                        )
+                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
+                        jsonPath("$.errors.requiredAmount", `is`("must be greater than or equal to 1"))
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
                 }
         }
     }

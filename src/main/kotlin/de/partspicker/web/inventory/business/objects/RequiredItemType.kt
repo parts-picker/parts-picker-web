@@ -1,5 +1,6 @@
 package de.partspicker.web.inventory.business.objects
 
+import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.objects.ItemType
@@ -21,6 +22,16 @@ data class RequiredItemType(
             projectId = projectId,
             itemType = ItemType(requiredItemTypePostRequest.itemTypeId),
             requiredAmount = requiredItemTypePostRequest.requiredAmount
+        )
+
+        fun from(
+            requiredItemTypePatchRequest: RequiredItemTypePatchRequest,
+            projectId: Long,
+            itemTypeId: Long
+        ) = RequiredItemType(
+            projectId = projectId,
+            itemType = ItemType(itemTypeId),
+            requiredAmount = requiredItemTypePatchRequest.requiredAmount
         )
     }
 

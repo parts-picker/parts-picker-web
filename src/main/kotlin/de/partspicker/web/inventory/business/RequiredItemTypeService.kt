@@ -17,7 +17,7 @@ class RequiredItemTypeService(
     private val projectRepository: ProjectRepository,
     private val itemTypeRepository: ItemTypeRepository
 ) {
-    fun create(requiredItemType: RequiredItemType): RequiredItemType {
+    fun createOrUpdate(requiredItemType: RequiredItemType): RequiredItemType {
         if (!this.projectRepository.existsById(requiredItemType.projectId)) {
             throw ProjectNotFoundException(projectId = requiredItemType.projectId)
         }
