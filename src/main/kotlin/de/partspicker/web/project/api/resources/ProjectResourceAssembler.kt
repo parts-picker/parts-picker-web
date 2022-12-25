@@ -4,8 +4,13 @@ import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
+import de.partspicker.web.common.hal.RelationName.ASSIGNED
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
+import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.withName
+import de.partspicker.web.common.hal.withRel
+import de.partspicker.web.inventory.api.RequiredItemTypeController
+import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.project.api.ProjectController
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.requests.ProjectPutRequest
@@ -42,7 +47,14 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
                 .withName(UPDATE),
             linkTo<ProjectController> { handleDeleteProject(projectId) }
                 .withSelfRel()
-                .withName(DELETE)
+                .withName(DELETE),
+            // requiredItemType
+            linkTo<RequiredItemTypeController> {
+                handlePostRequiredItemTypes(projectId, RequiredItemTypePostRequest.DUMMY)
+            }
+                .withRel(ASSIGNED)
+                .withName(CREATE),
+            generateGetAllRequiredItemTypesLink(ASSIGNED, projectId)
         )
     }
 }
