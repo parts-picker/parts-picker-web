@@ -8,4 +8,8 @@ data class RequiredItemTypePostRequest(
 
     @field:Min(1)
     val requiredAmount: Long
-)
+) {
+    companion object {
+        val DUMMY = RequiredItemTypePostRequest(0, 1)
+    }
+}
