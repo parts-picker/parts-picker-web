@@ -1,4 +1,4 @@
-package de.partspicker.web.inventory.persitance.embeddableIds
+package de.partspicker.web.inventory.persitance.embeddableids
 
 import java.io.Serializable
 import javax.persistence.Column

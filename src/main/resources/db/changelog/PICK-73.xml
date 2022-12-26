@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-73:createWorkflowSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="workflow_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-73:addWorkflowTable" author="RobinGuth">
+        <createTable tableName="workflows">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflows"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_workflow_name_x_version"
+                        nullable="false"
+                        notNullConstraintName="nnc_workflow_version"
+                />
+            </column>
+            <column name="version" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_workflow_name_x_version"
+                        nullable="false"
+                        notNullConstraintName="nnc_workflow_version"
+                />
+            </column>
+            <column name="created_on" type="timestamp with time zone">
+                <constraints nullable="false" notNullConstraintName="nnc_workflow_created_on"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="PICK-73:createNodeSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="node_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-73:addNodeTable" author="RobinGuth">
+        <createTable tableName="workflow_nodes">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_nodes"/>
+            </column>
+            <column name="workflow_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_node_name_x_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_node_workflow_id"
+                        foreignKeyName="fk_node_workflow_id"
+                        references="workflows(id)"
+                />
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_node_name_x_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_node_name"
+                />
+            </column>
+            <column name="node_type" type="VARCHAR(30)">
+                <constraints nullable="false" notNullConstraintName="nnc_node_type"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="PICK-73:createEdgeSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="edge_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-73:addEdgeTable" author="RobinGuth">
+        <createTable tableName="workflow_edges">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_edges"/>
+            </column>
+            <column name="workflow_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_edge_source_x_target_x_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_edge_workflow_id"
+                        foreignKeyName="fk_edge_workflow_id"
+                        references="workflows(id)"
+                />
+            </column>
+            <column name="source_node_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_edge_source_x_target_x_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_edge_source"
+                        foreignKeyName="fk_edge_source_node"
+                        references="workflow_nodes(id)"
+                />
+            </column>
+            <column name="target_node_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_edge_source_x_target_x_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_edge_target"
+                        foreignKeyName="fk_edge_target_node"
+                        references="workflow_nodes(id)"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-73:addConditionKeysTable" author="RobinGuth">
+        <createTable tableName="workflow_condition_keys">
+            <column name="edge_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_condition_keys"/>
+            </column>
+            <column name="condition_key" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_condition_keys"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="PICK-73:createInstanceSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="instance_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-73:addWorkflowInstanceTables" author="RobinGuth">
+        <createTable tableName="workflow_instances">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_instances"/>
+            </column>
+            <column name="workflow_id" type="BIGINT">
+                <constraints
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_workflow_id"
+                        foreignKeyName="fk_instance_workflow_id"
+                        references="workflows(id)"
+                />
+            </column>
+            <column name="current_node_id" type="BIGINT">
+                <constraints foreignKeyName="fk_current_node" references="workflow_nodes(id)"/>
+            </column>
+            <column name="active" type="BOOLEAN">
+                <constraints nullable="false" notNullConstraintName="nnc_instance_active"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="PICK-73:createInstanceValueSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="instance_value_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-73:addWorkflowInstanceValuesTables" author="RobinGuth">
+        <createTable tableName="workflow_instance_values">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_instance_values"/>
+            </column>
+            <column name="workflow_instance_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_instance_values_workflow_instance_id_x_key"
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_values_workflow_instance_id"
+                        foreignKeyName="fk_instance_values_workflow_instance_id"
+                        references="workflow_instances(id)"
+                />
+            </column>
+            <column name="key" type="VARCHAR(255)">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_instance_values_workflow_instance_id_x_key"
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_values_key"
+                />
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="value_data_type" type="VARCHAR(255)">
+                <constraints nullable="false" notNullConstraintName="nnc_instance_values_value_data_type"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false" notNullConstraintName="nnc_instance_values_type"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

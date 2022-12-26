@@ -2,7 +2,7 @@ package de.partspicker.web.inventory.business
 
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.inventory.persitance.RequiredItemTypeRepository
-import de.partspicker.web.inventory.persitance.embeddableIds.RequiredItemTypeId
+import de.partspicker.web.inventory.persitance.embeddableids.RequiredItemTypeId
 import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository

@@ -1,7 +1,7 @@
 package de.partspicker.web.inventory.persitance.entities
 
 import de.partspicker.web.inventory.business.objects.RequiredItemType
-import de.partspicker.web.inventory.persitance.embeddableIds.RequiredItemTypeId
+import de.partspicker.web.inventory.persitance.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import javax.persistence.Column
