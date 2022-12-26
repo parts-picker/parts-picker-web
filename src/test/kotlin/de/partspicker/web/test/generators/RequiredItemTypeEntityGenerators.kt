@@ -1,6 +1,6 @@
 package de.partspicker.web.test.generators
 
-import de.partspicker.web.inventory.persitance.embeddableIds.RequiredItemTypeId
+import de.partspicker.web.inventory.persitance.embeddableids.RequiredItemTypeId
 import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind

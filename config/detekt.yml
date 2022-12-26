@@ -749,6 +749,7 @@ style:
     acceptableLength: 4
   UnnecessaryAbstractClass:
     active: true
+    ignoreAnnotated: ['Entity']
   UnnecessaryAnnotationUseSiteTarget:
     active: false
   UnnecessaryApply:
