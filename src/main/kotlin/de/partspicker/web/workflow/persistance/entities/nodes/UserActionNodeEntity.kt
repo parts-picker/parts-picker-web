@@ -9,13 +9,13 @@ import javax.persistence.Entity
 @DiscriminatorValue("user_action")
 class UserActionNodeEntity(
     id: Long,
-    name: String,
     workflow: WorkflowEntity,
+    name: String,
 
     @Column
     val displayName: String
 ) : NodeEntity(
     id = id,
-    name = name,
-    workflow = workflow
+    workflow = workflow,
+    name = name
 )
