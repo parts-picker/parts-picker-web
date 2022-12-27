@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-80:addColumnNameToTableWorkflowEdges" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="workflow_edges"/>
+        </preConditions>
+        <addColumn tableName="workflow_edges">
+            <column name="name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-80:updateNewlyCreateNameColumn" author="RobinGuth">
+        <sql dbms="postgresql" splitStatements="true">
+            UPDATE workflow_edges SET name = workflow_nodes.name FROM workflow_nodes WHERE workflow_edges.target_node_id
+            = workflow_nodes.id;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-80:addNotNullConstraintToWorkflowEdgesNameColumn" author="RobinGuth">
+        <addNotNullConstraint
+                tableName="workflow_edges"
+                columnName="name"
+                constraintName="nnc_workflow_edges_name"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-80:addUniqueConstraintToWorkflowEdgesNameXWorkflowIdColumn" author="RobinGuth">
+        <addUniqueConstraint
+                tableName="workflow_edges"
+                columnNames="name,workflow_id"
+                constraintName="uc_workflow_edges_name_x_workflow_id"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-80:addColumnDisplayNameToTableWorkflowEdges" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="workflow_edges"/>
+        </preConditions>
+        <addColumn tableName="workflow_edges">
+            <column name="display_name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-80:updateNewlyCreateDisplayNameColumn" author="RobinGuth">
+        <sql dbms="postgresql" splitStatements="true">
+            UPDATE workflow_edges SET display_name = workflow_nodes.display_name FROM workflow_nodes WHERE
+            workflow_edges.target_node_id
+            = workflow_nodes.id;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-80:addNotNullConstraintToWorkflowEdgesDisplayNameColumn" author="RobinGuth">
+        <addNotNullConstraint
+                tableName="workflow_edges"
+                columnName="display_name"
+                constraintName="nnc_workflow_edges_display_name"
+        />
+    </changeSet>
+
+</databaseChangeLog>

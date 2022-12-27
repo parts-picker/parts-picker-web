@@ -1,7 +1,10 @@
 package de.partspicker.web.workflow.api
 
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.workflow.api.resources.EdgeInfoResource
 import io.kotest.core.spec.style.ShouldSpec
+import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -36,6 +39,7 @@ class WorkflowInteractionControllerIntTest(
                         jsonPath("$.name", `is`("planning"))
                         jsonPath("$.displayName", `is`("Planning"))
                         jsonPath("$._links", notNullValue())
+                        jsonPath("$._links.options.href", endsWith("/node/1/edges"))
                     }
                 }
         }
@@ -69,6 +73,34 @@ class WorkflowInteractionControllerIntTest(
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
+                }
+        }
+    }
+
+    context("GET all possible edges by source node") {
+        should("return status 200 & all edgeInfos belonging to the given node id") {
+            mockMvc.get("/node/1/edges")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(2))
+                    jsonPath("$._embedded.${EdgeInfoResource.collectionRelationName}", hasSize<Any>(1))
+                    jsonPath(
+                        "$._embedded.${EdgeInfoResource.collectionRelationName}[*].name",
+                        containsInAnyOrder("planning_to_implementation")
+                    )
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 200 & no edgeInfos when called with node which is no source node to any edges") {
+            mockMvc.get("/node/3/edges")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(1))
+                    jsonPath("$._embedded.${EdgeInfoResource.collectionRelationName}") { doesNotHaveJsonPath() }
+                    jsonPath("$._links", notNullValue())
                 }
         }
     }
