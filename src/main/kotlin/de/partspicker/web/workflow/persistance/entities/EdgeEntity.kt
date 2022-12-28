@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.persistance.entities
 
+import de.partspicker.web.workflow.business.objects.create.EdgeCreate
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
 import javax.persistence.CollectionTable
 import javax.persistence.Column
@@ -44,6 +45,29 @@ class EdgeEntity(
     @Column(name = "condition_key")
     val conditionKeys: List<String>
 ) {
+
+    companion object {
+        fun from(edgeCreate: EdgeCreate, workflowId: Long, nodeLookUpMap: Map<String, NodeEntity>): EdgeEntity {
+            val source = nodeLookUpMap.getValue(edgeCreate.sourceNode)
+            val target = nodeLookUpMap.getValue(edgeCreate.targetNode)
+
+            return EdgeEntity(
+                id = 0,
+                workflow = WorkflowEntity(id = workflowId),
+                name = edgeCreate.name,
+                displayName = edgeCreate.displayName,
+                source = source,
+                target = target,
+                conditionKeys = edgeCreate.conditions
+            )
+        }
+    }
+
+    object AsList {
+        fun from(edgeCreates: Iterable<EdgeCreate>, workflowId: Long, nodeLookUpMap: Map<String, NodeEntity>) =
+            edgeCreates.map { from(it, workflowId, nodeLookUpMap) }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is EdgeEntity) return false
