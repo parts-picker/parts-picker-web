@@ -1,13 +1,13 @@
 package de.partspicker.web.workflow.persistance.entities
 
-import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
+import de.partspicker.web.workflow.business.objects.create.WorkflowCreate
 import java.time.OffsetDateTime
-import javax.persistence.CascadeType.ALL
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
-import javax.persistence.OneToMany
+import javax.persistence.PrePersist
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
 
@@ -19,15 +19,27 @@ data class WorkflowEntity(
     @SequenceGenerator(name = "workflow_id_gen", sequenceName = "workflow_id_seq", allocationSize = 1)
     val id: Long,
 
-    val name: String,
+    @Column(nullable = false)
+    val name: String? = null,
 
-    val version: Long,
+    @Column(nullable = false)
+    val version: Long? = null
+) {
+    @Column(name = "created_on")
+    var createdOn: OffsetDateTime? = null
+        protected set
 
-    @OneToMany(mappedBy = "workflow", cascade = [ALL])
-    val nodes: Set<NodeEntity>,
+    @PrePersist
+    @Suppress("UnusedPrivateMember")
+    private fun setCreatedOnOnPersist() {
+        createdOn = OffsetDateTime.now()
+    }
 
-    @OneToMany(mappedBy = "workflow", cascade = [ALL])
-    val edges: Set<EdgeEntity>,
-
-    val createdOn: OffsetDateTime
-)
+    companion object {
+        fun from(workflowCreate: WorkflowCreate) = WorkflowEntity(
+            id = 0,
+            name = workflowCreate.name,
+            version = workflowCreate.version
+        )
+    }
+}

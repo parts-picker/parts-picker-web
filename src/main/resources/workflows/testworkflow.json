@@ -1,0 +1,37 @@
+{
+  "name": "Testflows",
+  "version": 7,
+  "nodes":[
+    {
+      "name": "node1",
+      "type": "user_action",
+      "displayName": "Node 1"
+    },
+    {
+      "name": "node2",
+      "type": "user_action",
+      "displayName": "Node 2"
+    },
+    {
+      "name": "node3",
+      "type": "user_action",
+      "displayName": "Node 3"
+    }
+  ],
+  "edges": [
+    {
+      "name": "edge1",
+      "displayName": "Continue to node 2",
+      "sourceNode": "node1",
+      "targetNode": "node2",
+      "conditions": ["Cond1"]
+    },
+    {
+      "name": "edge2",
+      "displayName": "Continue to node 3",
+      "sourceNode": "node2",
+      "targetNode": "node3"
+    }
+  ]
+}
+
