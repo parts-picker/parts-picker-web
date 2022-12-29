@@ -3,6 +3,12 @@
   "version": 1,
   "nodes":[
     {
+      "name": "start_node",
+      "type": "start",
+      "displayName": "Start Node",
+      "startType": "WORKFLOW"
+    },
+    {
       "name": "node1",
       "type": "user_action",
       "displayName": "Node 1"
@@ -19,6 +25,13 @@
     }
   ],
   "edges": [
+    {
+      "name": "edge0",
+      "displayName": "Continue to node 1",
+      "sourceNode": "start_node",
+      "targetNode": "node1",
+      "conditions": ["Cond0"]
+    },
     {
       "name": "edge1",
       "displayName": "Continue to node 2",

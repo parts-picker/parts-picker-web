@@ -1,7 +1,9 @@
 package de.partspicker.web.workflow.business.objects.create.nodes
 
 import de.partspicker.web.workflow.api.json.nodes.NodeJson
+import de.partspicker.web.workflow.api.json.nodes.StartNodeJson
 import de.partspicker.web.workflow.api.json.nodes.UserActionNodeJson
+import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 
 sealed class NodeCreate(
     val name: String
@@ -15,6 +17,12 @@ sealed class NodeCreate(
             is UserActionNodeJson -> UserActionNodeCreate(
                 name = nodeJson.name,
                 displayName = nodeJson.displayName
+            )
+
+            is StartNodeJson -> StartNodeCreate(
+                name = nodeJson.name,
+                displayName = nodeJson.displayName,
+                startType = StartTypeCreate.from(nodeJson.startType)
             )
         }
     }

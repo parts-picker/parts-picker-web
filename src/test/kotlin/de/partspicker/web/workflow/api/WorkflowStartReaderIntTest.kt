@@ -47,8 +47,8 @@ class WorkflowStartReaderIntTest(
                     match { workflowCreate ->
                         workflowCreate.name == "Testflows" &&
                             workflowCreate.version == 1L &&
-                            workflowCreate.nodes.size == 3 &&
-                            workflowCreate.edges.size == 2
+                            workflowCreate.nodes.size == 4 &&
+                            workflowCreate.edges.size == 3
                     }
                 )
             }
