@@ -22,6 +22,11 @@
       "name": "node3",
       "type": "user_action",
       "displayName": "Node 3"
+    },
+    {
+      "name": "stop_node",
+      "type": "stop",
+      "displayName": "Stop Node"
     }
   ],
   "edges": [
@@ -44,6 +49,12 @@
       "displayName": "Continue to node 3",
       "sourceNode": "node2",
       "targetNode": "node3"
+    },
+    {
+      "name": "edge3",
+      "displayName": "Complete",
+      "sourceNode": "node3",
+      "targetNode": "stop_node"
     }
   ]
 }

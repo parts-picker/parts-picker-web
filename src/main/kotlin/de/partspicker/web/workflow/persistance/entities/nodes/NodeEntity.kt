@@ -2,6 +2,7 @@ package de.partspicker.web.workflow.persistance.entities.nodes
 
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
+import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.UserActionNodeCreate
 import de.partspicker.web.workflow.persistance.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistance.entities.enums.StartTypeEntity
@@ -51,6 +52,13 @@ abstract class NodeEntity(
                 name = nodeCreate.name,
                 displayName = nodeCreate.displayName,
                 startType = StartTypeEntity.from(nodeCreate.startType)
+            )
+
+            is StopNodeCreate -> StopNodeEntity(
+                id = 0,
+                workflow = WorkflowEntity(id = workflowId),
+                name = nodeCreate.name,
+                displayName = nodeCreate.displayName
             )
         }
     }

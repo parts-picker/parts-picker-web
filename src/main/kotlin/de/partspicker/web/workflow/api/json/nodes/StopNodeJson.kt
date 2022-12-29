@@ -1,21 +1,18 @@
 package de.partspicker.web.workflow.api.json.nodes
 
 import com.fasterxml.jackson.annotation.JsonTypeName
-import de.partspicker.web.workflow.api.json.enums.StartTypeJson
 
-@JsonTypeName("start")
-class StartNodeJson(
+@JsonTypeName("stop")
+class StopNodeJson(
     name: String,
-    val displayName: String,
-    val startType: StartTypeJson
+    val displayName: String
 ) : NodeJson(name) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is StartNodeJson) return false
+        if (other !is StopNodeJson) return false
         if (!super.equals(other)) return false
 
         if (displayName != other.displayName) return false
-        if (startType != other.startType) return false
 
         return true
     }
@@ -23,11 +20,10 @@ class StartNodeJson(
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + displayName.hashCode()
-        result = 31 * result + startType.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "StartNodeJson(name='$name', displayName='$displayName', startType=$startType)"
+        return "StopNodeJson(name='$name', displayName='$displayName')"
     }
 }
