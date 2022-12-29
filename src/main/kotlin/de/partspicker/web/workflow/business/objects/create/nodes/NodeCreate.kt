@@ -2,6 +2,7 @@ package de.partspicker.web.workflow.business.objects.create.nodes
 
 import de.partspicker.web.workflow.api.json.nodes.NodeJson
 import de.partspicker.web.workflow.api.json.nodes.StartNodeJson
+import de.partspicker.web.workflow.api.json.nodes.StopNodeJson
 import de.partspicker.web.workflow.api.json.nodes.UserActionNodeJson
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 
@@ -23,6 +24,11 @@ sealed class NodeCreate(
                 name = nodeJson.name,
                 displayName = nodeJson.displayName,
                 startType = StartTypeCreate.from(nodeJson.startType)
+            )
+
+            is StopNodeJson -> StopNodeCreate(
+                name = nodeJson.name,
+                displayName = nodeJson.displayName
             )
         }
     }

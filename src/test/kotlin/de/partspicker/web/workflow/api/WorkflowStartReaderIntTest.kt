@@ -3,6 +3,8 @@ package de.partspicker.web.workflow.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.workflow.business.WorkflowService
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -45,10 +47,12 @@ class WorkflowStartReaderIntTest(
             verify {
                 workflowServiceMock.create(
                     match { workflowCreate ->
-                        workflowCreate.name == "Testflows" &&
-                            workflowCreate.version == 1L &&
-                            workflowCreate.nodes.size == 4 &&
-                            workflowCreate.edges.size == 3
+                        workflowCreate.name shouldBe "Testflows"
+                        workflowCreate.version shouldBe 1L
+                        workflowCreate.nodes shouldHaveSize 5
+                        workflowCreate.edges shouldHaveSize 4
+
+                        true
                     }
                 )
             }

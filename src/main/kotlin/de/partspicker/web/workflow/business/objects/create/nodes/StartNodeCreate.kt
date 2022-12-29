@@ -7,6 +7,10 @@ class StartNodeCreate(
     val displayName: String,
     val startType: StartTypeCreate
 ) : NodeCreate(name) {
+    init {
+        require(displayName.isNotBlank())
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is StartNodeCreate) return false
