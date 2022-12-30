@@ -2,7 +2,7 @@ package de.partspicker.web.workflow.business
 
 import de.partspicker.web.test.generators.EdgeEntityGenerators
 import de.partspicker.web.test.generators.InstanceEntityGenerators
-import de.partspicker.web.workflow.business.exceptions.InstanceNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.objects.EdgeInfo
 import de.partspicker.web.workflow.business.objects.NodeInfo
 import de.partspicker.web.workflow.persistance.EdgeRepository
@@ -59,7 +59,7 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
             every { instanceRepositoryMock.findById(randomId) } returns Optional.empty()
 
             // when
-            val exception = shouldThrow<InstanceNotFoundException> {
+            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
                 cut.readCurrentNodeByInstanceId(randomId)
             }
 
