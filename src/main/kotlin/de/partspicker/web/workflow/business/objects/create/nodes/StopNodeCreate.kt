@@ -5,7 +5,7 @@ class StopNodeCreate(
     val displayName: String
 ) : NodeCreate(name) {
     init {
-        require(displayName.isNotBlank())
+        check(displayName.isNotBlank())
     }
 
     override fun equals(other: Any?): Boolean {

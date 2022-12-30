@@ -12,15 +12,18 @@ class WorkflowCreateGenerators private constructor() {
         val generator: Arb<WorkflowCreate> = Arb.bind(
             Arb.string(range = IntRange(3, 16)),
             Arb.long(1, 1000),
-            Arb.list(NodeCreateGenerators.generator, IntRange(4, 10))
-        ) { name, version, nodes ->
+            Arb.list(NodeCreateGenerators.actionNodeGenerator, IntRange(4, 10)),
+            NodeCreateGenerators.startNodeCreateGenerator,
+            NodeCreateGenerators.stopNodeCreateGenerator
+        ) { name, version, nodes, startNode, stopNode ->
             val nodeNames = nodes.map { it.name }
-            val edges = EdgeCreateGenerators.generatorWithNodeNames(nodeNames).values
+            val edges = EdgeCreateGenerators.generatorWithNodes(nodeNames, startNode.name, stopNode.name).values
+            var nodesWithStartAndStop = nodes + startNode + stopNode
 
             WorkflowCreate(
                 name = name,
                 version = version,
-                nodes = nodes,
+                nodes = nodesWithStartAndStop,
                 edges = edges
             )
         }

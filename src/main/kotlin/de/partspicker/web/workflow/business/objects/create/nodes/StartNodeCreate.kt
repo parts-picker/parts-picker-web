@@ -8,7 +8,7 @@ class StartNodeCreate(
     val startType: StartTypeCreate
 ) : NodeCreate(name) {
     init {
-        require(displayName.isNotBlank())
+        check(displayName.isNotBlank())
     }
 
     override fun equals(other: Any?): Boolean {

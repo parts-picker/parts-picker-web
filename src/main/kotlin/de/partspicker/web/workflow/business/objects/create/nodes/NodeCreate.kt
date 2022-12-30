@@ -10,7 +10,7 @@ sealed class NodeCreate(
     val name: String
 ) {
     init {
-        require(name.isNotBlank())
+        check(name.isNotBlank())
     }
 
     companion object {

@@ -3,8 +3,14 @@ package de.partspicker.web.workflow.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
+import de.partspicker.web.workflow.api.exceptions.WorkflowStartupReadException
 import de.partspicker.web.workflow.api.json.WorkflowJson
 import de.partspicker.web.workflow.business.WorkflowService
+import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeDuplicateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowNodeDuplicateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
 import de.partspicker.web.workflow.business.objects.create.WorkflowCreate
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -30,7 +36,7 @@ class WorkflowStartupReader(
 
     @EventListener
     @Throws(Exception::class)
-    @Suppress("UnusedPrivateMember")
+    @Suppress("UnusedPrivateMember", "TooGenericExceptionCaught")
     fun onApplicationEvent(event: ContextRefreshedEvent?) {
         logCollectedResource(resources.size, path)
 
@@ -46,13 +52,31 @@ class WorkflowStartupReader(
             }
 
             // check if new version smaller than or equal to the latest version
-            val latestVersion = this.workflowService.latestVersion(workflow.name) ?: 0
-            if (workflow.version <= latestVersion) {
+            val latestVersion = this.workflowService.latestVersion(workflow.name)
+            if ((latestVersion != null) && (workflow.version <= latestVersion)) {
                 logVersionToSmall(workflow.name, workflow.version, latestVersion, resource.filename)
                 return
             }
 
-            this.workflowService.create(WorkflowCreate.from(workflow))
+            try {
+                this.workflowService.create(WorkflowCreate.from(workflow))
+            } catch (ex: Exception) {
+                when (ex) {
+                    is WorkflowIllegalStateException,
+                    is WorkflowNodeDuplicateException,
+                    is WorkflowEdgeDuplicateException,
+                    is WorkflowRouteDuplicateException,
+                    is WorkflowSemanticException
+                    -> throw WorkflowStartupReadException.from(
+                        name = workflow.name,
+                        version = workflow.version,
+                        sourcePath = resource.uri.path,
+                        cause = ex
+                    )
+
+                    else -> throw ex
+                }
+            }
 
             logSuccessfulCreation(workflow.name, workflow.version, resource.filename)
         }
