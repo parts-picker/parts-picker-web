@@ -5,6 +5,6 @@ class UserActionNodeCreate(
     val displayName: String
 ) : NodeCreate(name) {
     init {
-        require(displayName.isNotBlank())
+        check(displayName.isNotBlank())
     }
 }
