@@ -23,14 +23,14 @@ data class InstanceEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflow_id", foreignKey = ForeignKey(name = "fk_instance_workflow_id"))
-    val workflow: WorkflowEntity,
+    val workflow: WorkflowEntity? = null,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
-    val currentNode: NodeEntity?,
+    val currentNode: NodeEntity? = null,
 
     @OneToMany(mappedBy = "workflowInstance")
-    val values: Set<InstanceValueEntity>,
+    val values: Set<InstanceValueEntity> = emptySet(),
 
-    val active: Boolean
+    val active: Boolean = false
 )
