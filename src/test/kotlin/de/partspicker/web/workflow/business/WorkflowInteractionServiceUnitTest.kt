@@ -7,6 +7,8 @@ import de.partspicker.web.workflow.business.objects.EdgeInfo
 import de.partspicker.web.workflow.business.objects.NodeInfo
 import de.partspicker.web.workflow.persistance.EdgeRepository
 import de.partspicker.web.workflow.persistance.InstanceRepository
+import de.partspicker.web.workflow.persistance.NodeRepository
+import de.partspicker.web.workflow.persistance.WorkflowRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -19,11 +21,18 @@ import java.util.Optional
 
 class WorkflowInteractionServiceUnitTest : ShouldSpec({
 
+    val workflowRepositoryMock = mockk<WorkflowRepository>()
     val instanceRepositoryMock = mockk<InstanceRepository>()
+    val nodeRepositoryMock = mockk<NodeRepository>()
     val edgeRepositoryMock = mockk<EdgeRepository>()
+    val instanceValueServiceMock = mockk<InstanceValueService>()
+
     val cut = WorkflowInteractionService(
+        workflowRepository = workflowRepositoryMock,
         instanceRepository = instanceRepositoryMock,
-        edgeRepository = edgeRepositoryMock
+        nodeRepository = nodeRepositoryMock,
+        edgeRepository = edgeRepositoryMock,
+        instanceValueService = instanceValueServiceMock
     )
 
     context("read current node info by instance") {

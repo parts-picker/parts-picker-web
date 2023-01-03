@@ -9,7 +9,6 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
 
@@ -28,9 +27,6 @@ data class InstanceEntity(
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
     val currentNode: NodeEntity? = null,
-
-    @OneToMany(mappedBy = "workflowInstance")
-    val values: Set<InstanceValueEntity> = emptySet(),
 
     val active: Boolean = false
 )
