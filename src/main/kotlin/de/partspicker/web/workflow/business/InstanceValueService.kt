@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.workflow.business.exceptions.DatatypeNotSupportedException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistance.InstanceRepository
@@ -8,6 +9,8 @@ import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 import de.partspicker.web.workflow.persistance.entities.InstanceValueEntity
 import de.partspicker.web.workflow.persistance.entities.enums.InstanceValueTypeEntity
 import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity
+import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity.LONG
+import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity.STRING
 import org.springframework.stereotype.Service
 
 @Service
@@ -16,20 +19,13 @@ class InstanceValueService(
     private val instanceRepository: InstanceRepository
 ) {
 
-    fun setMultipleForInstance(instanceId: Long, values: Map<String, Pair<Any, SupportedDataType>>) {
+    fun setMultipleForInstance(instanceId: Long, values: Map<String, Any>) {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
 
         val preparedValues = values.map {
-            InstanceValueEntity(
-                id = 0,
-                workflowInstance = InstanceEntity(id = instanceId),
-                key = it.key,
-                value = it.value.first.toString(),
-                valueDataType = SupportedDataTypeEntity.from(it.value.second),
-                type = InstanceValueTypeEntity.WORKFLOW
-            )
+            convert(instanceId, it.key, it.value)
         }
 
         this.instanceValueRepository.saveAll(preparedValues)
@@ -38,24 +34,33 @@ class InstanceValueService(
     fun setForInstance(
         instanceId: Long,
         key: String,
-        value: Any,
-        supportedDataType: SupportedDataType
+        value: Any
     ): Pair<String, SupportedDataType> {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
 
-        val preparedValue = InstanceValueEntity(
-            id = 0,
-            workflowInstance = InstanceEntity(id = instanceId),
-            key = key,
-            value = value.toString(),
-            valueDataType = SupportedDataTypeEntity.from(supportedDataType),
-            type = InstanceValueTypeEntity.WORKFLOW
-        )
+        val preparedValue = convert(instanceId, key, value)
 
         val savedValue = this.instanceValueRepository.save(preparedValue)
 
         return savedValue.value to SupportedDataType.from(savedValue.valueDataType)
+    }
+
+    private fun convert(instanceId: Long, key: String, value: Any): InstanceValueEntity {
+        val convertedPair: Pair<String, SupportedDataTypeEntity> = when (value) {
+            is Long -> value.toString() to LONG
+            is String -> value to STRING
+            else -> throw DatatypeNotSupportedException(value.javaClass.simpleName)
+        }
+
+        return InstanceValueEntity(
+            id = 0,
+            workflowInstance = InstanceEntity(id = instanceId),
+            key = key,
+            value = convertedPair.first,
+            valueDataType = convertedPair.second,
+            type = InstanceValueTypeEntity.WORKFLOW
+        )
     }
 }

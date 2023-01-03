@@ -1,7 +1,10 @@
 package de.partspicker.web.workflow.business.objects.nodes
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowException
+import de.partspicker.web.workflow.business.objects.enums.StartType
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
+import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.UserActionNodeEntity
 
 sealed class Node(
@@ -13,6 +16,21 @@ sealed class Node(
         fun from(nodeEntity: NodeEntity): Node {
             return when (nodeEntity) {
                 is UserActionNodeEntity -> UserActionNode(
+                    id = nodeEntity.id,
+                    workflowId = nodeEntity.workflow.id,
+                    name = nodeEntity.name,
+                    displayName = nodeEntity.displayName
+                )
+
+                is StartNodeEntity -> StartNode(
+                    id = nodeEntity.id,
+                    workflowId = nodeEntity.workflow.id,
+                    name = nodeEntity.name,
+                    displayName = nodeEntity.displayName,
+                    startType = StartType.from(nodeEntity.startType)
+                )
+
+                is StopNodeEntity -> StopNode(
                     id = nodeEntity.id,
                     workflowId = nodeEntity.workflow.id,
                     name = nodeEntity.name,

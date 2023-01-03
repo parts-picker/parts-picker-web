@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.workflow.business.exceptions.DatatypeNotSupportedException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistance.InstanceValueRepository
@@ -26,9 +27,9 @@ class InstanceValueServiceIntTest(
     context("setForMultiple") {
         should("save all given values") {
             // given
-            val values: Map<String, Pair<Any, SupportedDataType>> = mapOf(
-                "numberValue" to (9 to SupportedDataType.LONG),
-                "stringValue" to ("value" to SupportedDataType.STRING)
+            val values: Map<String, Any> = mapOf(
+                "numberValue" to 9L,
+                "stringValue" to "value"
             )
 
             val instanceId = 1L
@@ -45,6 +46,24 @@ class InstanceValueServiceIntTest(
             valuesToCheck shouldHaveSize 2
             valuesToCheck shouldContain "numberValue"
             valuesToCheck shouldContain "stringValue"
+        }
+
+        should("throw DatatypeNotSupportedException when given value with unsupported data type") {
+            // given
+            val values: Map<String, Any> = mapOf(
+                "booleanValue" to true
+            )
+
+            val instanceId = 1L
+
+            // when
+            val exception = shouldThrow<DatatypeNotSupportedException> {
+                instanceValueService.setMultipleForInstance(instanceId, values)
+            }
+
+            // then
+            exception.message shouldBe "The given data with datatype 'Boolean' is not supported. " +
+                "Supported types are ${SupportedDataType.values().map { it.name }}"
         }
 
         should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
@@ -66,8 +85,7 @@ class InstanceValueServiceIntTest(
             val savedValue = instanceValueService.setForInstance(
                 1L,
                 key,
-                value,
-                SupportedDataType.LONG
+                value
             )
 
             // then
@@ -75,10 +93,26 @@ class InstanceValueServiceIntTest(
             savedValue.second shouldBe SupportedDataType.LONG
         }
 
+        should("throw DatatypeNotSupportedException when given value with unsupported data type") {
+            // given
+            val value = "booleanValue" to true
+
+            val instanceId = 1L
+
+            // when
+            val exception = shouldThrow<DatatypeNotSupportedException> {
+                instanceValueService.setForInstance(instanceId, value.first, value.second)
+            }
+
+            // then
+            exception.message shouldBe "The given data with datatype 'Boolean' is not supported. " +
+                "Supported types are ${SupportedDataType.values().map { it.name }}"
+        }
+
         should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
             val nonExistentId = 666L
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                instanceValueService.setForInstance(nonExistentId, "key", "value", SupportedDataType.STRING)
+                instanceValueService.setForInstance(nonExistentId, "key", "value")
             }
 
             exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
