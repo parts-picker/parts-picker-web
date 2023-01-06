@@ -7,7 +7,8 @@ enum class RelationName(val displayName: String) {
     ASSIGNED("assigned"),
     ASSIGNED_TO("assignedTo"),
     OPTIONS("options"),
-    OPTION_OF("optionOf")
+    OPTION_OF("optionOf"),
+    ADVANCE("advance")
 }
 
 fun WebMvcLinkBuilder.withRel(rel: RelationName) = this.withRel(rel.displayName)

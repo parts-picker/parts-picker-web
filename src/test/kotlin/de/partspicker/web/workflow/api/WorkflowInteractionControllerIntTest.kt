@@ -8,6 +8,7 @@ import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
@@ -15,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -39,7 +41,7 @@ class WorkflowInteractionControllerIntTest(
                         jsonPath("$.name", `is`("planning"))
                         jsonPath("$.displayName", `is`("Planning"))
                         jsonPath("$._links", notNullValue())
-                        jsonPath("$._links.options.href", endsWith("/node/1/edges"))
+                        jsonPath("$._links.options.href", endsWith("/instance/1/edges"))
                     }
                 }
         }
@@ -77,9 +79,9 @@ class WorkflowInteractionControllerIntTest(
         }
     }
 
-    context("GET all possible edges by source node") {
-        should("return status 200 & all edgeInfos belonging to the given node id") {
-            mockMvc.get("/node/1/edges")
+    context("GET all possible edges by instance id") {
+        should("return status 200 & all edgeInfos belonging to the given instance id") {
+            mockMvc.get("/instance/1/edges")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
@@ -93,14 +95,111 @@ class WorkflowInteractionControllerIntTest(
                 }
         }
 
-        should("return status 200 & no edgeInfos when called with node which is no source node to any edges") {
-            mockMvc.get("/node/3/edges")
+        should("return status 200 & no edgeInfos when called with instance id with a stop node") {
+            mockMvc.get("/instance/5/edges")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(1))
                     jsonPath("$._embedded.${EdgeInfoResource.collectionRelationName}") { doesNotHaveJsonPath() }
                     jsonPath("$._links", notNullValue())
+                }
+        }
+    }
+
+    context("POST instance state advance") {
+        should("return status 200 & the new current node info") {
+            mockMvc.post("/instance/1/edges/1")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$.name", `is`("implementation"))
+                    jsonPath("$.displayName", `is`("Implementation"))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 404 when given non-existent instance id") {
+            val nonExistentId = 666L
+            val path = "/instance/$nonExistentId/edges/1"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath(
+                        "$.message",
+                        `is`("Workflow instance with id $nonExistentId could not be found")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 422 when given inactive instance") {
+            val instanceId = 4L
+            val path = "/instance/$instanceId/edges/1"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                    jsonPath("$.errorCode") { nullValue() }
+                    jsonPath(
+                        "$.message",
+                        `is`("Workflow instance with id $instanceId cannot be edited because it is inactive.")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 404 when given non-existent edge id") {
+            val nonExistentId = 666L
+            val path = "/instance/1/edges/$nonExistentId"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath(
+                        "$.message",
+                        `is`("Workflow edge with id $nonExistentId could not be found")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 422 when current node & edge source node not matching") {
+            val edgeId = 3L
+            val path = "/instance/1/edges/$edgeId"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                    jsonPath("$.errorCode") { nullValue() }
+                    jsonPath(
+                        "$.message",
+                        `is`(
+                            "The current instance node with id 1 does not match the source node with " +
+                                "id 3 of the given edge with id $edgeId to advance the instance state"
+                        )
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
                 }
         }
     }

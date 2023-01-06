@@ -23,7 +23,6 @@ class InstanceValueServiceIntTest(
     private val instanceValueService: InstanceValueService,
     private val instanceValueRepository: InstanceValueRepository
 ) : ShouldSpec({
-
     context("setForMultiple") {
         should("save all given values") {
             // given
@@ -43,7 +42,7 @@ class InstanceValueServiceIntTest(
                 InstanceValueTypeEntity.WORKFLOW
             ).map { it.key }
 
-            valuesToCheck shouldHaveSize 2
+            valuesToCheck shouldHaveSize 3
             valuesToCheck shouldContain "numberValue"
             valuesToCheck shouldContain "stringValue"
         }
@@ -91,6 +90,22 @@ class InstanceValueServiceIntTest(
             // then
             savedValue.first shouldBe value.toString()
             savedValue.second shouldBe SupportedDataType.LONG
+        }
+
+        should("overwrite existing value") {
+            // give
+            val key = "existing"
+            val value = "newValue"
+            // when
+            val savedValue = instanceValueService.setForInstance(
+                1L,
+                key,
+                value
+            )
+
+            // then
+            savedValue.first shouldBe value
+            savedValue.second shouldBe SupportedDataType.STRING
         }
 
         should("throw DatatypeNotSupportedException when given value with unsupported data type") {

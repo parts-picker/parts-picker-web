@@ -9,6 +9,7 @@ import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 import de.partspicker.web.workflow.persistance.entities.InstanceValueEntity
 import de.partspicker.web.workflow.persistance.entities.enums.InstanceValueTypeEntity
 import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity
+import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity.INTEGER
 import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity.LONG
 import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity.STRING
 import org.springframework.stereotype.Service
@@ -48,14 +49,21 @@ class InstanceValueService(
     }
 
     private fun convert(instanceId: Long, key: String, value: Any): InstanceValueEntity {
+        val existingId = this.instanceValueRepository.findByWorkflowInstanceIdAndTypeAndKey(
+            instanceId,
+            InstanceValueTypeEntity.WORKFLOW,
+            key
+        )?.id
+
         val convertedPair: Pair<String, SupportedDataTypeEntity> = when (value) {
             is Long -> value.toString() to LONG
             is String -> value to STRING
+            is Int -> value.toString() to INTEGER
             else -> throw DatatypeNotSupportedException(value.javaClass.simpleName)
         }
 
         return InstanceValueEntity(
-            id = 0,
+            id = existingId ?: 0,
             workflowInstance = InstanceEntity(id = instanceId),
             key = key,
             value = convertedPair.first,
