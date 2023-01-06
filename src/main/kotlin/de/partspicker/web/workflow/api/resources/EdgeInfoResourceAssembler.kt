@@ -1,8 +1,12 @@
 package de.partspicker.web.workflow.api.resources
 
 import de.partspicker.web.common.hal.DefaultName.READ
+import de.partspicker.web.common.hal.DefaultName.UPDATE
+import de.partspicker.web.common.hal.RelationName.ADVANCE
 import de.partspicker.web.common.hal.withName
+import de.partspicker.web.common.hal.withRel
 import de.partspicker.web.workflow.api.WorkflowInteractionController
+import de.partspicker.web.workflow.api.requests.AdvanceInstanceStateRequest.Companion.DUMMY
 import de.partspicker.web.workflow.business.objects.EdgeInfo
 import org.springframework.hateoas.IanaLinkRelations.COLLECTION
 import org.springframework.hateoas.server.RepresentationModelAssembler
@@ -15,13 +19,16 @@ class EdgeInfoResourceAssembler : RepresentationModelAssembler<EdgeInfo, EdgeInf
         return EdgeInfoResource(
             name = edgeInfo.name,
             displayName = edgeInfo.displayName,
-            generateDefaultLinks(edgeInfo.sourceNodeId)
+            generateDefaultLinks(edgeInfo.id, edgeInfo.instanceId)
         )
     }
 
-    private fun generateDefaultLinks(nodeId: Long) = listOf(
-        linkTo<WorkflowInteractionController> { handleGetAllEdgesForNode(nodeId) }
+    private fun generateDefaultLinks(edgeId: Long, instanceId: Long) = listOf(
+        linkTo<WorkflowInteractionController> { handleGetAllEdgesForInstance(instanceId) }
             .withRel(COLLECTION)
-            .withName(READ)
+            .withName(READ),
+        linkTo<WorkflowInteractionController> { handleAdvanceInstanceState(instanceId, edgeId, DUMMY) }
+            .withRel(ADVANCE)
+            .withName(UPDATE)
     )
 }

@@ -1,5 +1,8 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
+import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
@@ -12,7 +15,10 @@ import de.partspicker.web.workflow.persistance.InstanceRepository
 import de.partspicker.web.workflow.persistance.NodeRepository
 import de.partspicker.web.workflow.persistance.WorkflowRepository
 import de.partspicker.web.workflow.persistance.entities.InstanceEntity
+import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
+import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import javax.transaction.Transactional
 
@@ -36,10 +42,18 @@ class WorkflowInteractionService(
         return NodeInfo.from(nodeEntity, instanceId)
     }
 
-    fun readPossibleEdgesByNodeId(nodeId: Long): Set<EdgeInfo> {
-        val possibleEdges = this.edgeRepository.findAllBySourceId(nodeId)
+    fun readPossibleEdgesByInstanceId(instanceId: Long): Set<EdgeInfo> {
+        val instance = this.instanceRepository.findById(instanceId)
+            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
-        return EdgeInfo.AsSet.from(possibleEdges)
+        val currentNode = instance.currentNode
+        if (currentNode == null || !instance.active) {
+            throw WorkflowInstanceNotActiveException(instanceId)
+        }
+
+        val possibleEdges = this.edgeRepository.findAllBySourceId(currentNode.id)
+
+        return EdgeInfo.AsSet.from(possibleEdges, instanceId)
     }
 
     @Transactional(rollbackOn = [Exception::class])
@@ -77,5 +91,44 @@ class WorkflowInteractionService(
         }
 
         return Instance.from(savedInstance)
+    }
+
+    @Transactional(rollbackOn = [Exception::class])
+    fun advanceInstanceNodeThroughEdge(
+        instanceId: Long,
+        edgeId: Long,
+        values: Map<String, Any>? = null
+    ): NodeInfo? {
+        val instanceEntity = this.instanceRepository.findById(instanceId)
+            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+
+        val currentNode = instanceEntity.currentNode
+        if (currentNode == null || !instanceEntity.active) {
+            throw WorkflowInstanceNotActiveException(instanceId)
+        }
+
+        val currentNodeId = currentNode.id
+        val edge = this.edgeRepository.findById(edgeId)
+            .orElseThrow { WorkflowEdgeNotFoundException(edgeId) }
+
+        if (edge.source.id != currentNodeId) {
+            throw WorkflowEdgeSourceNotMatchingException(edgeId, edge.source.id, currentNodeId)
+        }
+
+        // update instance values
+        values?.let {
+            this.instanceValueService.setMultipleForInstance(instanceId, it)
+        }
+
+        // check if target is stop node
+        if (edge.target is StopNodeEntity) {
+            instanceEntity.active = false
+        }
+
+        instanceEntity.currentNode = edge.target
+
+        this.instanceRepository.save(instanceEntity)
+
+        return NodeInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, instanceId)
     }
 }

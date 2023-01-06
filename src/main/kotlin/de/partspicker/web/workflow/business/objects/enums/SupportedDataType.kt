@@ -4,12 +4,14 @@ import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeE
 
 enum class SupportedDataType {
     STRING,
-    LONG;
+    LONG,
+    INTEGER;
 
     companion object {
         fun from(supportedDataTypeEntity: SupportedDataTypeEntity) = when (supportedDataTypeEntity) {
             SupportedDataTypeEntity.STRING -> STRING
             SupportedDataTypeEntity.LONG -> LONG
+            SupportedDataTypeEntity.INTEGER -> INTEGER
         }
     }
 }

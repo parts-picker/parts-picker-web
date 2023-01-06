@@ -17,11 +17,11 @@ class NodeInfoResourceAssembler : RepresentationModelAssembler<NodeInfo, NodeInf
         return NodeInfoResource(
             name = nodeInfo.name,
             displayName = nodeInfo.displayName,
-            links = generateDefaultLinks(nodeInfo.instanceId, nodeInfo.id, nodeInfo.userCanInteract)
+            links = generateDefaultLinks(nodeInfo.instanceId, nodeInfo.userCanInteract)
         )
     }
 
-    private fun generateDefaultLinks(instanceId: Long, nodeId: Long, userCanInteract: Boolean): List<Link> {
+    private fun generateDefaultLinks(instanceId: Long, userCanInteract: Boolean): List<Link> {
         val links = mutableListOf(
             linkTo<WorkflowInteractionController> { handleGetCurrentNodeInfoForInstance(instanceId) }
                 .withSelfRel()
@@ -30,7 +30,7 @@ class NodeInfoResourceAssembler : RepresentationModelAssembler<NodeInfo, NodeInf
 
         if (userCanInteract) {
             links.add(
-                linkTo<WorkflowInteractionController> { handleGetAllEdgesForNode(nodeId) }
+                linkTo<WorkflowInteractionController> { handleGetAllEdgesForInstance(instanceId) }
                     .withRel(RelationName.OPTIONS)
                     .withName(READ)
             )

@@ -26,7 +26,7 @@ data class InstanceEntity(
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
-    val currentNode: NodeEntity? = null,
+    var currentNode: NodeEntity? = null,
 
-    val active: Boolean = false
+    var active: Boolean = false
 )

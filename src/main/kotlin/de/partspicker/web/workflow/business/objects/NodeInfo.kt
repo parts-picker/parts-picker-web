@@ -3,6 +3,7 @@ package de.partspicker.web.workflow.business.objects
 import de.partspicker.web.workflow.business.exceptions.WorkflowException
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.UserActionNodeEntity
 
 data class NodeInfo(
@@ -23,6 +24,7 @@ data class NodeInfo(
                     instanceId = instanceId
                 )
                 is StartNodeEntity -> null
+                is StopNodeEntity -> null
                 else -> throw WorkflowException() // use is branch w/ explicit null for child classes
             }
         }

@@ -4,7 +4,13 @@ import de.partspicker.web.item.business.exceptions.ItemNotFoundException
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
+import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
+import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -25,7 +31,10 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             ProjectNotFoundException::class,
             ItemNotFoundException::class,
             ItemTypeNotFoundException::class,
-            WorkflowInstanceNotFoundException::class
+            WorkflowInstanceNotFoundException::class,
+            WorkflowEdgeNotFoundException::class,
+            WorkflowNodeNameNotFoundException::class,
+            WorkflowNameNotFoundException::class
         ]
     )
     fun handleEntityNotFoundException(
@@ -36,6 +45,35 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpStatus.NOT_FOUND,
             exc.localizedMessage,
             ErrorCode.EntityNotFound,
+            mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            webRequest.request.requestURI,
+            ZonedDateTime.now()
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest
+        )
+    }
+
+    @ExceptionHandler(
+        value = [
+            WorkflowEdgeSourceNotMatchingException::class,
+            WorkflowInstanceNotActiveException::class,
+            WorkflowStartedWithNonStartNodeException::class
+        ]
+    )
+    fun handleWorkflowBusinessException(
+        exc: Exception,
+        webRequest: ServletWebRequest
+    ): ResponseEntity<Any> {
+        val info = ErrorInfo(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            exc.localizedMessage,
+            null,
             mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
             webRequest.request.requestURI,
             ZonedDateTime.now()
