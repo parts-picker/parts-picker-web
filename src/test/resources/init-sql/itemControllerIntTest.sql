@@ -18,5 +18,9 @@ INSERT INTO item_types VALUES(4, 'ITEMTYPE TO USE TO CREATE NEW ITEMS', 'THIS TY
 INSERT INTO item_types VALUES(5, 'ITEMTYPE TO USE TO DELETE ITEMS', 'THIS TYPE SHOULD HAVE ONE ITEMS');
 INSERT INTO items VALUES(9, 'IN_STOCK', 'USED', 'ITEM ONE', 5);
 
-INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1: used for PUT projectId', null);
+INSERT INTO workflows VALUES(nextval('workflow_id_seq'), 'Testflows', 1, now());
+INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'), 'start', 'start', 'Start', 'WORKFLOW');
+INSERT INTO workflow_instances VALUES(1, currval('workflow_id_seq'), currval('node_id_seq'), true);
+
+INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1: used for PUT projectId', null, 1);
 

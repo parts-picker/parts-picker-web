@@ -13,13 +13,15 @@ class ProjectGenerators private constructor() {
             Arb.long(0),
             Arb.string(range = IntRange(3, 16)),
             Arb.descriptionLikeString(),
-            GroupGenerators.generator
-        ) { id, name, description, group ->
+            GroupGenerators.generator,
+            Arb.long(1)
+        ) { id, name, description, group, instanceId ->
             Project(
                 id = id,
                 name = name,
                 description = description,
-                group = group
+                group = group,
+                workflowInstanceId = instanceId
             )
         }
     }

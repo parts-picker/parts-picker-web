@@ -17,17 +17,17 @@ class ItemGenerators private constructor() {
         val randomConditionGen = Arb.enum<ItemCondition>()
 
         val generator: Arb<Item> = Arb.bind(
-            Arb.long(0),
+            Arb.long(1),
             ItemTypeGenerators.generator,
-            ProjectGenerators.generator,
+            Arb.long(1),
             randomStatusGen,
             randomConditionGen,
             Arb.string()
-        ) { id, type, assignedProject, status, condition, note ->
+        ) { id, type, assignedProjectId, status, condition, note ->
             Item(
                 id = id,
                 type = type,
-                assignedProject = assignedProject,
+                assignedProjectId = assignedProjectId,
                 status = status,
                 condition = condition,
                 note = note

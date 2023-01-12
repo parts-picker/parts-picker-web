@@ -1,6 +1,7 @@
 package de.partspicker.web.project.persistance.entities
 
-import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.project.business.objects.CreateProject
+import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed
 import javax.persistence.Column
@@ -12,6 +13,7 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToOne
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
 
@@ -33,14 +35,19 @@ data class ProjectEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
-    var group: GroupEntity? = null
+    var group: GroupEntity? = null,
+
+    @OneToOne
+    @JoinColumn(name = "instance_id", foreignKey = ForeignKey(name = "fk_instance"))
+    val workflowInstance: InstanceEntity? = null
 ) {
     companion object {
-        fun from(project: Project) = ProjectEntity(
+        fun from(project: CreateProject, instanceId: Long) = ProjectEntity(
             id = project.id,
             name = project.name,
             description = project.description,
-            group = project.group?.let { group -> GroupEntity.from(group) }
+            group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
+            workflowInstance = InstanceEntity(id = instanceId)
         )
     }
 }

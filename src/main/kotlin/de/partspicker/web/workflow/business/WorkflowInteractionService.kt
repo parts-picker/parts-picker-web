@@ -30,6 +30,10 @@ class WorkflowInteractionService(
     private val edgeRepository: EdgeRepository,
     private val instanceValueService: InstanceValueService
 ) {
+    companion object {
+        const val PROJECT_WORKFLOW_NAME = "project_workflow"
+        const val PROJECT_WORKFLOW_START_NODE = "new_project_start"
+    }
 
     fun readCurrentNodeByInstanceId(instanceId: Long): NodeInfo? {
         val instanceEntity = this.instanceRepository.findById(
@@ -55,6 +59,12 @@ class WorkflowInteractionService(
 
         return EdgeInfo.AsSet.from(possibleEdges, instanceId)
     }
+
+    fun startProjectWorkflow(instanceValues: Map<String, Any>? = null) = startWorkflowInstance(
+        workflowName = PROJECT_WORKFLOW_NAME,
+        startNodeName = PROJECT_WORKFLOW_START_NODE,
+        instanceValues = instanceValues
+    )
 
     @Transactional(rollbackOn = [Exception::class])
     fun startWorkflowInstance(

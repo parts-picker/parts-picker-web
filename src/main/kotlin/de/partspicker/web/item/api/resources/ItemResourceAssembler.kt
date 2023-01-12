@@ -30,7 +30,7 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             links = generateDefaultLinks(
                 itemId = item.id,
                 itemTypeId = item.type.id,
-                assignedProjectId = item.assignedProject?.id
+                assignedProjectId = item.assignedProjectId
             )
         )
     }

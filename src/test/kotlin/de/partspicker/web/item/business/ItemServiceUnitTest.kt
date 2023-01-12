@@ -19,6 +19,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -38,12 +39,16 @@ class ItemServiceUnitTest : ShouldSpec({
         projectRepository = projectRepositoryMock
     )
 
+    afterTest {
+        clearMocks(itemRepositoryMock, itemTypeRepositoryMock, projectRepositoryMock)
+    }
+
     context("create") {
         should("create new item & return it") {
             // given
             val typeEntity = ItemTypeEntityGenerators.generator.next()
             val entity = ItemEntityGenerators.generator.next().copy(type = typeEntity)
-            every { itemRepositoryMock.save(entity) } returns entity
+            every { itemRepositoryMock.save(any()) } returns entity
             every { itemTypeRepositoryMock.existsById(typeEntity.id) } returns true
 
             // when
@@ -69,6 +74,10 @@ class ItemServiceUnitTest : ShouldSpec({
             }
 
             // then
+            verify(exactly = 0) {
+                itemRepositoryMock.save(any())
+            }
+
             exception.message shouldBe "ItemType with id ${typeEntity.id} could not be found"
         }
     }
@@ -205,7 +214,7 @@ class ItemServiceUnitTest : ShouldSpec({
             val updatedItem = cut.updateAssignedProject(id, projectId)
 
             // then
-            updatedItem.assignedProject!!.id shouldBe projectId
+            updatedItem.assignedProjectId shouldBe projectId
             updatedItem.status shouldBe ItemStatus.from(entity.status)
             updatedItem.condition shouldBe ItemCondition.from(entity.condition)
             updatedItem.note shouldBe entity.note
@@ -226,7 +235,7 @@ class ItemServiceUnitTest : ShouldSpec({
             val updatedItem = cut.updateAssignedProject(id, null)
 
             // then
-            updatedItem.assignedProject shouldBe null
+            updatedItem.assignedProjectId shouldBe null
             updatedItem.status shouldBe ItemStatus.from(entity.status)
             updatedItem.condition shouldBe ItemCondition.from(entity.condition)
             updatedItem.note shouldBe entity.note

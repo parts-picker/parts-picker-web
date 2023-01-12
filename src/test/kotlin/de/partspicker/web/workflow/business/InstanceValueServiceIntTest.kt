@@ -31,7 +31,7 @@ class InstanceValueServiceIntTest(
                 "stringValue" to "value"
             )
 
-            val instanceId = 1L
+            val instanceId = 100L
 
             // when
             instanceValueService.setMultipleForInstance(instanceId, values)
@@ -53,7 +53,7 @@ class InstanceValueServiceIntTest(
                 "booleanValue" to true
             )
 
-            val instanceId = 1L
+            val instanceId = 100L
 
             // when
             val exception = shouldThrow<DatatypeNotSupportedException> {
@@ -82,7 +82,7 @@ class InstanceValueServiceIntTest(
             val value = 2L
             // when
             val savedValue = instanceValueService.setForInstance(
-                1L,
+                100L,
                 key,
                 value
             )
@@ -98,7 +98,7 @@ class InstanceValueServiceIntTest(
             val value = "newValue"
             // when
             val savedValue = instanceValueService.setForInstance(
-                1L,
+                100L,
                 key,
                 value
             )
@@ -112,7 +112,7 @@ class InstanceValueServiceIntTest(
             // given
             val value = "booleanValue" to true
 
-            val instanceId = 1L
+            val instanceId = 100L
 
             // when
             val exception = shouldThrow<DatatypeNotSupportedException> {

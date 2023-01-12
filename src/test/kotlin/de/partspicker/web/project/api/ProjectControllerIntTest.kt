@@ -2,8 +2,8 @@ package de.partspicker.web.project.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.project.api.requests.ProjectPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
-import de.partspicker.web.project.api.requests.ProjectPutRequest
 import de.partspicker.web.project.api.resources.ProjectResource
 import io.kotest.core.spec.style.ShouldSpec
 import org.hamcrest.Matchers.hasSize
@@ -18,8 +18,8 @@ import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -134,7 +134,7 @@ class ProjectControllerIntTest(
 
     context("UPDATE project") {
         should("return status 200 & the updated item when called") {
-            val putRequestBody = ProjectPutRequest(
+            val putRequestBody = ProjectPatchRequest(
                 name = "Updated name",
                 description = "Updated description",
                 groupId = 2
@@ -142,7 +142,7 @@ class ProjectControllerIntTest(
 
             val id = 3
 
-            mockMvc.put("/projects/$id") {
+            mockMvc.patch("/projects/$id") {
                 contentType = MediaType.APPLICATION_JSON
                 content = mapper.writeValueAsString(putRequestBody)
             }
@@ -159,7 +159,7 @@ class ProjectControllerIntTest(
         }
 
         should("return status 404 when no project with the requested id exists") {
-            val putRequestBody = ProjectPutRequest(
+            val putRequestBody = ProjectPatchRequest(
                 name = "Updated name",
                 description = "Updated description",
                 groupId = null
@@ -168,7 +168,7 @@ class ProjectControllerIntTest(
             val nonExistentId = 666
             val path = "/projects/$nonExistentId"
 
-            mockMvc.put(path) {
+            mockMvc.patch(path) {
                 contentType = MediaType.APPLICATION_JSON
                 content = mapper.writeValueAsString(putRequestBody)
             }
