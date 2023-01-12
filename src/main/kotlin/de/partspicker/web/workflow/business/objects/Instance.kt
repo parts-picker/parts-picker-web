@@ -6,13 +6,15 @@ import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 data class Instance(
     val id: Long,
     val currentNode: Node?,
-    val active: Boolean
+    val active: Boolean,
+    val workflowId: Long
 ) {
     companion object {
         fun from(instanceEntity: InstanceEntity) = Instance(
             id = instanceEntity.id,
             currentNode = instanceEntity.currentNode?.let { Node.from(it) },
-            active = instanceEntity.active
+            active = instanceEntity.active,
+            workflowId = instanceEntity.workflow!!.id
         )
     }
 }

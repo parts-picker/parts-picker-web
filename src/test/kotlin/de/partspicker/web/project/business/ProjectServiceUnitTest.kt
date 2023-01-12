@@ -2,17 +2,21 @@ package de.partspicker.web.project.business
 
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.persistance.GroupRepository
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.test.generators.ProjectEntityGenerators
+import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.objects.Instance
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,24 +27,40 @@ import java.util.Optional
 
 class ProjectServiceUnitTest : ShouldSpec({
     val projectRepositoryMock = mockk<ProjectRepository>()
-    val groupRespositoryMock = mockk<GroupRepository>()
+    val groupRepositoryMock = mockk<GroupRepository>()
+    val workflowInteractionServiceMock = mockk<WorkflowInteractionService>()
     val cut = ProjectService(
         projectRepository = projectRepositoryMock,
-        groupRepository = groupRespositoryMock
+        groupRepository = groupRepositoryMock,
+        workflowInteractionService = workflowInteractionServiceMock
     )
+
+    afterTest {
+        clearMocks(projectRepositoryMock)
+    }
 
     context("create") {
         should("create new project & return it") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { groupRespositoryMock.existsById(projectEntity.group?.id!!) } returns true
-            every { projectRepositoryMock.save(projectEntity) } returns projectEntity
+            every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns true
+            every { projectRepositoryMock.save(any()) } returns projectEntity
+            every { workflowInteractionServiceMock.startProjectWorkflow(any()) } returns
+                Instance.from(projectEntity.workflowInstance!!)
 
             // when
-            val returnedProject = cut.create(Project.from(projectEntity))
+            val returnedProject = cut.create(
+                CreateProject(
+                    id = projectEntity.id,
+                    name = projectEntity.name,
+                    description = projectEntity.description,
+                    groupId = projectEntity.group?.id
+                )
+            )
 
             verify(exactly = 1) {
                 projectRepositoryMock.save(any())
+                workflowInteractionServiceMock.startProjectWorkflow(any())
             }
 
             returnedProject shouldBe Project.from(projectEntity)
@@ -49,11 +69,18 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("throw GroupNotFoundException when given non-existent group") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { groupRespositoryMock.existsById(projectEntity.group?.id!!) } returns false
+            every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns false
 
             // when
             val exception = shouldThrow<GroupNotFoundException> {
-                cut.create(Project.from(projectEntity))
+                cut.create(
+                    CreateProject(
+                        id = projectEntity.id,
+                        name = projectEntity.name,
+                        description = projectEntity.description,
+                        groupId = projectEntity.group?.id
+                    )
+                )
             }
 
             // then
@@ -123,93 +150,99 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("update the project with the given id with no group & return it") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next().copy(group = null)
-            every { projectRepositoryMock.existsById(projectEntity.id) } returns true
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { projectRepositoryMock.save(projectEntity) } returns projectEntity
 
-            val project = Project.from(projectEntity)
-
             // when
-            val updatedProject = cut.update(project)
+            val updatedProject = cut.update(
+                projectId = projectEntity.id,
+                name = projectEntity.name!!,
+                description = projectEntity.description,
+                groupId = null
+            )
 
             // then
-
             verify(exactly = 1) {
-                projectRepositoryMock.existsById(projectEntity.id)
                 projectRepositoryMock.save(projectEntity)
             }
-            updatedProject shouldBe project
+
+            updatedProject.name shouldBe projectEntity.name
+            updatedProject.description shouldBe projectEntity.description
         }
 
         should("update the project with the given id & return it") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { projectRepositoryMock.existsById(projectEntity.id) } returns true
-            every { projectRepositoryMock.save(projectEntity) } returns projectEntity
-            every { groupRespositoryMock.existsById(projectEntity.group!!.id) } returns true
-
-            val project = Project.from(projectEntity)
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.save(any()) } returns projectEntity
+            every { groupRepositoryMock.existsById(projectEntity.group!!.id) } returns true
 
             // when
-            val updatedProject = cut.update(project)
+            val updatedProject = cut.update(
+                projectId = projectEntity.id,
+                name = projectEntity.name!!,
+                description = projectEntity.description,
+                groupId = projectEntity.group!!.id
+            )
 
             // then
-
             verify(exactly = 1) {
-                projectRepositoryMock.save(projectEntity)
-                projectRepositoryMock.existsById(projectEntity.id)
-                groupRespositoryMock.existsById(projectEntity.group!!.id)
+                projectRepositoryMock.save(any())
+                groupRepositoryMock.existsById(projectEntity.group!!.id)
             }
-            updatedProject shouldBe project
+
+            updatedProject.name shouldBe projectEntity.name
+            updatedProject.description shouldBe projectEntity.description
+            updatedProject.group!!.id shouldBe projectEntity.group!!.id
+            updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance!!.id
         }
 
         should("throw ProjectNotFoundException when given non-existent id") {
             // given
-            val projectEntity = ProjectEntityGenerators.generator.next()
-            every { projectRepositoryMock.existsById(projectEntity.id) } returns false
-
-            val project = Project.from(projectEntity)
+            val nonExistentId = 666L
+            every { projectRepositoryMock.findById(nonExistentId) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
-                cut.update(project)
+                cut.update(
+                    projectId = nonExistentId,
+                    name = "name",
+                    description = "description",
+                    groupId = null
+                )
             }
 
             // then
-            verify(exactly = 1) {
-                projectRepositoryMock.existsById(projectEntity.id)
-            }
-
             verify(exactly = 0) {
-                projectRepositoryMock.save(projectEntity)
+                projectRepositoryMock.save(any())
             }
 
-            exception.message shouldBe "Project with id ${project.id} could not be found"
+            exception.message shouldBe "Project with id $nonExistentId could not be found"
         }
 
         should("throw GroupNotFoundException when given non-existent group") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { projectRepositoryMock.existsById(projectEntity.id) } returns true
-            every { groupRespositoryMock.existsById(projectEntity.group!!.id) } returns false
-
-            val project = Project.from(projectEntity)
+            val nonExistentId = 666L
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { groupRepositoryMock.existsById(nonExistentId) } returns false
 
             // when
             val exception = shouldThrow<GroupNotFoundException> {
-                cut.update(project)
+                cut.update(
+                    projectId = projectEntity.id,
+                    name = "name",
+                    description = "description",
+                    groupId = nonExistentId
+                )
             }
 
             // then
-            verify(exactly = 1) {
-                projectRepositoryMock.existsById(projectEntity.id)
-                groupRespositoryMock.existsById(projectEntity.group!!.id)
-            }
-
             verify(exactly = 0) {
-                projectRepositoryMock.save(projectEntity)
+                projectRepositoryMock.save(any())
             }
 
-            exception.message shouldBe "Group with id ${project.group!!.id} could not be found"
+            exception.message shouldBe "Group with id $nonExistentId could not be found"
         }
     }
 

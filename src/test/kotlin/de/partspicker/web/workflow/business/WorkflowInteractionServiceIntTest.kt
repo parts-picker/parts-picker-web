@@ -100,7 +100,7 @@ class WorkflowInteractionServiceIntTest(
         should("advance to the next node with the given values") {
             // given
             val instanceId = 1L
-            val edgeId = 1L
+            val edgeId = 100L
             val values = mapOf("amount" to 3, "owner" to "someone")
 
             // when
@@ -120,7 +120,7 @@ class WorkflowInteractionServiceIntTest(
         should("deactivate the instance when advancing to stop node") {
             // given
             val instanceId = 3L
-            val edgeId = 4L
+            val edgeId = 400L
 
             // when
             val instanceInfo = cut.advanceInstanceNodeThroughEdge(instanceId, edgeId)
@@ -136,7 +136,7 @@ class WorkflowInteractionServiceIntTest(
         should("throw WorkflowInstanceNotFoundException when given non-existent instance id ") {
             // given
             val nonExistentId = 666L
-            val edgeId = 1L
+            val edgeId = 100L
 
             // when
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
@@ -150,7 +150,7 @@ class WorkflowInteractionServiceIntTest(
         should("throw WorkflowInstanceNotActiveException when given inactive instance") {
             // given
             val instanceId = 2L
-            val edgeId = 1L
+            val edgeId = 100L
 
             // when
             val exception = shouldThrow<WorkflowInstanceNotActiveException> {
@@ -178,7 +178,7 @@ class WorkflowInteractionServiceIntTest(
         should("throw WorkflowEdgeSourceNotMatchingException when current node does match edge source node") {
             // given
             val instanceId = 1L
-            val edgeId = 3L
+            val edgeId = 300L
 
             // when
             val exception = shouldThrow<WorkflowEdgeSourceNotMatchingException> {
@@ -186,8 +186,8 @@ class WorkflowInteractionServiceIntTest(
             }
 
             // then
-            exception.message shouldBe "The current instance node with id 1 does not match the source node with id 3 " +
-                "of the given edge with id $edgeId to advance the instance state"
+            exception.message shouldBe "The current instance node with id 100 does not match the source node" +
+                " with id 300 of the given edge with id $edgeId to advance the instance state"
         }
     }
 })

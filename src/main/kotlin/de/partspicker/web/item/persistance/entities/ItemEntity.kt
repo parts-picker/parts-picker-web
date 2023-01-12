@@ -44,7 +44,7 @@ data class ItemEntity(
     companion object {
         fun from(item: Item) = ItemEntity(
             id = item.id,
-            assignedProject = item.assignedProject?.let { project -> ProjectEntity.from(project) },
+            assignedProject = item.assignedProjectId?.let { projectId -> ProjectEntity(id = projectId) },
             type = ItemTypeEntity.from(item.type),
             status = ItemStatusEntity.from(item.status),
             condition = ItemConditionEntity.from(item.condition),

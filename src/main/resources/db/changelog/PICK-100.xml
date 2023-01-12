@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-100:addFallbackProjectWorkflow" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="workflows"/>
+            <tableExists tableName="workflow_nodes"/>
+            <tableExists tableName="workflow_edges"/>
+        </preConditions>
+        <sql>
+            INSERT INTO workflows VALUES(nextval('workflow_id_seq'), 'project_workflow', 0, now());
+
+            INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'), 'new_project_start',
+            'start', 'New Project', 'WORKFLOW');
+            INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'), 'planning',
+            'user_action', 'Planning');
+            INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'), 'implementation',
+            'user_action', 'Implementation');
+            INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'),
+            'successful_completion', 'stop', 'Successful Completion');
+
+            INSERT INTO workflow_edges VALUES(nextval('edge_id_seq'), currval('workflow_id_seq'), currval('node_id_seq')
+            - 3, currval('node_id_seq') - 2, 'new_project_start->planning', 'Begin planning');
+            INSERT INTO workflow_edges VALUES(nextval('edge_id_seq'), currval('workflow_id_seq'), currval('node_id_seq')
+            - 2, currval('node_id_seq') - 1, 'planning->implementation', 'Begin implementation');
+            INSERT INTO workflow_edges VALUES(nextval('edge_id_seq'), currval('workflow_id_seq'), currval('node_id_seq')
+            - 1, currval('node_id_seq'), 'implementation->successful_completion', 'Successful Completion');
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-100:addColumnInstanceIdToTableProjects" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="projects"/>
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(1) FROM workflows WHERE name = 'project_workflow' AND version = 0
+            </sqlCheck>
+        </preConditions>
+        <addColumn tableName="projects">
+            <column name="instance_id" type="BIGINT">
+                <constraints
+                        foreignKeyName="fk_workflow_instance"
+                        references="workflow_instances(id)"
+                        unique="true"
+                        uniqueConstraintName="uc_instance_id"
+                />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-100:addInstancesToProjectsWithoutInstance" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="projects"/>
+            <tableExists tableName="workflows"/>
+            <tableExists tableName="workflow_nodes"/>
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(1) FROM workflows WHERE name = 'project_workflow' AND version = 0
+            </sqlCheck>
+        </preConditions>
+        <customChange class="de.partspicker.web.common.dbmigrators.GenerateInstancesForProjectsChange"/>
+    </changeSet>
+
+    <changeSet id="PICK-100:addNonNullConstraintToProjectsInstanceIdColumn" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="projects"/>
+            <columnExists tableName="projects" columnName="instance_id"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM projects WHERE instance_id IS null
+            </sqlCheck>
+        </preConditions>
+        <addNotNullConstraint tableName="projects" columnName="instance_id" constraintName="nnc_projects_instance_id"/>
+    </changeSet>
+
+</databaseChangeLog>

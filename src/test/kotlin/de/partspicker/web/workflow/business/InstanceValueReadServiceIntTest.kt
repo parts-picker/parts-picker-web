@@ -22,7 +22,7 @@ class InstanceValueReadServiceIntTest(
 
     context("readAll") {
         should("read all instance values belonging to the given id & return them") {
-            val values = instanceValueReadService.readAllForInstance(1)
+            val values = instanceValueReadService.readAllForInstance(100)
 
             values shouldHaveSize 2
             values shouldHaveKey "userID"
@@ -43,13 +43,13 @@ class InstanceValueReadServiceIntTest(
 
     context("read") {
         should("read the value by key belonging to the given instance id & return it") {
-            val value = instanceValueReadService.readForInstanceByKey(1, "amount")
+            val value = instanceValueReadService.readForInstanceByKey(100, "amount")
 
             value shouldBe ("7" to SupportedDataType.LONG)
         }
 
         should("return null when the key does not exists for the given instance id") {
-            val value = instanceValueReadService.readForInstanceByKey(1, "nonExistentKey")
+            val value = instanceValueReadService.readForInstanceByKey(100, "nonExistentKey")
 
             value shouldBe null
         }

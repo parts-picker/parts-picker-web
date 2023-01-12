@@ -30,7 +30,7 @@ class WorkflowInteractionControllerIntTest(
 
     context("GET current node info by instance") {
         should("return status 200 & the resource with the node info belonging to the requested id when called") {
-            val id = 1
+            val id = 100
 
             mockMvc.get("/instance/$id/node")
                 .andExpect {
@@ -41,13 +41,13 @@ class WorkflowInteractionControllerIntTest(
                         jsonPath("$.name", `is`("planning"))
                         jsonPath("$.displayName", `is`("Planning"))
                         jsonPath("$._links", notNullValue())
-                        jsonPath("$._links.options.href", endsWith("/instance/1/edges"))
+                        jsonPath("$._links.options.href", endsWith("/instance/100/edges"))
                     }
                 }
         }
 
         should("return status 204 when called & no node is assigned to the instance with the given id") {
-            val id = 4
+            val id = 400
 
             mockMvc.get("/instance/$id/node")
                 .andExpect {
@@ -81,7 +81,7 @@ class WorkflowInteractionControllerIntTest(
 
     context("GET all possible edges by instance id") {
         should("return status 200 & all edgeInfos belonging to the given instance id") {
-            mockMvc.get("/instance/1/edges")
+            mockMvc.get("/instance/100/edges")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
@@ -96,7 +96,7 @@ class WorkflowInteractionControllerIntTest(
         }
 
         should("return status 200 & no edgeInfos when called with instance id with a stop node") {
-            mockMvc.get("/instance/5/edges")
+            mockMvc.get("/instance/500/edges")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
@@ -109,7 +109,7 @@ class WorkflowInteractionControllerIntTest(
 
     context("POST instance state advance") {
         should("return status 200 & the new current node info") {
-            mockMvc.post("/instance/1/edges/1")
+            mockMvc.post("/instance/100/edges/100")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
@@ -141,8 +141,8 @@ class WorkflowInteractionControllerIntTest(
         }
 
         should("return status 422 when given inactive instance") {
-            val instanceId = 4L
-            val path = "/instance/$instanceId/edges/1"
+            val instanceId = 400L
+            val path = "/instance/$instanceId/edges/100"
 
             mockMvc.post(path)
                 .andExpect {
@@ -162,7 +162,7 @@ class WorkflowInteractionControllerIntTest(
 
         should("return status 404 when given non-existent edge id") {
             val nonExistentId = 666L
-            val path = "/instance/1/edges/$nonExistentId"
+            val path = "/instance/100/edges/$nonExistentId"
 
             mockMvc.post(path)
                 .andExpect {
@@ -182,7 +182,7 @@ class WorkflowInteractionControllerIntTest(
 
         should("return status 422 when current node & edge source node not matching") {
             val edgeId = 3L
-            val path = "/instance/1/edges/$edgeId"
+            val path = "/instance/100/edges/$edgeId"
 
             mockMvc.post(path)
                 .andExpect {
@@ -194,7 +194,7 @@ class WorkflowInteractionControllerIntTest(
                     jsonPath(
                         "$.message",
                         `is`(
-                            "The current instance node with id 1 does not match the source node with " +
+                            "The current instance node with id 100 does not match the source node with " +
                                 "id 3 of the given edge with id $edgeId to advance the instance state"
                         )
                     )
