@@ -7,11 +7,13 @@ import de.partspicker.web.workflow.api.json.WorkflowJson
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeDuplicateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowNodeHasMoreThanOneTargetException
 import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
+import de.partspicker.web.workflow.business.objects.create.nodes.UserActionNodeCreate
 
 data class WorkflowCreate(
     val name: String,
@@ -57,6 +59,16 @@ data class WorkflowCreate(
         val edgesWithDuplicatedRoutes = edges.filter { duplicatedRoutes.contains(it.sourceNode to it.targetNode) }
             .map { it.name }.toSet()
         duplicatedRoutes.isEmpty() elseThrow WorkflowRouteDuplicateException(edgesWithDuplicatedRoutes)
+
+        // only one edge per node except for user_action nodes
+        val nodesToCheckForMultipleEdges = nodes.filter { it !is UserActionNodeCreate }.map { it.name }
+        val nodesWithMultipleTargets = edges
+            .groupBy { it.sourceNode }
+            .filter { nodesToCheckForMultipleEdges.contains(it.key) }
+            .filter { it.value.size != 1 }
+            .mapValues { entry -> entry.value.map { it.name } }
+
+        nodesWithMultipleTargets.isEmpty() elseThrow WorkflowNodeHasMoreThanOneTargetException(nodesWithMultipleTargets)
 
         traverseAllRoutes(startNodes, stopNodes, edges, allNodes)
     }

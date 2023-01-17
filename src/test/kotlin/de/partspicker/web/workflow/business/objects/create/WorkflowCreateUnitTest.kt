@@ -5,6 +5,7 @@ import de.partspicker.web.test.generators.workflow.WorkflowCreateGenerators
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeDuplicateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowNodeHasMoreThanOneTargetException
 import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
@@ -217,6 +218,89 @@ class WorkflowCreateUnitTest : ShouldSpec({
             }
 
             exception.message shouldBe "Node with name ${node.name} is not a stop node & is not the source if any edges"
+        }
+
+        should("throw Exception when node is no user_action node & is source node of multiple edges") {
+            val startNode = StartNodeCreate("start_node", "start", StartTypeCreate.WORKFLOW)
+            val node = NodeCreateGenerators.actionNodeGenerator.single()
+            val stopNode = StopNodeCreate("stop_node", "stop")
+
+            val exception = shouldThrow<WorkflowNodeHasMoreThanOneTargetException> {
+                WorkflowCreate(
+                    name = "Workflow",
+                    version = 1L,
+                    nodes = listOf(startNode, node, stopNode),
+                    edges = listOf(
+                        EdgeCreate(
+                            name = "edge1",
+                            displayName = "start->node",
+                            sourceNode = startNode.name,
+                            targetNode = node.name,
+                            conditions = emptyList()
+                        ),
+                        EdgeCreate(
+                            name = "edge2",
+                            displayName = "start->stop",
+                            sourceNode = startNode.name,
+                            targetNode = stopNode.name,
+                            conditions = emptyList()
+                        ),
+                        EdgeCreate(
+                            name = "edge3",
+                            displayName = "node->stop",
+                            sourceNode = node.name,
+                            targetNode = stopNode.name,
+                            conditions = emptyList()
+                        )
+                    )
+                )
+            }
+
+            exception.message shouldBe "One or more nodes who may have only one target have multiple targets:\n" +
+                " Node with name 'start_node' with edges with names [edge1, edge2]"
+        }
+
+        should("be valid when node is user_action node & is source node of multiple edges") {
+            val startNode = StartNodeCreate("start_node", "start", StartTypeCreate.WORKFLOW)
+            val userActionNode = NodeCreateGenerators.userActionNodeCreateGenerator.single()
+            val node = NodeCreateGenerators.actionNodeGenerator.single()
+            val stopNode = StopNodeCreate("stop_node", "stop")
+
+            WorkflowCreate(
+                name = "Workflow",
+                version = 1L,
+                nodes = listOf(startNode, userActionNode, node, stopNode),
+                edges = listOf(
+                    EdgeCreate(
+                        name = "edge1",
+                        displayName = "start->node",
+                        sourceNode = startNode.name,
+                        targetNode = userActionNode.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge2",
+                        displayName = "user_action_node->node",
+                        sourceNode = userActionNode.name,
+                        targetNode = node.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge3",
+                        displayName = "user_action_node->stop",
+                        sourceNode = userActionNode.name,
+                        targetNode = stopNode.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge4",
+                        displayName = "node->stop",
+                        sourceNode = node.name,
+                        targetNode = stopNode.name,
+                        conditions = emptyList()
+                    )
+                )
+            )
         }
 
         should("throw WorkflowSemanticException when a node has no connection to a start node") {
