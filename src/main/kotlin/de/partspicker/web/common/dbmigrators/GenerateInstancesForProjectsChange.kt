@@ -6,6 +6,9 @@ import liquibase.database.jvm.JdbcConnection
 import liquibase.exception.ValidationErrors
 import liquibase.resource.ResourceAccessor
 
+/**
+ * CustomChange used by PICK-100 to generate instances for projects with no instance.
+ */
 class GenerateInstancesForProjectsChange : CustomTaskChange {
     companion object {
         const val SELECT_PROJECT_FALLBACK_WORKFLOW =
@@ -14,7 +17,7 @@ class GenerateInstancesForProjectsChange : CustomTaskChange {
         const val SELECT_PROJECTS_WITHOUT_INSTANCE =
             "SELECT id FROM projects WHERE instance_id IS null"
 
-        const val PREPARED_SELECT_START_NODE_BY_WORFLOWID =
+        const val PREPARED_SELECT_START_NODE_BY_WORKFLOW_ID =
             "SELECT id FROM workflow_nodes WHERE workflow_id = ? AND node_type = 'start'"
 
         const val PREPARED_INSERT_INSTANCE =
@@ -52,7 +55,7 @@ class GenerateInstancesForProjectsChange : CustomTaskChange {
         val workflowId = workflowIdResult.getLong("id")
 
         // find single start node for workflow
-        val preparedSelectStartNodeStatement = connection.prepareStatement(PREPARED_SELECT_START_NODE_BY_WORFLOWID)
+        val preparedSelectStartNodeStatement = connection.prepareStatement(PREPARED_SELECT_START_NODE_BY_WORKFLOW_ID)
         preparedSelectStartNodeStatement.setLong(1, workflowId)
         val nodeIdResult = preparedSelectStartNodeStatement.executeQuery()
         nodeIdResult.next()

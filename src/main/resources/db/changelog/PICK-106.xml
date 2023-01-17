@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-106:addForeignKeyConstraintToConditionKeysTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflow_condition_keys" columnName="edge_id"/>
+            <columnExists tableName="workflow_edges" columnName="id"/>
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_condition_keys_edge_id"/>
+            </not>
+        </preConditions>
+        <sql>
+            DELETE FROM workflow_condition_keys as cond WHERE NOT EXISTS (SELECT 1 FROM workflow_edges as edges WHERE
+            cond.edge_id = edges.id);
+        </sql>
+        <addForeignKeyConstraint
+                baseTableName="workflow_condition_keys"
+                baseColumnNames="edge_id"
+                constraintName="fk_condition_keys_edge_id"
+                referencedTableName="workflow_edges"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-106:alterForeignKeyConstraintOfWorkflowInstanceValuesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflow_instances" columnName="id"/>
+            <columnExists tableName="workflow_instance_values" columnName="workflow_instance_id"/>
+            <foreignKeyConstraintExists foreignKeyName="fk_instance_values_workflow_instance_id"/>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="workflow_instance_values"
+                constraintName="fk_instance_values_workflow_instance_id"
+        />
+        <addForeignKeyConstraint
+                baseTableName="workflow_instance_values"
+                baseColumnNames="workflow_instance_id"
+                constraintName="fk_instance_values_workflow_instance_id"
+                referencedTableName="workflow_instances"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-106:alterForeignKeyConstraintOfWorkflowInstancesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflows" columnName="id"/>
+            <columnExists tableName="workflow_instances" columnName="workflow_id"/>
+            <foreignKeyConstraintExists foreignKeyName="fk_instance_workflow_id"/>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="workflow_instances"
+                constraintName="fk_instance_workflow_id"
+        />
+        <addForeignKeyConstraint
+                baseTableName="workflow_instances"
+                baseColumnNames="workflow_id"
+                constraintName="fk_instance_workflow_id"
+                referencedTableName="workflows"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-106:alterForeignKeyConstraintOfWorkflowNodesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflows" columnName="id"/>
+            <columnExists tableName="workflow_nodes" columnName="workflow_id"/>
+            <foreignKeyConstraintExists foreignKeyName="fk_node_workflow_id"/>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="workflow_nodes"
+                constraintName="fk_node_workflow_id"
+        />
+        <addForeignKeyConstraint
+                baseTableName="workflow_nodes"
+                baseColumnNames="workflow_id"
+                constraintName="fk_node_workflow_id"
+                referencedTableName="workflows"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-106:alterForeignKeyConstraintOfWorkflowEdgesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflows" columnName="id"/>
+            <columnExists tableName="workflow_edges" columnName="workflow_id"/>
+            <foreignKeyConstraintExists foreignKeyName="fk_edge_workflow_id"/>
+        </preConditions>
+        <dropForeignKeyConstraint
+                baseTableName="workflow_edges"
+                constraintName="fk_edge_workflow_id"
+        />
+        <addForeignKeyConstraint
+                baseTableName="workflow_edges"
+                baseColumnNames="workflow_id"
+                constraintName="fk_edge_workflow_id"
+                referencedTableName="workflows"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-106:deleteWorkflowsWithInvalidEdges" author="RobinGuth">
+        <preConditions>
+            <tableExists tableName="workflows"/>
+            <tableExists tableName="workflow_nodes"/>
+            <tableExists tableName="workflow_edges"/>
+        </preConditions>
+        <customChange class="de.partspicker.web.common.dbmigrators.DeleteWorkflowsWithInvalidEdgesChange"/>
+    </changeSet>
+
+</databaseChangeLog>

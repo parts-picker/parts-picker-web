@@ -32,7 +32,7 @@ class WorkflowInteractionServiceIntTest(
 ) : ShouldSpec({
 
     context("start workflow instance") {
-        should("create an instance for the latest version of the given workflow starting at the given node") {
+        should("create an instance for the latest workflow version starting at the successor of the given start") {
             // given
             val workflowName = "Testflows"
             val nodeName = "start"
@@ -43,7 +43,8 @@ class WorkflowInteractionServiceIntTest(
 
             // then
             instance.id shouldNotBe null
-            instance.currentNode!!.name shouldBe nodeName
+            instance.currentNode!!.name shouldNotBe nodeName
+            instance.currentNode!!.name shouldBe "planning"
             instance.active shouldBe true
 
             val readValues = instanceValueReadService.readAllForInstance(instance.id)

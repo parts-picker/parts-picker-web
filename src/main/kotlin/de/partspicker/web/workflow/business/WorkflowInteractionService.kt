@@ -85,11 +85,14 @@ class WorkflowInteractionService(
             throw WorkflowStartedWithNonStartNodeException(workflowName, startNodeName)
         }
 
+        // fetch first successor of start node
+        val successor = this.edgeRepository.readBySourceId(chosenStartNode.id).target
+
         // create new instance
         val newInstance = InstanceEntity(
             id = 0,
             workflow = workflow,
-            currentNode = chosenStartNode,
+            currentNode = Hibernate.unproxy(successor) as NodeEntity,
             active = true
         )
 
