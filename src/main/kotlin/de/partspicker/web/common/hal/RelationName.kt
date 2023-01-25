@@ -6,8 +6,6 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder
 enum class RelationName(val displayName: String) {
     ASSIGNED("assigned"),
     ASSIGNED_TO("assignedTo"),
-    OPTIONS("options"),
-    OPTION_OF("optionOf"),
     ADVANCE("advance"),
     STATUS("status") // RFC8631
 }

@@ -6,7 +6,6 @@ import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.RelationName
 import de.partspicker.web.common.hal.RelationName.ASSIGNED
-import de.partspicker.web.common.hal.RelationName.OPTIONS
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
 import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.withName
@@ -60,14 +59,9 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             generateGetAllRequiredItemTypesLink(ASSIGNED, projectId),
             // workflow
             linkTo<WorkflowInteractionController> {
-                handleGetCurrentNodeInfoForInstance(instanceId)
+                handleGetInstanceInfo(instanceId)
             }
                 .withRel(RelationName.STATUS)
-                .withName(READ),
-            linkTo<WorkflowInteractionController> {
-                handleGetAllEdgesForInstance(instanceId)
-            }
-                .withRel(OPTIONS)
                 .withName(READ)
         )
     }

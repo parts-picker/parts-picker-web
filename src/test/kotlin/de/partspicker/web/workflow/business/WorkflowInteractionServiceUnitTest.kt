@@ -2,20 +2,19 @@ package de.partspicker.web.workflow.business
 
 import de.partspicker.web.test.generators.EdgeEntityGenerators
 import de.partspicker.web.test.generators.InstanceEntityGenerators
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.business.objects.EdgeInfo
-import de.partspicker.web.workflow.business.objects.NodeInfo
 import de.partspicker.web.workflow.persistance.EdgeRepository
 import de.partspicker.web.workflow.persistance.InstanceRepository
 import de.partspicker.web.workflow.persistance.NodeRepository
 import de.partspicker.web.workflow.persistance.WorkflowRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.kotest.property.arbitrary.single
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Optional
@@ -36,18 +35,26 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
         instanceValueService = instanceValueServiceMock
     )
 
-    context("read current node info by instance") {
-        should("return node info") {
+    context("read current instance info") {
+        should("return instance info") {
             // given
             val instanceEntity = InstanceEntityGenerators.generator.next()
+            val options = listOf(
+                EdgeEntityGenerators.generator.single(),
+                EdgeEntityGenerators.generator.single()
+            )
 
             every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
+            every { edgeRepositoryMock.findAllBySourceId(instanceEntity.currentNode!!.id) } returns options
 
             // when
-            val returnedNodeInfo = cut.readCurrentNodeByInstanceId(instanceEntity.id)
+            val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)!!
 
             // then
-            returnedNodeInfo shouldBe NodeInfo.from(instanceEntity.currentNode!!, instanceEntity.id)
+            returnedNodeInfo.id shouldBe instanceEntity.currentNode!!.id
+            returnedNodeInfo.name shouldBe instanceEntity.currentNode!!.name
+            returnedNodeInfo.instanceId shouldBe instanceEntity.id
+            returnedNodeInfo.options shouldHaveSize options.size
         }
 
         should("return null when instance has no current node assigned") {
@@ -57,7 +64,7 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
             every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
 
             // when
-            val returnedNodeInfo = cut.readCurrentNodeByInstanceId(instanceEntity.id)
+            val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)
 
             // then
             returnedNodeInfo shouldBe null
@@ -70,61 +77,11 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
 
             // when
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.readCurrentNodeByInstanceId(randomId)
+                cut.readInstanceInfo(randomId)
             }
 
             // then
             exception.message shouldBe "Workflow instance with id $randomId could not be found"
-        }
-    }
-
-    context("read all possible edges by source node") {
-        should("return all edges with the given source node") {
-            // given
-            val instance = InstanceEntityGenerators.generator.next()
-            instance.active = true
-            val edgeEntities = listOf(
-                EdgeEntityGenerators.generator.next(),
-                EdgeEntityGenerators.generator.next()
-            )
-            every { instanceRepositoryMock.findById(instance.id) } returns Optional.of(instance)
-            every { edgeRepositoryMock.findAllBySourceId(instance.currentNode!!.id) } returns edgeEntities
-
-            // when
-            val returnedEdgeInfos = cut.readPossibleEdgesByInstanceId(instance.id)
-
-            // then
-            returnedEdgeInfos shouldBe EdgeInfo.AsSet.from(edgeEntities, instance.id)
-        }
-
-        should("throw InstanceNotFoundException when given non-existent id") {
-            // given
-            val nonExistentId = Arb.long(1).next()
-            every { instanceRepositoryMock.findById(nonExistentId) } returns Optional.empty()
-
-            // when
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.readPossibleEdgesByInstanceId(nonExistentId)
-            }
-
-            // then
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
-        }
-
-        should("throw WorkflowInstanceNotActiveException when given non-existent id") {
-            // given
-            val instance = InstanceEntityGenerators.generator.next()
-            instance.active = false
-            every { instanceRepositoryMock.findById(instance.id) } returns Optional.of(instance)
-
-            // when
-            val exception = shouldThrow<WorkflowInstanceNotActiveException> {
-                cut.readPossibleEdgesByInstanceId(instance.id)
-            }
-
-            // then
-            exception.message shouldBe "Workflow instance with id ${instance.id} " +
-                "cannot be edited because it is inactive."
         }
     }
 })
