@@ -127,7 +127,9 @@ class WorkflowInteractionServiceIntTest(
             val instanceInfo = cut.advanceInstanceNodeThroughEdge(instanceId, edgeId)
 
             // then
-            instanceInfo shouldBe null
+            instanceInfo!!
+            instanceInfo.name shouldBe "stop"
+            instanceInfo.displayName shouldBe "Stop"
 
             val instance = instanceRepository.findById(instanceId).get()
             instance.active shouldBe true

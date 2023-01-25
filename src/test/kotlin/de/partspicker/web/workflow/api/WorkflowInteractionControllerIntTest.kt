@@ -1,10 +1,7 @@
 package de.partspicker.web.workflow.api
 
 import de.partspicker.web.common.exceptions.ErrorCode
-import de.partspicker.web.workflow.api.resources.EdgeInfoResource
 import io.kotest.core.spec.style.ShouldSpec
-import org.hamcrest.Matchers.containsInAnyOrder
-import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -28,8 +25,8 @@ class WorkflowInteractionControllerIntTest(
     private val mockMvc: MockMvc
 ) : ShouldSpec({
 
-    context("GET current node info by instance") {
-        should("return status 200 & the resource with the node info belonging to the requested id when called") {
+    context("GET current instance info") {
+        should("return status 200 & the resource with the instance info belonging to the requested id when called") {
             val id = 100
 
             mockMvc.get("/instance/$id/node")
@@ -37,11 +34,11 @@ class WorkflowInteractionControllerIntTest(
                     status { isOk() }
                     content {
                         contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(3))
+                        jsonPath("$.*", hasSize<Any>(4))
                         jsonPath("$.name", `is`("planning"))
                         jsonPath("$.displayName", `is`("Planning"))
+                        jsonPath("$.options", hasSize<Any>(1))
                         jsonPath("$._links", notNullValue())
-                        jsonPath("$._links.options.href", endsWith("/instance/100/edges"))
                     }
                 }
         }
@@ -79,43 +76,16 @@ class WorkflowInteractionControllerIntTest(
         }
     }
 
-    context("GET all possible edges by instance id") {
-        should("return status 200 & all edgeInfos belonging to the given instance id") {
-            mockMvc.get("/instance/100/edges")
-                .andExpect {
-                    status { isOk() }
-                    content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
-                    jsonPath("$._embedded.${EdgeInfoResource.collectionRelationName}", hasSize<Any>(1))
-                    jsonPath(
-                        "$._embedded.${EdgeInfoResource.collectionRelationName}[*].name",
-                        containsInAnyOrder("planning_to_implementation")
-                    )
-                    jsonPath("$._links", notNullValue())
-                }
-        }
-
-        should("return status 200 & no edgeInfos when called with instance id with a stop node") {
-            mockMvc.get("/instance/500/edges")
-                .andExpect {
-                    status { isOk() }
-                    content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(1))
-                    jsonPath("$._embedded.${EdgeInfoResource.collectionRelationName}") { doesNotHaveJsonPath() }
-                    jsonPath("$._links", notNullValue())
-                }
-        }
-    }
-
     context("POST instance state advance") {
-        should("return status 200 & the new current node info") {
+        should("return status 200 & the new current instance info") {
             mockMvc.post("/instance/100/edges/100")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(3))
+                    jsonPath("$.*", hasSize<Any>(4))
                     jsonPath("$.name", `is`("implementation"))
                     jsonPath("$.displayName", `is`("Implementation"))
+                    jsonPath("$.options", hasSize<Any>(1))
                     jsonPath("$._links", notNullValue())
                 }
         }

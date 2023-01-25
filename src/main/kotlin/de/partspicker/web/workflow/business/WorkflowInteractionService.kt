@@ -7,9 +7,8 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
-import de.partspicker.web.workflow.business.objects.EdgeInfo
 import de.partspicker.web.workflow.business.objects.Instance
-import de.partspicker.web.workflow.business.objects.NodeInfo
+import de.partspicker.web.workflow.business.objects.InstanceInfo
 import de.partspicker.web.workflow.persistance.EdgeRepository
 import de.partspicker.web.workflow.persistance.InstanceRepository
 import de.partspicker.web.workflow.persistance.NodeRepository
@@ -35,29 +34,16 @@ class WorkflowInteractionService(
         const val PROJECT_WORKFLOW_START_NODE = "new_project_start"
     }
 
-    fun readCurrentNodeByInstanceId(instanceId: Long): NodeInfo? {
+    fun readInstanceInfo(instanceId: Long): InstanceInfo? {
         val instanceEntity = this.instanceRepository.findById(
             instanceId
         ).orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
-        val nodeEntity = instanceEntity.currentNode
+        val currentNodeEntity = instanceEntity.currentNode
             ?: return null
+        val options = this.findOptionsBySourceNodeId(currentNodeEntity.id)
 
-        return NodeInfo.from(nodeEntity, instanceId)
-    }
-
-    fun readPossibleEdgesByInstanceId(instanceId: Long): Set<EdgeInfo> {
-        val instance = this.instanceRepository.findById(instanceId)
-            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
-
-        val currentNode = instance.currentNode
-        if (currentNode == null || !instance.active) {
-            throw WorkflowInstanceNotActiveException(instanceId)
-        }
-
-        val possibleEdges = this.edgeRepository.findAllBySourceId(currentNode.id)
-
-        return EdgeInfo.AsSet.from(possibleEdges, instanceId)
+        return InstanceInfo.from(currentNodeEntity, instanceId, options)
     }
 
     fun startProjectWorkflow(instanceValues: Map<String, Any>? = null) = startWorkflowInstance(
@@ -111,7 +97,7 @@ class WorkflowInteractionService(
         instanceId: Long,
         edgeId: Long,
         values: Map<String, Any>? = null
-    ): NodeInfo? {
+    ): InstanceInfo? {
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
@@ -142,6 +128,10 @@ class WorkflowInteractionService(
 
         this.instanceRepository.save(instanceEntity)
 
-        return NodeInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, instanceId)
+        val options = this.findOptionsBySourceNodeId(edge.target.id)
+
+        return InstanceInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, instanceId, options)
     }
+
+    private fun findOptionsBySourceNodeId(sourceNodeId: Long) = this.edgeRepository.findAllBySourceId(sourceNodeId)
 }
