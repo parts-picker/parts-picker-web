@@ -8,6 +8,7 @@ import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResourceAssembler
 import de.partspicker.web.inventory.business.RequiredItemTypeService
 import de.partspicker.web.inventory.business.objects.RequiredItemType
+import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.PagedModel
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import javax.validation.Valid
 
 @RestController
 class RequiredItemTypeController(

@@ -1,8 +1,8 @@
-package de.partspicker.web.inventory.persitance.embeddableids
+package de.partspicker.web.inventory.persistence.embeddableids
 
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
 import java.io.Serializable
-import javax.persistence.Column
-import javax.persistence.Embeddable
 
 @Embeddable
 data class RequiredItemTypeId(

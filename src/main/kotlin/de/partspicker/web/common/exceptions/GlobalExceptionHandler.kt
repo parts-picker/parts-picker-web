@@ -13,6 +13,7 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -40,7 +41,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     fun handleEntityNotFoundException(
         exc: Exception,
         webRequest: ServletWebRequest
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             HttpStatus.NOT_FOUND,
             exc.localizedMessage,
@@ -69,7 +70,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     fun handleWorkflowBusinessException(
         exc: Exception,
         webRequest: ServletWebRequest
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             HttpStatus.UNPROCESSABLE_ENTITY,
             exc.localizedMessage,
@@ -91,9 +92,9 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     override fun handleMethodArgumentNotValid(
         exc: MethodArgumentNotValidException,
         headers: HttpHeaders,
-        status: HttpStatus,
+        status: HttpStatusCode,
         request: WebRequest
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             message = "Validation for object ${exc.objectName} failed with ${exc.errorCount} error(s)",
@@ -102,7 +103,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             timestamp = ZonedDateTime.now()
         )
 
-        return return handleExceptionInternal(
+        return handleExceptionInternal(
             exc,
             info,
             HttpHeaders(),

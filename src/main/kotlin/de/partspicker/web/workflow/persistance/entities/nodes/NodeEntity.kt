@@ -6,20 +6,20 @@ import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.UserActionNodeCreate
 import de.partspicker.web.workflow.persistance.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistance.entities.enums.StartTypeEntity
-import javax.persistence.DiscriminatorColumn
-import javax.persistence.DiscriminatorType
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.ForeignKey
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.Inheritance
-import javax.persistence.InheritanceType
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.SequenceGenerator
-import javax.persistence.Table
+import jakarta.persistence.DiscriminatorColumn
+import jakarta.persistence.DiscriminatorType
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.ForeignKey
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Inheritance
+import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "workflow_nodes")

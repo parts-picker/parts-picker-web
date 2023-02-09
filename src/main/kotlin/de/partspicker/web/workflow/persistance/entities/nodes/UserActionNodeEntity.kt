@@ -1,9 +1,9 @@
 package de.partspicker.web.workflow.persistance.entities.nodes
 
 import de.partspicker.web.workflow.persistance.entities.WorkflowEntity
-import javax.persistence.Column
-import javax.persistence.DiscriminatorValue
-import javax.persistence.Entity
+import jakarta.persistence.Column
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
 
 @Entity
 @DiscriminatorValue("user_action")
