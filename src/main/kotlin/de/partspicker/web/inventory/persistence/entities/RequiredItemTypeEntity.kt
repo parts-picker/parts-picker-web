@@ -1,16 +1,16 @@
-package de.partspicker.web.inventory.persitance.entities
+package de.partspicker.web.inventory.persistence.entities
 
 import de.partspicker.web.inventory.business.objects.RequiredItemType
-import de.partspicker.web.inventory.persitance.embeddableids.RequiredItemTypeId
+import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
-import javax.persistence.Column
-import javax.persistence.EmbeddedId
-import javax.persistence.Entity
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.MapsId
-import javax.persistence.Table
+import jakarta.persistence.Column
+import jakarta.persistence.EmbeddedId
+import jakarta.persistence.Entity
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "required_item_types")

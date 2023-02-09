@@ -9,8 +9,8 @@ import de.partspicker.web.workflow.persistance.WorkflowRepository
 import de.partspicker.web.workflow.persistance.entities.EdgeEntity
 import de.partspicker.web.workflow.persistance.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import javax.transaction.Transactional
 
 @Service
 class WorkflowService(

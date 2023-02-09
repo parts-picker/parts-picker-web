@@ -2,7 +2,7 @@ package de.partspicker.web.inventory.business.objects
 
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
-import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
+import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.objects.ItemType
 import org.springframework.data.domain.Page
 

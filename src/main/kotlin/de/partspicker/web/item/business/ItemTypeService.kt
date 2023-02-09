@@ -48,9 +48,9 @@ class ItemTypeService(
             throw ItemTypeNotFoundException(itemTypeId = id)
         }
 
-        val amountOfdeletedItems = this.itemService.deleteItemsForItemType(id)
+        val amountOfDeletedItems = this.itemService.deleteItemsForItemType(id)
         this.itemTypeRepository.deleteById(id)
 
-        return amountOfdeletedItems
+        return amountOfDeletedItems
     }
 }

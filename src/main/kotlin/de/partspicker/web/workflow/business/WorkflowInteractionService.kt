@@ -17,9 +17,9 @@ import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
+import jakarta.transaction.Transactional
 import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
-import javax.transaction.Transactional
 
 @Service
 class WorkflowInteractionService(

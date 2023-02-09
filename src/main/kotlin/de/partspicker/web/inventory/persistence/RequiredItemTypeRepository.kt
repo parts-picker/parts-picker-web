@@ -1,7 +1,7 @@
-package de.partspicker.web.inventory.persitance
+package de.partspicker.web.inventory.persistence
 
-import de.partspicker.web.inventory.persitance.embeddableids.RequiredItemTypeId
-import de.partspicker.web.inventory.persitance.entities.RequiredItemTypeEntity
+import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
+import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

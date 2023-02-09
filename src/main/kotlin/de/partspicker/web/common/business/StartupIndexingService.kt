@@ -1,11 +1,12 @@
-package de.partspicker.web.project.business
+package de.partspicker.web.common.business
 
+import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.GroupEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
+import jakarta.annotation.PostConstruct
 import org.hibernate.SessionFactory
 import org.hibernate.search.mapper.orm.Search
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class StartupIndexingService(private val sessionFactory: SessionFactory) {
@@ -16,5 +17,6 @@ class StartupIndexingService(private val sessionFactory: SessionFactory) {
 
         searchSession.massIndexer(GroupEntity::class.java).startAndWait()
         searchSession.massIndexer(ProjectEntity::class.java).startAndWait()
+        searchSession.massIndexer(ItemTypeEntity::class.java).startAndWait()
     }
 }

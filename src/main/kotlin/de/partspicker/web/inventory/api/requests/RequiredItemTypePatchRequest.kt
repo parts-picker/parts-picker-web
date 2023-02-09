@@ -1,6 +1,6 @@
 package de.partspicker.web.inventory.api.requests
 
-import javax.validation.constraints.Min
+import jakarta.validation.constraints.Min
 
 data class RequiredItemTypePatchRequest(
     @field:Min(1)
