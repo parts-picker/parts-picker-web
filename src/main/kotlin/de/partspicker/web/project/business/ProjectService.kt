@@ -9,6 +9,7 @@ import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.GroupEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import jakarta.transaction.Transactional
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
@@ -18,6 +19,8 @@ class ProjectService(
     private val groupRepository: GroupRepository,
     private val workflowInteractionService: WorkflowInteractionService
 ) {
+
+    @Transactional
     fun create(project: CreateProject): Project {
         project.groupId?.let { groupId ->
             if (!this.groupRepository.existsById(groupId)) {

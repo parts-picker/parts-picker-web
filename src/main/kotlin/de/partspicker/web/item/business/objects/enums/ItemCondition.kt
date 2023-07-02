@@ -11,6 +11,11 @@ enum class ItemCondition {
     BROKEN,
     UNKNOWN;
 
+    fun isUsable() =
+        this == WRAPPED ||
+            this == NEW ||
+            this == USED
+
     companion object {
         fun from(itemConditionEntity: ItemConditionEntity) = when (itemConditionEntity) {
             ItemConditionEntity.WRAPPED -> WRAPPED

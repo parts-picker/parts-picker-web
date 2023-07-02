@@ -9,8 +9,8 @@ import de.partspicker.web.workflow.persistance.WorkflowRepository
 import de.partspicker.web.workflow.persistance.entities.EdgeEntity
 import de.partspicker.web.workflow.persistance.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class WorkflowService(
@@ -22,7 +22,7 @@ class WorkflowService(
 
     fun latestVersion(name: String) = this.workflowRepository.findLatestVersion(name)
 
-    @Transactional(rollbackOn = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class])
     fun create(workflow: WorkflowCreate) {
         if (this.exists(workflow.name, workflow.version)) {
             throw WorkflowAlreadyExistsException(workflow.name, workflow.version)

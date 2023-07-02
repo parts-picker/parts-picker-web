@@ -5,7 +5,6 @@ import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.item.api.requests.ItemConditionRequest
 import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
-import de.partspicker.web.item.api.requests.ItemProjectPatchRequest
 import de.partspicker.web.item.api.requests.ItemStatusRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.responses.ItemConditionResponse
@@ -265,79 +264,6 @@ class ItemControllerIntTest(
                         jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
                         jsonPath("$.message", `is`("Item with id $nonExistentId could not be found"))
-                        jsonPath("$.path", `is`(path))
-                        jsonPath("$.timestamp", notNullValue())
-                    }
-            }
-        }
-
-        context("assigned projectId body") {
-            should("return status 200 & the updated item when called") {
-                val body = ItemProjectPatchRequest(
-                    assignedProjectId = 1L
-                )
-
-                mockMvc.patch("/items/7") {
-                    contentType = MediaType.APPLICATION_JSON
-                    content = mapper.writeValueAsString(body)
-                }
-                    .andExpect {
-                        status { isOk() }
-                        content { contentType("application/hal+json") }
-                        jsonPath("$.*", hasSize<Any>(5))
-                        jsonPath("$.id", `is`(7))
-                        jsonPath("$.status", `is`(ItemStatus.IN_STOCK.name))
-                        jsonPath("$.condition", `is`(ItemCondition.USED.name))
-                        jsonPath("$.note", `is`("ITEM ONE"))
-                        jsonPath("$._links", notNullValue())
-                        jsonPath("$._links.assignedTo.href") { endsWith("projects/${body.assignedProjectId}") }
-                    }
-            }
-
-            should("return status 404 when no item with the requested id exists") {
-                val putRequestBody = ItemProjectPatchRequest(
-                    assignedProjectId = 1L
-                )
-
-                val nonExistentId = 666
-                val path = "/items/$nonExistentId"
-
-                mockMvc.patch(path) {
-                    contentType = MediaType.APPLICATION_JSON
-                    content = mapper.writeValueAsString(putRequestBody)
-                }
-                    .andExpect {
-                        status { isNotFound() }
-                        content { contentType(MediaType.APPLICATION_JSON) }
-                        jsonPath("$.*", hasSize<Any>(7))
-                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
-                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
-                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
-                        jsonPath("$.message", `is`("Item with id $nonExistentId could not be found"))
-                        jsonPath("$.path", `is`(path))
-                        jsonPath("$.timestamp", notNullValue())
-                    }
-            }
-
-            should("return status 404 when no project with the given id exists") {
-                val nonExistentId = 666L
-                val putRequestBody = ItemProjectPatchRequest(
-                    assignedProjectId = nonExistentId
-                )
-                val path = "/items/7"
-
-                mockMvc.patch(path) {
-                    contentType = MediaType.APPLICATION_JSON
-                    content = mapper.writeValueAsString(putRequestBody)
-                }
-                    .andExpect {
-                        status { isNotFound() }
-                        content { contentType(MediaType.APPLICATION_JSON) }
-                        jsonPath("$.*", hasSize<Any>(7))
-                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
-                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
-                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
-                        jsonPath("$.message", `is`("Project with id $nonExistentId could not be found"))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }

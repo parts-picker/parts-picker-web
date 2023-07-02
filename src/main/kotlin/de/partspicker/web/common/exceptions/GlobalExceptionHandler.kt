@@ -1,5 +1,7 @@
 package de.partspicker.web.common.exceptions
 
+import de.partspicker.web.common.business.exceptions.RuleException
+import de.partspicker.web.inventory.business.exceptions.RequiredItemTypeNotFound
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
@@ -35,12 +37,13 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             WorkflowInstanceNotFoundException::class,
             WorkflowEdgeNotFoundException::class,
             WorkflowNodeNameNotFoundException::class,
-            WorkflowNameNotFoundException::class
-        ]
+            WorkflowNameNotFoundException::class,
+            RequiredItemTypeNotFound::class
+        ],
     )
     fun handleEntityNotFoundException(
         exc: Exception,
-        webRequest: ServletWebRequest
+        webRequest: ServletWebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             HttpStatus.NOT_FOUND,
@@ -48,7 +51,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             ErrorCode.EntityNotFound,
             mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
             webRequest.request.requestURI,
-            ZonedDateTime.now()
+            ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(
@@ -56,7 +59,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             info,
             HttpHeaders(),
             info.status,
-            webRequest
+            webRequest,
         )
     }
 
@@ -64,12 +67,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         value = [
             WorkflowEdgeSourceNotMatchingException::class,
             WorkflowInstanceNotActiveException::class,
-            WorkflowStartedWithNonStartNodeException::class
-        ]
+            WorkflowStartedWithNonStartNodeException::class,
+        ],
     )
     fun handleWorkflowBusinessException(
         exc: Exception,
-        webRequest: ServletWebRequest
+        webRequest: ServletWebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             HttpStatus.UNPROCESSABLE_ENTITY,
@@ -77,7 +80,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             null,
             mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
             webRequest.request.requestURI,
-            ZonedDateTime.now()
+            ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(
@@ -85,7 +88,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             info,
             HttpHeaders(),
             info.status,
-            webRequest
+            webRequest,
         )
     }
 
@@ -93,14 +96,14 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         exc: MethodArgumentNotValidException,
         headers: HttpHeaders,
         status: HttpStatusCode,
-        request: WebRequest
+        request: WebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             message = "Validation for object ${exc.objectName} failed with ${exc.errorCount} error(s)",
             errors = exc.bindingResult.fieldErrors.associateBy({ it.field }, { it.defaultMessage ?: "" }),
             path = (request as ServletWebRequest).request.requestURI,
-            timestamp = ZonedDateTime.now()
+            timestamp = ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(
@@ -108,7 +111,34 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             info,
             HttpHeaders(),
             info.status,
-            request
+            request,
+        )
+    }
+
+    @ExceptionHandler(
+        value = [
+            RuleException::class,
+        ],
+    )
+    fun handleRuleException(
+        exc: Exception,
+        webRequest: ServletWebRequest,
+    ): ResponseEntity<Any>? {
+        val info = ErrorInfo(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            exc.localizedMessage,
+            null,
+            mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            webRequest.request.requestURI,
+            ZonedDateTime.now(),
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest,
         )
     }
 }

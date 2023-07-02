@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.test.generators.EdgeEntityGenerators
 import de.partspicker.web.test.generators.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
@@ -26,13 +27,15 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
     val nodeRepositoryMock = mockk<NodeRepository>()
     val edgeRepositoryMock = mockk<EdgeRepository>()
     val instanceValueServiceMock = mockk<InstanceValueService>()
+    val projectRepositoryMock = mockk<ProjectRepository>()
 
     val cut = WorkflowInteractionService(
         workflowRepository = workflowRepositoryMock,
         instanceRepository = instanceRepositoryMock,
         nodeRepository = nodeRepositoryMock,
         edgeRepository = edgeRepositoryMock,
-        instanceValueService = instanceValueServiceMock
+        instanceValueService = instanceValueServiceMock,
+        projectRepository = projectRepositoryMock
     )
 
     context("read current instance info") {
@@ -51,7 +54,7 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
             val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)!!
 
             // then
-            returnedNodeInfo.id shouldBe instanceEntity.currentNode!!.id
+            returnedNodeInfo.nodeId shouldBe instanceEntity.currentNode!!.id
             returnedNodeInfo.name shouldBe instanceEntity.currentNode!!.name
             returnedNodeInfo.instanceId shouldBe instanceEntity.id
             returnedNodeInfo.options shouldHaveSize options.size

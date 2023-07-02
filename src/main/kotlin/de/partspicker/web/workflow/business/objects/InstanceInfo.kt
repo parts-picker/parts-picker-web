@@ -8,7 +8,7 @@ import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.UserActionNodeEntity
 
 data class InstanceInfo(
-    val id: Long,
+    val nodeId: Long,
     val name: String,
     val displayName: String,
     val instanceId: Long,
@@ -18,7 +18,7 @@ data class InstanceInfo(
         fun from(nodeEntity: NodeEntity, instanceId: Long, edgeEntities: Iterable<EdgeEntity>): InstanceInfo? {
             return when (nodeEntity) {
                 is UserActionNodeEntity -> InstanceInfo(
-                    id = nodeEntity.id,
+                    nodeId = nodeEntity.id,
                     name = nodeEntity.name,
                     displayName = nodeEntity.displayName,
                     instanceId = instanceId,
@@ -26,7 +26,7 @@ data class InstanceInfo(
                 )
 
                 is StartNodeEntity -> InstanceInfo(
-                    id = nodeEntity.id,
+                    nodeId = nodeEntity.id,
                     name = nodeEntity.name,
                     displayName = nodeEntity.displayName,
                     instanceId = instanceId,
@@ -34,7 +34,7 @@ data class InstanceInfo(
                 )
 
                 is StopNodeEntity -> InstanceInfo(
-                    id = nodeEntity.id,
+                    nodeId = nodeEntity.id,
                     name = nodeEntity.name,
                     displayName = nodeEntity.displayName,
                     instanceId = instanceId,

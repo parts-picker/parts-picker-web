@@ -4,7 +4,11 @@ import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
+import de.partspicker.web.common.hal.RelationName.ASSIGNABLE
+import de.partspicker.web.common.hal.RelationName.ASSIGNED
 import de.partspicker.web.common.hal.RelationName.ASSIGNED_TO
+import de.partspicker.web.common.hal.generateGetAllAssignableItemsLink
+import de.partspicker.web.common.hal.generateGetAllAssignedItemsLink
 import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
@@ -26,8 +30,9 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
     override fun toModel(requiredItemType: RequiredItemType): RequiredItemTypeResource {
         return RequiredItemTypeResource(
             itemTypeName = requiredItemType.itemType.name!!,
+            assignedAmount = requiredItemType.assignedAmount,
             requiredAmount = requiredItemType.requiredAmount,
-            generateDefaultLinks(projectId = requiredItemType.projectId, itemTypeId = requiredItemType.itemType.id)
+            generateDefaultLinks(projectId = requiredItemType.projectId, itemTypeId = requiredItemType.itemType.id),
         )
     }
 
@@ -41,7 +46,7 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
                 .withName(READ),
             // self-related links
             linkTo<RequiredItemTypeController> {
-                handlePostRequiredItemTypes(projectId, RequiredItemTypePostRequest.DUMMY)
+                handlePostRequiredItemTypes(projectId, itemTypeId, RequiredItemTypePostRequest.DUMMY)
             }
                 .withRel(COLLECTION)
                 .withName(CREATE),
@@ -53,8 +58,10 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
                 .withName(UPDATE),
             linkTo<RequiredItemTypeController> { handleDeleteByProjectIdAndItemTypeId(projectId, itemTypeId) }
                 .withSelfRel()
-                .withName(DELETE)
-
+                .withName(DELETE),
+            // item related links
+            generateGetAllAssignableItemsLink(ASSIGNABLE, projectId, itemTypeId),
+            generateGetAllAssignedItemsLink(ASSIGNED, projectId, itemTypeId),
         )
     }
 }

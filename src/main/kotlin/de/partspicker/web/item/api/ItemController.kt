@@ -5,7 +5,6 @@ import de.partspicker.web.common.util.logger
 import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
 import de.partspicker.web.item.api.requests.ItemPatchRequest
 import de.partspicker.web.item.api.requests.ItemPostRequest
-import de.partspicker.web.item.api.requests.ItemProjectPatchRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.resources.ItemResourceAssembler
 import de.partspicker.web.item.business.ItemService
@@ -88,11 +87,6 @@ class ItemController(
                     id,
                     ItemCondition.from(body.condition),
                     body.note
-                )
-            is ItemProjectPatchRequest ->
-                this.itemService.updateAssignedProject(
-                    id,
-                    body.assignedProjectId
                 )
         }
 

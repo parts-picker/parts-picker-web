@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
@@ -7,10 +8,13 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
+import de.partspicker.web.workflow.business.objects.EdgeInfo
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistance.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContain
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.maps.shouldHaveSize
@@ -27,9 +31,73 @@ import org.springframework.transaction.annotation.Transactional
 @Sql("classpath:/init-sql/workflowInteractionServiceIntTest.sql")
 class WorkflowInteractionServiceIntTest(
     private val cut: WorkflowInteractionService,
+    // support classes
     private val instanceValueReadService: InstanceValueReadService,
     private val instanceRepository: InstanceRepository
 ) : ShouldSpec({
+
+    context("read instance info") {
+        should("return instance info when given existing instance id") {
+            // given
+            val instanceId = 1L
+
+            // when
+            val instanceInfo = cut.readInstanceInfo(instanceId)
+
+            // then
+            instanceInfo shouldNotBe null
+            instanceInfo!!.name shouldBe "start"
+            instanceInfo.displayName shouldBe "Start"
+            instanceInfo.nodeId shouldBe 100L
+            instanceInfo.instanceId shouldBe instanceId
+
+            instanceInfo.options shouldHaveSize 1
+            instanceInfo.options shouldContain EdgeInfo(
+                100L,
+                "start_to_planning",
+                "Start",
+                100L,
+                instanceId
+            )
+        }
+
+        should("throw WorkflowInstanceNotFoundException when given non-existing instance id") {
+            // given
+            val nonExistentId = 666L
+
+            // when & then
+            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
+                cut.readInstanceInfo(nonExistentId)
+            }
+
+            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
+        }
+    }
+
+    context("read project status") {
+        should("return project status when given existing id") {
+            // given
+            val projectId = 1L
+
+            // when
+            val projectStatus = cut.readProjectStatus(projectId)
+
+            // then
+            projectStatus shouldBe "start"
+        }
+
+        should("throw ProjectNotFoundException when given non-existing id") {
+            // given
+            val nonExistentId = 666L
+
+            // when & then
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.readProjectStatus(nonExistentId)
+            }
+
+            exception.message shouldBe "Project with id $nonExistentId could not be found"
+        }
+    }
 
     context("start workflow instance") {
         should("create an instance for the latest workflow version starting at the successor of the given start") {
@@ -191,6 +259,55 @@ class WorkflowInteractionServiceIntTest(
             // then
             exception.message shouldBe "The current instance node with id 100 does not match the source node" +
                 " with id 300 of the given edge with id $edgeId to advance the instance state"
+        }
+    }
+
+    context("force instance node") {
+        should("set instance to node with given name & return the updated instance info") {
+            // given
+            val instanceId = 1L
+            val nodeName = "implementation"
+
+            // when
+            val updatedInstance = cut.forceInstanceNode(instanceId, nodeName)!!
+
+            // then
+            updatedInstance.instanceId shouldBe instanceId
+            updatedInstance.name shouldBe nodeName
+            updatedInstance.displayName shouldBe "Implementation"
+        }
+
+        should("throw WorkflowInstanceNotFoundException when given non-existing instance id") {
+            // given
+            val nonExistentId = 666L
+            val nodeName = "implementation"
+
+            // when & then
+            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
+                cut.forceInstanceNode(
+                    nonExistentId,
+                    nodeName
+                )!!
+            }
+
+            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
+        }
+
+        should("throw WorkflowNodeNameNotFoundException when given non-existing node name") {
+            // given
+            val instanceId = 1L
+            val nonExistentNodeName = "non-existent node name"
+
+            // when & then
+            val exception = shouldThrow<WorkflowNodeNameNotFoundException> {
+                cut.forceInstanceNode(
+                    instanceId,
+                    nonExistentNodeName
+                )!!
+            }
+
+            exception.message shouldBe
+                "Workflow node with name $nonExistentNodeName could not be found for workflow with name Testflows"
         }
     }
 })

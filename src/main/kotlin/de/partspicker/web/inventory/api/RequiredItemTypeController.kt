@@ -6,7 +6,9 @@ import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResourceAssembler
+import de.partspicker.web.inventory.business.RequiredItemTypeReadService
 import de.partspicker.web.inventory.business.RequiredItemTypeService
+import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
@@ -24,7 +26,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class RequiredItemTypeController(
-    private val requiredItemTypesService: RequiredItemTypeService,
+    private val requiredItemTypeReadService: RequiredItemTypeReadService,
+    private val requiredItemTypeService: RequiredItemTypeService,
     private val pagedResourcesAssembler: PagedResourcesAssembler<RequiredItemType>,
     private val requiredItemTypeResourceAssembler: RequiredItemTypeResourceAssembler
 ) {
@@ -32,18 +35,20 @@ class RequiredItemTypeController(
         val logger = logger()
     }
 
-    @PostMapping("/projects/{projectId}/required")
+    @PostMapping("/projects/{projectId}/required/{itemTypeId}")
     fun handlePostRequiredItemTypes(
         @PathVariable projectId: Long,
+        @PathVariable itemTypeId: Long,
         @Valid @RequestBody
         body: RequiredItemTypePostRequest
     ): ResponseEntity<RequiredItemTypeResource> {
         logger.info("=> POST request for a new required item type")
 
-        val createdRequiredItemType = this.requiredItemTypesService.createOrUpdate(
-            RequiredItemType.from(
+        val createdRequiredItemType = this.requiredItemTypeService.createOrUpdate(
+            CreateOrUpdateRequiredItemType.from(
                 body,
-                projectId
+                projectId,
+                itemTypeId
             )
         )
 
@@ -57,7 +62,7 @@ class RequiredItemTypeController(
     ): ResponseEntity<PagedModel<RequiredItemTypeResource>> {
         logger.info("=> GET request for all required item types for project with id $projectId")
 
-        val requiredItemTypes = this.requiredItemTypesService.readAllByProjectId(projectId, pageable)
+        val requiredItemTypes = this.requiredItemTypeReadService.readAllByProjectId(projectId, pageable)
         val pagedResource = this.pagedResourcesAssembler.toModel(requiredItemTypes, requiredItemTypeResourceAssembler)
 
         return ResponseEntity(pagedResource, HttpStatus.OK)
@@ -75,8 +80,8 @@ class RequiredItemTypeController(
                 "requiredItemType with project id $projectId & itemTypeId id $itemTypeId"
         )
 
-        val updatedRequiredItemType = this.requiredItemTypesService.createOrUpdate(
-            RequiredItemType.from(body, projectId, itemTypeId)
+        val updatedRequiredItemType = this.requiredItemTypeService.createOrUpdate(
+            CreateOrUpdateRequiredItemType.from(body, projectId, itemTypeId)
         )
 
         return ResponseEntity(requiredItemTypeResourceAssembler.toModel(updatedRequiredItemType), HttpStatus.OK)
@@ -89,7 +94,7 @@ class RequiredItemTypeController(
     ): ResponseEntity<Unit> {
         logger.info("=> DELETE request for requiredItemType with project id $projectId & itemTypeId id $itemTypeId")
 
-        this.requiredItemTypesService.delete(projectId, itemTypeId)
+        this.requiredItemTypeService.delete(projectId, itemTypeId)
 
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }

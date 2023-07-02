@@ -17,3 +17,5 @@ INSERT INTO workflow_instances VALUES(1, 200, 100, true);
 INSERT INTO workflow_instances VALUES(2, 200, 500, false);
 INSERT INTO workflow_instances VALUES(3, 200, 400, true);
 ALTER SEQUENCE instance_id_seq RESTART WITH 10;
+
+INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1', null, 1);

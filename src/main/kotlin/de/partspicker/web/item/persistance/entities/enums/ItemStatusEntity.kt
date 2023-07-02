@@ -5,7 +5,6 @@ import de.partspicker.web.item.business.objects.enums.ItemStatus
 enum class ItemStatusEntity {
     NEEDED,
     ORDERED,
-    UNSORTED,
     IN_TRANSIT,
     IN_STOCK,
     RESERVED,
@@ -17,7 +16,6 @@ enum class ItemStatusEntity {
         fun from(itemStatus: ItemStatus) = when (itemStatus) {
             ItemStatus.NEEDED -> NEEDED
             ItemStatus.ORDERED -> ORDERED
-            ItemStatus.UNSORTED -> UNSORTED
             ItemStatus.IN_TRANSIT -> IN_TRANSIT
             ItemStatus.IN_STOCK -> IN_STOCK
             ItemStatus.RESERVED -> RESERVED
