@@ -6,12 +6,12 @@ import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.RelationName
 import de.partspicker.web.common.hal.RelationName.ASSIGNED
+import de.partspicker.web.common.hal.RelationName.AVAILABLE
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
 import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
+import de.partspicker.web.common.hal.generateSearchItemsByNameLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
-import de.partspicker.web.inventory.api.RequiredItemTypeController
-import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.project.api.ProjectController
 import de.partspicker.web.project.api.requests.ProjectPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
@@ -50,12 +50,9 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             linkTo<ProjectController> { handleDeleteProject(projectId) }
                 .withSelfRel()
                 .withName(DELETE),
+            // availableItemType
+            generateSearchItemsByNameLink(AVAILABLE, projectId),
             // requiredItemType
-            linkTo<RequiredItemTypeController> {
-                handlePostRequiredItemTypes(projectId, RequiredItemTypePostRequest.DUMMY)
-            }
-                .withRel(ASSIGNED)
-                .withName(CREATE),
             generateGetAllRequiredItemTypesLink(ASSIGNED, projectId),
             // workflow
             linkTo<WorkflowInteractionController> {

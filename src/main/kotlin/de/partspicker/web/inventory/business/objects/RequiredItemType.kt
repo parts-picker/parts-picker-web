@@ -1,46 +1,27 @@
 package de.partspicker.web.inventory.business.objects
 
-import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
-import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.objects.ItemType
-import org.springframework.data.domain.Page
 
 data class RequiredItemType(
     val projectId: Long,
     val itemType: ItemType,
+    val assignedAmount: Long,
     val requiredAmount: Long
 ) {
     companion object {
-        fun from(requiredItemTypeEntity: RequiredItemTypeEntity) = RequiredItemType(
+        fun from(requiredItemTypeEntity: RequiredItemTypeEntity, assignedAmount: Long) = RequiredItemType(
             projectId = requiredItemTypeEntity.project.id,
             itemType = ItemType.from(requiredItemTypeEntity.itemType),
+            assignedAmount = assignedAmount,
             requiredAmount = requiredItemTypeEntity.requiredAmount
         )
-
-        fun from(requiredItemTypePostRequest: RequiredItemTypePostRequest, projectId: Long) = RequiredItemType(
-            projectId = projectId,
-            itemType = ItemType(requiredItemTypePostRequest.itemTypeId),
-            requiredAmount = requiredItemTypePostRequest.requiredAmount
-        )
-
-        fun from(
-            requiredItemTypePatchRequest: RequiredItemTypePatchRequest,
-            projectId: Long,
-            itemTypeId: Long
-        ) = RequiredItemType(
-            projectId = projectId,
-            itemType = ItemType(itemTypeId),
-            requiredAmount = requiredItemTypePatchRequest.requiredAmount
-        )
-    }
-
-    object AsPage {
-        fun from(pagedRequiredItemTypeEntities: Page<RequiredItemTypeEntity>) =
-            pagedRequiredItemTypeEntities.map { from(it) }
     }
 
     init {
+        require(assignedAmount >= 0) {
+            "The assignedAmount of a requiredItemType must be greater than or equal to zero"
+        }
         require(requiredAmount > 0) { "The requiredAmount of a requiredItemType must be greater than zero" }
     }
 }

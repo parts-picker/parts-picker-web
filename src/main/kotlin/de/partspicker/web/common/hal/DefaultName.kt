@@ -6,7 +6,8 @@ enum class DefaultName {
     CREATE,
     READ,
     UPDATE,
-    DELETE
+    DELETE,
+    SEARCH
 }
 
 fun Link.withName(name: DefaultName) = this.withName(name.name)

@@ -1,5 +1,7 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
@@ -17,9 +19,9 @@ import de.partspicker.web.workflow.persistance.entities.InstanceEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
-import jakarta.transaction.Transactional
 import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class WorkflowInteractionService(
@@ -27,7 +29,8 @@ class WorkflowInteractionService(
     private val instanceRepository: InstanceRepository,
     private val nodeRepository: NodeRepository,
     private val edgeRepository: EdgeRepository,
-    private val instanceValueService: InstanceValueService
+    private val instanceValueService: InstanceValueService,
+    private val projectRepository: ProjectRepository,
 ) {
     companion object {
         const val PROJECT_WORKFLOW_NAME = "project_workflow"
@@ -36,7 +39,7 @@ class WorkflowInteractionService(
 
     fun readInstanceInfo(instanceId: Long): InstanceInfo? {
         val instanceEntity = this.instanceRepository.findById(
-            instanceId
+            instanceId,
         ).orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
         val currentNodeEntity = instanceEntity.currentNode
@@ -46,17 +49,25 @@ class WorkflowInteractionService(
         return InstanceInfo.from(currentNodeEntity, instanceId, options)
     }
 
+    @Transactional(readOnly = true)
+    fun readProjectStatus(projectId: Long): String? {
+        val projectEntity = this.projectRepository.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId) }
+
+        return projectEntity.workflowInstance!!.currentNode?.name
+    }
+
     fun startProjectWorkflow(instanceValues: Map<String, Any>? = null) = startWorkflowInstance(
         workflowName = PROJECT_WORKFLOW_NAME,
         startNodeName = PROJECT_WORKFLOW_START_NODE,
-        instanceValues = instanceValues
+        instanceValues = instanceValues,
     )
 
-    @Transactional(rollbackOn = [Exception::class])
+    @Transactional(rollbackFor = [Exception::class])
     fun startWorkflowInstance(
         workflowName: String,
         startNodeName: String,
-        instanceValues: Map<String, Any>? = null
+        instanceValues: Map<String, Any>? = null,
     ): Instance {
         val latestVersion = this.workflowRepository.findLatestVersion(workflowName)
             ?: throw WorkflowNameNotFoundException(workflowName)
@@ -72,14 +83,14 @@ class WorkflowInteractionService(
         }
 
         // fetch first successor of start node
-        val successor = this.edgeRepository.readBySourceId(chosenStartNode.id).target
+        val successor = Hibernate.unproxy(this.edgeRepository.readBySourceId(chosenStartNode.id).target) as NodeEntity
 
         // create new instance
         val newInstance = InstanceEntity(
             id = 0,
             workflow = workflow,
-            currentNode = Hibernate.unproxy(successor) as NodeEntity,
-            active = true
+            currentNode = successor,
+            active = true,
         )
 
         val savedInstance = this.instanceRepository.save(newInstance)
@@ -92,11 +103,44 @@ class WorkflowInteractionService(
         return Instance.from(savedInstance)
     }
 
-    @Transactional(rollbackOn = [Exception::class])
+    /**
+     * This method should only be used for version migration and testing.
+     */
+    fun forceInstanceNode(
+        instanceId: Long,
+        nodeName: String,
+        values: Map<String, Any>? = null,
+    ): InstanceInfo? {
+        val instanceEntity = this.instanceRepository.findById(instanceId)
+            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+
+        val workflow = instanceEntity.workflow!!
+
+        // update instance values
+        values?.let {
+            this.instanceValueService.setMultipleForInstance(instanceId, it)
+        }
+
+        val targetNode = this.nodeRepository.findByWorkflowIdAndName(workflow.id, nodeName)
+            ?: throw WorkflowNodeNameNotFoundException(workflow.name!!, nodeName)
+
+        instanceEntity.currentNode = targetNode
+
+        val savedInstance = this.instanceRepository.save(instanceEntity)
+
+        val options = this.findOptionsBySourceNodeId(targetNode.id)
+        return InstanceInfo.from(
+            Hibernate.unproxy(savedInstance.currentNode!!) as NodeEntity,
+            savedInstance.id,
+            options
+        )
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
     fun advanceInstanceNodeThroughEdge(
         instanceId: Long,
         edgeId: Long,
-        values: Map<String, Any>? = null
+        values: Map<String, Any>? = null,
     ): InstanceInfo? {
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }

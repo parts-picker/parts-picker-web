@@ -7,7 +7,10 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import org.hibernate.search.engine.backend.types.Projectable.YES
+import org.hibernate.search.engine.backend.types.Searchable.NO
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed
 
 @Entity
@@ -17,9 +20,10 @@ data class ItemTypeEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "item_type_gen")
     @SequenceGenerator(name = "item_type_gen", sequenceName = "item_type_seq", allocationSize = 1)
+    @GenericField(projectable = YES, searchable = NO)
     val id: Long = 0,
 
-    @FullTextField
+    @FullTextField(projectable = YES)
     val name: String? = null,
 
     val description: String? = null

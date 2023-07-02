@@ -8,9 +8,6 @@ import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
-import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
-import de.partspicker.web.project.persistance.ProjectRepository
-import de.partspicker.web.project.persistance.entities.ProjectEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
@@ -18,7 +15,6 @@ import org.springframework.stereotype.Service
 class ItemService(
     private val itemRepository: ItemRepository,
     private val itemTypeRepository: ItemTypeRepository,
-    private val projectRepository: ProjectRepository
 ) {
 
     fun create(itemToCreate: Item): Item {
@@ -51,22 +47,6 @@ class ItemService(
 
         itemToUpdate.condition = ItemConditionEntity.from(condition)
         itemToUpdate.note = note
-
-        return Item.from(this.itemRepository.save(itemToUpdate))
-    }
-
-    fun updateAssignedProject(id: Long, assignedProjectId: Long?): Item {
-        val itemToUpdate = this.itemRepository.findById(id).orElseThrow { ItemNotFoundException(id) }
-
-        if (assignedProjectId != null) {
-            if (this.projectRepository.existsById(assignedProjectId)) {
-                itemToUpdate.assignedProject = ProjectEntity(id = assignedProjectId)
-            } else {
-                throw ProjectNotFoundException(projectId = assignedProjectId)
-            }
-        } else {
-            itemToUpdate.assignedProject = null
-        }
 
         return Item.from(this.itemRepository.save(itemToUpdate))
     }

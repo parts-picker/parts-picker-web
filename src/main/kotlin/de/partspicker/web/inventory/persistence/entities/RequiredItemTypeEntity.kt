@@ -1,6 +1,6 @@
 package de.partspicker.web.inventory.persistence.entities
 
-import de.partspicker.web.inventory.business.objects.RequiredItemType
+import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
@@ -40,9 +40,9 @@ data class RequiredItemTypeEntity(
     )
 
     companion object {
-        fun from(requiredItemType: RequiredItemType) = RequiredItemTypeEntity(
+        fun from(requiredItemType: CreateOrUpdateRequiredItemType) = RequiredItemTypeEntity(
             projectId = requiredItemType.projectId,
-            itemTypeId = requiredItemType.itemType.id,
+            itemTypeId = requiredItemType.itemTypeId,
             requiredAmount = requiredItemType.requiredAmount
         )
     }

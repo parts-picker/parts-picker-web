@@ -51,7 +51,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val returnedProject = cut.create(
                 CreateProject(
-                    id = projectEntity.id,
                     name = projectEntity.name,
                     description = projectEntity.description,
                     groupId = projectEntity.group?.id
@@ -75,7 +74,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             val exception = shouldThrow<GroupNotFoundException> {
                 cut.create(
                     CreateProject(
-                        id = projectEntity.id,
                         name = projectEntity.name,
                         description = projectEntity.description,
                         groupId = projectEntity.group?.id

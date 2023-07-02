@@ -18,7 +18,7 @@ data class Item(
         fun from(itemEntity: ItemEntity) = Item(
             id = itemEntity.id,
             type = ItemType.from(itemEntity.type),
-            assignedProjectId = itemEntity.assignedProject?.let { projectEntity -> projectEntity.id },
+            assignedProjectId = itemEntity.assignedProject?.id,
             status = ItemStatus.from(itemEntity.status),
             condition = ItemCondition.from(itemEntity.condition),
             note = itemEntity.note

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-119:removeUNSORTEDFromItemStatus" author="RobinGuth">
+        <update tableName="items">
+            <column name="status" value="IN_STOCK"/>
+            <where>status='UNSORTED'</where>
+        </update>
+    </changeSet>
+
+    <!-- fix all item states -->
+    <changeSet id="PICK-119:removeAllItemsWithUnusableConditionFromProject" author="RobinGuth">
+        <update tableName="items">
+            <column name="assigned_project_id" value="null"/>
+            <column name="status" value="IN_STOCK"/>
+            <where>
+                assigned_project_id IS NOT NULL AND
+                (condition = 'REPAIRABLE' OR condition = 'BROKEN' OR condition = 'UNKNOWN')
+            </where>
+        </update>
+    </changeSet>
+
+    <changeSet id="PICK-119:setStatusToReservedForAllItemsWithProject" author="RobinGuth">
+        <update tableName="items">
+            <column name="status" value="RESERVED"/>
+            <where>assigned_project_id IS NOT NULL</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="PICK-119:setStatusToInStockForAllItemsWithoutProjectAndStatusReserved" author="RobinGuth">
+        <update tableName="items">
+            <column name="status" value="IN_STOCK"/>
+            <where>assigned_project_id IS NULL AND status = 'RESERVED'</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="PICK-119:removeItemsFromProjectWhereMoreItemsAssignedThanRequired" author="RobinGuth" dbms="postgresql">
+        <sqlFile path="db/changelog/files/PICK-119_remove_items.sql" splitStatements="false"/>
+    </changeSet>
+
+    <changeSet id="PICK-119:removeItemsFromProjectWhereTheirTypeIsNotRequired" author="RobinGuth">
+        <sqlFile path="db/changelog/files/PICK-119_remove_items2.sql" splitStatements="false"/>
+    </changeSet>
+
+</databaseChangeLog>

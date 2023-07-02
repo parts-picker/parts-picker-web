@@ -18,7 +18,7 @@ class WorkflowCreateGenerators private constructor() {
         ) { name, version, nodes, startNode, stopNode ->
             val nodeNames = nodes.map { it.name }
             val edges = EdgeCreateGenerators.generatorWithNodes(nodeNames, startNode.name, stopNode.name).values
-            var nodesWithStartAndStop = nodes + startNode + stopNode
+            val nodesWithStartAndStop = nodes + startNode + stopNode
 
             WorkflowCreate(
                 name = name,

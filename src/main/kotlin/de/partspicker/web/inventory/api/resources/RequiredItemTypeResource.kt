@@ -8,6 +8,7 @@ import org.springframework.hateoas.server.core.Relation
 @Relation(collectionRelation = collectionRelationName)
 class RequiredItemTypeResource(
     val itemTypeName: String,
+    val assignedAmount: Long,
     val requiredAmount: Long,
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<RequiredItemTypeResource>(links) {
@@ -17,12 +18,11 @@ class RequiredItemTypeResource(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other !is RequiredItemTypeResource) return false
         if (!super.equals(other)) return false
 
-        other as RequiredItemTypeResource
-
         if (itemTypeName != other.itemTypeName) return false
+        if (assignedAmount != other.assignedAmount) return false
         if (requiredAmount != other.requiredAmount) return false
 
         return true
@@ -31,11 +31,13 @@ class RequiredItemTypeResource(
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + itemTypeName.hashCode()
+        result = 31 * result + assignedAmount.hashCode()
         result = 31 * result + requiredAmount.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "RequiredItemTypeResource(itemTypeName='$itemTypeName', requiredAmount=$requiredAmount)"
+        return "RequiredItemTypeResource(itemTypeName='$itemTypeName', " +
+            "assignedAmount=$assignedAmount, requiredAmount=$requiredAmount)"
     }
 }

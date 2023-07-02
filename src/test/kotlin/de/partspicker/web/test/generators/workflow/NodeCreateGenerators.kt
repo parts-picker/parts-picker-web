@@ -14,8 +14,10 @@ import io.kotest.property.arbitrary.string
 
 class NodeCreateGenerators private constructor() {
     companion object {
+        private const val MIN_NAME_LENGTH = 10
+
         val userActionNodeCreateGenerator: Arb<UserActionNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(3, 16)),
+            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
             Arb.string(range = IntRange(3, 16))
         ) { name, displayName ->
             UserActionNodeCreate(name, displayName)
@@ -24,7 +26,7 @@ class NodeCreateGenerators private constructor() {
         val randomStartTypeGen = Arb.enum<StartTypeCreate>()
 
         val startNodeCreateGenerator: Arb<StartNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(3, 16)),
+            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
             Arb.string(range = IntRange(3, 16)),
             randomStartTypeGen
         ) { name, displayName, startType ->
@@ -32,7 +34,7 @@ class NodeCreateGenerators private constructor() {
         }
 
         val stopNodeCreateGenerator: Arb<StopNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(3, 16)),
+            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
             Arb.string(range = IntRange(3, 16))
         ) { name, displayName ->
             StopNodeCreate(name, displayName)

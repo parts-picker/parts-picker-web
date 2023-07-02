@@ -6,7 +6,6 @@ import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
 enum class ItemStatus {
     NEEDED,
     ORDERED,
-    UNSORTED,
     IN_TRANSIT,
     IN_STOCK,
     RESERVED,
@@ -18,7 +17,6 @@ enum class ItemStatus {
         fun from(entity: ItemStatusEntity) = when (entity) {
             ItemStatusEntity.NEEDED -> NEEDED
             ItemStatusEntity.ORDERED -> ORDERED
-            ItemStatusEntity.UNSORTED -> UNSORTED
             ItemStatusEntity.IN_TRANSIT -> IN_TRANSIT
             ItemStatusEntity.IN_STOCK -> IN_STOCK
             ItemStatusEntity.RESERVED -> RESERVED
@@ -29,7 +27,6 @@ enum class ItemStatus {
 
         fun from(itemStatusRequest: ItemStatusRequest) = when (itemStatusRequest) {
             ItemStatusRequest.ORDERED -> ORDERED
-            ItemStatusRequest.UNSORTED -> UNSORTED
             ItemStatusRequest.IN_STOCK -> IN_STOCK
         }
     }

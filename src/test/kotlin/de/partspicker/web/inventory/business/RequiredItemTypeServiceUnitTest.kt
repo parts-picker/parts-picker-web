@@ -1,38 +1,43 @@
 package de.partspicker.web.inventory.business
 
-import de.partspicker.web.inventory.business.objects.RequiredItemType
+import de.partspicker.web.common.business.exceptions.WrongNodeNameRuleException
+import de.partspicker.web.inventory.business.exceptions.RequiredItemTypeAmountSmallerThanAssignedException
 import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
-import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
-import de.partspicker.web.test.generators.RequiredItemTypeEntityGenerators
-import de.partspicker.web.test.generators.RequiredItemTypeGenerators
+import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
+import de.partspicker.web.workflow.business.WorkflowInteractionService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.kotest.property.arbitrary.single
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 
 class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
     val requiredItemTypeRepositoryMock = mockk<RequiredItemTypeRepository>()
     val projectRepositoryMock = mockk<ProjectRepository>()
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
+    val workflowInteractionsServiceMock = mockk<WorkflowInteractionService>()
+    val inventoryItemReadServiceMock = mockk<InventoryItemReadService>()
+    val inventoryItemServiceMock = mockk<InventoryItemService>()
     val cut = RequiredItemTypeService(
         requiredItemTypeRepository = requiredItemTypeRepositoryMock,
         projectRepository = projectRepositoryMock,
-        itemTypeRepository = itemTypeRepositoryMock
+        itemTypeRepository = itemTypeRepositoryMock,
+        workflowInteractionService = workflowInteractionsServiceMock,
+        inventoryItemReadService = inventoryItemReadServiceMock,
+        inventoryItemService = inventoryItemServiceMock
     )
 
     afterTest {
@@ -42,78 +47,117 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
     context("createOrUpdate") {
         should("create or update a required item type & return it") {
             // given
-            val requiredItemType = RequiredItemTypeGenerators.generator.next()
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
 
-            every { projectRepositoryMock.existsById(requiredItemType.projectId) } returns true
-            every { itemTypeRepositoryMock.existsById(requiredItemType.itemType.id) } returns true
+            every { projectRepositoryMock.existsById(createOrUpdateRequiredItemType.projectId) } returns true
+            every { itemTypeRepositoryMock.existsById(createOrUpdateRequiredItemType.itemTypeId) } returns true
             every { requiredItemTypeRepositoryMock.save(any()) } returnsArgument 0
+            every {
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns 0L
+            every {
+                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
+            } returns "planning"
 
             // when
-            val returnedRequiredItemType = cut.createOrUpdate(requiredItemType)
+            val returnedRequiredItemType = cut.createOrUpdate(createOrUpdateRequiredItemType)
 
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.save(any())
             }
 
-            returnedRequiredItemType.projectId shouldBe requiredItemType.projectId
-            returnedRequiredItemType.itemType.id shouldBe requiredItemType.itemType.id
-            returnedRequiredItemType.requiredAmount shouldBe requiredItemType.requiredAmount
+            returnedRequiredItemType.projectId shouldBe createOrUpdateRequiredItemType.projectId
+            returnedRequiredItemType.itemType.id shouldBe createOrUpdateRequiredItemType.itemTypeId
+            returnedRequiredItemType.requiredAmount shouldBe createOrUpdateRequiredItemType.requiredAmount
         }
 
         should("throw ProjectNotFoundException when given non-existent project") {
             // given
             every { projectRepositoryMock.existsById(any()) } returns false
 
-            val requiredItemType = RequiredItemTypeGenerators.generator.next()
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
-                cut.createOrUpdate(requiredItemType)
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
             }
 
             // then
-            exception.message shouldBe "Project with id ${requiredItemType.projectId} could not be found"
+            exception.message shouldBe "Project with id ${createOrUpdateRequiredItemType.projectId} could not be found"
         }
 
         should("throw ItemTypeNotFoundException when given non-existent itemType") {
             // given
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+
             every { projectRepositoryMock.existsById(any()) } returns true
             every { itemTypeRepositoryMock.existsById(any()) } returns false
-
-            val requiredItemType = RequiredItemTypeGenerators.generator.next()
+            every {
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns 0L
+            every {
+                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
+            } returns "planning"
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
-                cut.createOrUpdate(requiredItemType)
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
             }
 
             // then
-            exception.message shouldBe "ItemType with id ${requiredItemType.itemType.id} could not be found"
+            exception.message shouldBe
+                "ItemType with id ${createOrUpdateRequiredItemType.itemTypeId} could not be found"
         }
-    }
 
-    context("readAllByProjectId") {
-        should("return all required item types") {
+        should("throw RequiredItemTypeAmountSmallerThanAssignedException when given required smaller assigned") {
             // given
-            val projectId = Arb.long(min = 1).next()
-
-            val requiredItemTypesPage: Page<RequiredItemTypeEntity> = PageImpl(
-                listOf(
-                    RequiredItemTypeEntityGenerators.generator.next(),
-                    RequiredItemTypeEntityGenerators.generator.next()
-                )
+            val assignedAmount = 5L
+            val requiredAmount = 4L
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single().copy(
+                requiredAmount = requiredAmount
             )
 
+            every { projectRepositoryMock.existsById(any()) } returns true
             every {
-                requiredItemTypeRepositoryMock
-                    .findAllByProjectId(projectId, Pageable.unpaged())
-            } returns requiredItemTypesPage
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns assignedAmount
 
-            // when
-            val returnedRequiredItemTypes = cut.readAllByProjectId(projectId, Pageable.unpaged())
+            // when & then
+            assignedAmount shouldBeGreaterThan requiredAmount
+            shouldThrow<RequiredItemTypeAmountSmallerThanAssignedException> {
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
+            }
+        }
 
-            // then
-            returnedRequiredItemTypes shouldBe RequiredItemType.AsPage.from(requiredItemTypesPage)
+        should("throw WrongNodeNameRuleException when project status is not 'planning'") {
+            // given
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+
+            every { projectRepositoryMock.existsById(any()) } returns true
+            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every {
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns 0L
+            every {
+                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
+            } returns "not-planning"
+
+            // when & then
+            shouldThrow<WrongNodeNameRuleException> {
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
+            }
         }
     }
 
@@ -126,6 +170,15 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             every { projectRepositoryMock.existsById(projectId) } returns true
             every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
             every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
+            every {
+                workflowInteractionsServiceMock.readProjectStatus(projectId)
+            } returns "planning"
+            every {
+                inventoryItemServiceMock.removeAllWithTypeFromProject(
+                    itemTypeId = itemTypeId,
+                    projectId = projectId
+                )
+            } returns Unit
 
             // when
             cut.delete(projectId, itemTypeId)
@@ -133,6 +186,10 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // then
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId))
+                inventoryItemServiceMock.removeAllWithTypeFromProject(
+                    itemTypeId = itemTypeId,
+                    projectId = projectId
+                )
             }
         }
 
@@ -162,6 +219,9 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val itemTypeId = Arb.long(min = 1).next()
 
             every { projectRepositoryMock.existsById(projectId) } returns true
+            every {
+                workflowInteractionsServiceMock.readProjectStatus(projectId)
+            } returns "planning"
             every { itemTypeRepositoryMock.existsById(itemTypeId) } returns false
 
             // when

@@ -37,13 +37,13 @@ data class ProjectEntity(
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
     var group: GroupEntity? = null,
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instance_id", foreignKey = ForeignKey(name = "fk_instance"))
     val workflowInstance: InstanceEntity? = null
 ) {
     companion object {
         fun from(project: CreateProject, instanceId: Long) = ProjectEntity(
-            id = project.id,
+            id = 0L,
             name = project.name,
             description = project.description,
             group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
