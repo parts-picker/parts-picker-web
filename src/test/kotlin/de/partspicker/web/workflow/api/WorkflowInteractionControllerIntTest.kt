@@ -2,6 +2,7 @@ package de.partspicker.web.workflow.api
 
 import de.partspicker.web.common.exceptions.ErrorCode
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -173,4 +174,6 @@ class WorkflowInteractionControllerIntTest(
                 }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

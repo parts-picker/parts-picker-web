@@ -15,6 +15,7 @@ import de.partspicker.web.test.util.TestSetupHelper
 import de.partspicker.web.test.util.getLink
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -378,4 +379,6 @@ class InventoryItemControllerIntTest(
             patchedItem.assignedProjectId shouldBe project.id
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

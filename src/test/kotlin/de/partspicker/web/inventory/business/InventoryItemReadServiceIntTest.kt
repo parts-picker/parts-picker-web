@@ -12,6 +12,7 @@ import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
 import org.springframework.boot.test.context.SpringBootTest
@@ -118,4 +119,6 @@ class InventoryItemReadServiceIntTest(
             count shouldBe 0
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

@@ -53,10 +53,10 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-hateoas:3.0.4")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.5.5")
-    testImplementation("io.kotest:kotest-assertions-core:5.5.5")
+    testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
+    testImplementation("io.kotest:kotest-assertions-core:5.6.2")
     testImplementation("io.kotest:kotest-property:5.5.5")
-    testImplementation("io.kotest:kotest-framework-datatest:5.5.5")
+    testImplementation("io.kotest:kotest-framework-datatest:5.6.2")
     testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.3")
 
     testImplementation("org.springframework:spring-test")
@@ -64,7 +64,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
 
-    testImplementation("org.testcontainers:postgresql:1.16.2")
+    testImplementation("org.testcontainers:postgresql:1.18.3")
 
     testImplementation("io.mockk:mockk:1.12.3")
 
@@ -78,7 +78,7 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 

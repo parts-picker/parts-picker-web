@@ -13,6 +13,7 @@ import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistance.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldContain
@@ -310,4 +311,6 @@ class WorkflowInteractionServiceIntTest(
                 "Workflow node with name $nonExistentNodeName could not be found for workflow with name Testflows"
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

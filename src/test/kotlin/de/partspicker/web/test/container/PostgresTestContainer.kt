@@ -2,15 +2,15 @@ package de.partspicker.web.test.container
 
 import org.testcontainers.containers.PostgreSQLContainer
 
-class IntPostgresContainer : PostgreSQLContainer<IntPostgresContainer>(postgresImageName) {
+class PostgresTestContainer private constructor() : PostgreSQLContainer<PostgresTestContainer>(postgresImageName) {
     companion object {
-        private const val postgresImageName = "postgres:13.3-alpine"
+        private const val postgresImageName = "postgres:13.11-alpine"
 
-        private lateinit var instance: IntPostgresContainer
+        private lateinit var instance: PostgresTestContainer
 
         fun start() {
             if (!Companion::instance.isInitialized) {
-                instance = IntPostgresContainer().apply {
+                instance = PostgresTestContainer().apply {
                     withUsername("int-test-user")
                     withPassword("local")
                     withDatabaseName("test")

@@ -4,6 +4,7 @@ import de.partspicker.web.inventory.persistence.AvailableItemTypeSearchRepositor
 import de.partspicker.web.inventory.persistence.results.AvailableItemTypeResult
 import de.partspicker.web.test.util.TestSetupHelper
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
@@ -140,4 +141,6 @@ class AvailableItemTypeSearchRepositoryIntTest(
             returnedTypes shouldContain AvailableItemTypeResult(type2.id, type2.name!!)
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

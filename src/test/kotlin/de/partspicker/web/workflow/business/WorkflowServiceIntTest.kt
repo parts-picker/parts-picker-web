@@ -5,6 +5,7 @@ import de.partspicker.web.workflow.persistance.EdgeRepository
 import de.partspicker.web.workflow.persistance.NodeRepository
 import de.partspicker.web.workflow.persistance.WorkflowRepository
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeSameSizeAs
 import io.kotest.matchers.shouldBe
 import io.kotest.property.arbitrary.next
@@ -41,4 +42,6 @@ class WorkflowServiceIntTest(
             edges shouldBeSameSizeAs workflowCreate.edges
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

@@ -12,6 +12,7 @@ import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
@@ -298,4 +299,6 @@ class ItemControllerIntTest(
                 }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

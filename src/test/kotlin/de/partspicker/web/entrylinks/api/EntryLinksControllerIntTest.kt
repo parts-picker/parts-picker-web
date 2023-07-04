@@ -2,6 +2,7 @@ package de.partspicker.web.entrylinks.api
 
 import de.partspicker.web.entrylinks.api.resources.EntryLinksResource
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.notNullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -32,4 +33,6 @@ class EntryLinksControllerIntTest(
                 }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

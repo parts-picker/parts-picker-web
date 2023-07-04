@@ -9,6 +9,7 @@ import de.partspicker.web.inventory.business.InventoryItemService
 import de.partspicker.web.test.util.TestSetupHelper
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.comparables.shouldBeLessThan
 import org.hamcrest.Matchers.aMapWithSize
@@ -602,4 +603,6 @@ class RequiredItemTypeControllerIntTest(
                 }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

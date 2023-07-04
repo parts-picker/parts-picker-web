@@ -10,6 +10,7 @@ import de.partspicker.web.inventory.persistence.AvailableItemTypeSearchRepositor
 import de.partspicker.web.test.util.TestSetupHelper
 import de.partspicker.web.test.util.getLink
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -35,7 +36,6 @@ class AvailableItemTypeControllerIntTest(
     private val objectMapper: ObjectMapper,
     private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
-
     afterEach {
         testSetupHelper.manualSearchClearing()
     }
@@ -227,7 +227,7 @@ class AvailableItemTypeControllerIntTest(
             availableItemTypeSearchLink!!.href shouldEndWith "/projects/${project.id}/available{?name}"
         }
 
-        should("return status 200 & no more than ten available item types") {
+        should("return status 200 & at most ten matching item types") {
             // data setup
             val project = testSetupHelper.setupProject()
 
@@ -256,4 +256,6 @@ class AvailableItemTypeControllerIntTest(
             responseBody.content.map { it.name } shouldContainAll listOf(similarItemTypeName, containedItemTypeName)
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}
