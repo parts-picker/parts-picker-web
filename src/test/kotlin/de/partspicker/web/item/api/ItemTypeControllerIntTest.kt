@@ -6,6 +6,7 @@ import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.api.resources.ItemTypeResource
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -203,4 +204,6 @@ class ItemTypeControllerIntTest(
                 }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

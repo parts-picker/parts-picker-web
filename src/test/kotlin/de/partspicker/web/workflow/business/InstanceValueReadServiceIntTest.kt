@@ -4,6 +4,7 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundE
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.maps.shouldHaveKey
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -63,4 +64,6 @@ class InstanceValueReadServiceIntTest(
             exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

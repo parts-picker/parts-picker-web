@@ -3,6 +3,7 @@ package de.partspicker.web.workflow.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.workflow.business.WorkflowService
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
@@ -91,4 +92,6 @@ class WorkflowStartReaderIntTest(
             }
         }
     }
-})
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}
