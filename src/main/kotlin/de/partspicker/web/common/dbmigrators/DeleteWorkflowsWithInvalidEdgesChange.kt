@@ -23,7 +23,7 @@ class DeleteWorkflowsWithInvalidEdgesChange : CustomTaskChange {
         const val PREPARED_DELETE_WORKFLOW = "DELETE FROM workflows WHERE id = ?"
     }
 
-    private var deletedWorkflowIds = mutableSetOf<Long>()
+    private val deletedWorkflowIds = mutableSetOf<Long>()
 
     override fun getConfirmationMessage(): String {
         return "${deletedWorkflowIds.size} workflow(s) with invalid edges was/were deleted"

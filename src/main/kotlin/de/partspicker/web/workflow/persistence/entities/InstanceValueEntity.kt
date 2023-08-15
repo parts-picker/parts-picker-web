@@ -45,14 +45,14 @@ data class InstanceValueEntity(
             id: Long,
             instanceValueCreate: InstanceValueCreate,
             instanceId: Long,
-            instanceValueEntity: InstanceValueTypeEntity
+            instanceValueTypeEntity: InstanceValueTypeEntity
         ) = InstanceValueEntity(
             id = id,
             workflowInstance = InstanceEntity(id = instanceId),
             key = instanceValueCreate.key,
             value = instanceValueCreate.value,
             valueDataType = SupportedDataTypeEntity.from(instanceValueCreate.type),
-            type = instanceValueEntity
+            type = instanceValueTypeEntity
         )
     }
 }

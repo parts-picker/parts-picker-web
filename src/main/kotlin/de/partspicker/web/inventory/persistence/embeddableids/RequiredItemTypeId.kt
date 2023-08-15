@@ -12,6 +12,6 @@ data class RequiredItemTypeId(
     val itemTypeId: Long
 ) : Serializable {
     companion object {
-        const val serialVersionUID = 1L
+        private const val serialVersionUID = 1L
     }
 }

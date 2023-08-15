@@ -27,12 +27,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         webRequest: ServletWebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
-            HttpStatus.NOT_FOUND,
-            exc.localizedMessage,
-            ErrorCode.EntityNotFound,
-            mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
-            webRequest.request.requestURI,
-            ZonedDateTime.now(),
+            status = HttpStatus.NOT_FOUND,
+            message = exc.localizedMessage,
+            errorCode = ErrorCode.EntityNotFound,
+            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(
@@ -56,12 +56,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         webRequest: ServletWebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
-            HttpStatus.UNPROCESSABLE_ENTITY,
-            exc.localizedMessage,
-            null,
-            mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
-            webRequest.request.requestURI,
-            ZonedDateTime.now(),
+            status = HttpStatus.UNPROCESSABLE_ENTITY,
+            message = exc.localizedMessage,
+            errorCode = null,
+            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(
@@ -106,12 +106,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         webRequest: ServletWebRequest,
     ): ResponseEntity<Any>? {
         val info = ErrorInfo(
-            HttpStatus.UNPROCESSABLE_ENTITY,
-            exc.localizedMessage,
-            null,
-            mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
-            webRequest.request.requestURI,
-            ZonedDateTime.now(),
+            status = HttpStatus.UNPROCESSABLE_ENTITY,
+            message = exc.localizedMessage,
+            errorCode = null,
+            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
         )
 
         return handleExceptionInternal(

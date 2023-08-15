@@ -81,7 +81,7 @@ class InventoryItemService(
         )
 
         AssignableItem.from(
-            itemToUpdate,
+            itemEntity = itemToUpdate,
             assignedAmount = assignedItemsAmount,
             requiredAmount = requiredItemTypeEntity.requiredAmount,
             assignableToProjectId = newProjectId,

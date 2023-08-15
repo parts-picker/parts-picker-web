@@ -95,7 +95,7 @@ data class WorkflowCreate(
 
         nodesWithMultipleTargets.isEmpty() elseThrow WorkflowNodeHasMoreThanOneTargetException(nodesWithMultipleTargets)
 
-        traverseAllRoutes(startNodes, stopNodes, edges, allNodes)
+        traverseAllRoutes(startNodes = startNodes, stopNodes = stopNodes, edgesToCheck = edges, allNodes = allNodes)
     }
 
     companion object {

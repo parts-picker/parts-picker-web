@@ -56,7 +56,12 @@ class WorkflowStartupReader(
             } catch (ex: Exception) {
                 when (ex) {
                     is WorkflowLatestVersionIsGreaterException -> {
-                        logVersionToSmall(ex.name, ex.requestedVersion, ex.requestedVersion, resource.filename)
+                        logVersionToSmall(
+                            name = ex.name,
+                            version = ex.requestedVersion,
+                            latestVersion = ex.requestedVersion,
+                            filename = resource.filename
+                        )
                         return
                     }
 

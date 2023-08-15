@@ -36,7 +36,12 @@ class InstanceValueService(
                 it.key
             )?.id ?: 0L
 
-            InstanceValueEntity.from(existingId, it, instanceId, InstanceValueTypeEntity.WORKFLOW)
+            InstanceValueEntity.from(
+                id = existingId,
+                instanceValueCreate = it,
+                instanceId = instanceId,
+                instanceValueTypeEntity = InstanceValueTypeEntity.WORKFLOW
+            )
         }
 
         this.instanceValueRepository.saveAll(valuesToSave)
