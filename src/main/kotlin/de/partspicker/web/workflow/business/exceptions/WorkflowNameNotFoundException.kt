@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business.exceptions
 
-class WorkflowNameNotFoundException(workflowName: String) : Exception(
-    "Workflow with name $workflowName could not be found"
-)
+import de.partspicker.web.common.exceptions.EntityNotFoundException
+
+class WorkflowNameNotFoundException(workflowName: String) :
+    EntityNotFoundException("Workflow with name $workflowName could not be found")
