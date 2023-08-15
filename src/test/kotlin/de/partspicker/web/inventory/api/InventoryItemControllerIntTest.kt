@@ -13,7 +13,7 @@ import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.test.util.TestSetupHelper
 import de.partspicker.web.test.util.getLink
-import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.WorkflowMigrationService
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.inspectors.forAll
@@ -44,7 +44,7 @@ class InventoryItemControllerIntTest(
     private val objectMapper: ObjectMapper,
     private val testSetupHelper: TestSetupHelper,
     private val itemService: ItemService,
-    private val workflowInteractionService: WorkflowInteractionService
+    private val workflowMigrationService: WorkflowMigrationService
 ) : ShouldSpec({
     context("GET all assignable items") {
         should("return status 200 & the resource with all assignable items for the given type & project") {
@@ -213,7 +213,10 @@ class InventoryItemControllerIntTest(
             val project = testSetupHelper.setupProject()
             val itemType = testSetupHelper.setupItemType()
             testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id)
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
 
             val item = testSetupHelper.setupItemForType(itemType)
 
@@ -355,7 +358,10 @@ class InventoryItemControllerIntTest(
             val project = testSetupHelper.setupProject()
             val itemType = testSetupHelper.setupItemType()
             testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id)
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
 
             val item = testSetupHelper.setupItemForType(itemType, projectId = project.id)
 

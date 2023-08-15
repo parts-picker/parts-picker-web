@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-130:createMigrationPlanSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="migration_plan_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-130:createTableMigrationPlans" author="RobinGuth">
+        <createTable tableName="workflow_migration_plans">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_migration_plan"/>
+            </column>
+            <column name="source_workflow_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_source_workflow_id_x_target_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_migration_plan_x_source_workflow_id"
+                        foreignKeyName="fk_source_workflow_id"
+                        references="workflows(id)"
+                        deleteCascade="true"
+                />
+            </column>
+            <column name="target_workflow_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_source_workflow_id_x_target_workflow_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_migration_plan_x_target_workflow_id"
+                        foreignKeyName="fk_target_workflow_id"
+                        references="workflows(id)"
+                        deleteCascade="true"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-130:createNodeMigrationSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="node_migration_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-130:createTableNodeMigrations" author="RobinGuth">
+        <createTable tableName="workflow_migration_node_migrations">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_workflow_migration_node_migrations"/>
+            </column>
+            <column name="source_node_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_source_node_id_x_migration_plan_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_node_migration_source_node_id"
+                        foreignKeyName="fk_source_node_id"
+                        references="workflow_nodes(id)"
+                />
+            </column>
+            <column name="target_node_id" type="BIGINT">
+                <constraints
+                        nullable="false"
+                        notNullConstraintName="nnc_node_migration_source_node_id"
+                        foreignKeyName="fk_target_node_id"
+                        references="workflow_nodes(id)"
+                />
+            </column>
+            <column name="migration_plan_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_source_node_id_x_migration_plan_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_node_migration_plan_id"
+                        foreignKeyName="fk_migration_plan_id"
+                        references="workflow_migration_plans(id)"
+                        deleteCascade="true"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-130:createInstanceValueMigrationSequence" author="RobinGuth">
+        <createSequence incrementBy="1" sequenceName="instance_value_migration_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-130:createTableInstanceValueMigrations" author="RobinGuth">
+        <createTable tableName="workflow_migration_instance_value_migrations">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_instance_value_migration_id_gen"/>
+            </column>
+            <column name="key" type="varchar(255)">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_key_x_node_migration_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_value_migration_key"
+                />
+            </column>
+            <column name="value" type="varchar(255)"/>
+            <column name="type" type="varchar(255)">
+                <constraints
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_value_migration_type"
+                />
+            </column>
+            <column name="node_migration_id" type="BIGINT">
+                <constraints
+                        unique="true"
+                        uniqueConstraintName="uc_key_x_node_migration_id"
+                        nullable="false"
+                        notNullConstraintName="nnc_instance_value_migration_node_migration_id"
+                        foreignKeyName="fk_node_migration_id"
+                        references="workflow_migration_node_migrations(id)"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

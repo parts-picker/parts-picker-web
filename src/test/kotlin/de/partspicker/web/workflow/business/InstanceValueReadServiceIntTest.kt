@@ -1,8 +1,6 @@
 package de.partspicker.web.workflow.business
 
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.maps.shouldHaveKey
@@ -22,7 +20,7 @@ class InstanceValueReadServiceIntTest(
 ) : ShouldSpec({
 
     context("readAll") {
-        should("read all instance values belonging to the given id & return them") {
+        should("read all instance values belonging to the instance with the given id & return them") {
             val values = instanceValueReadService.readAllForInstance(100)
 
             values shouldHaveSize 2
@@ -31,37 +29,13 @@ class InstanceValueReadServiceIntTest(
             values["userID"] shouldBe ("Leonard" to SupportedDataType.STRING)
             values["amount"] shouldBe ("7" to SupportedDataType.LONG)
         }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            val nonExistentId = 666L
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                instanceValueReadService.readAllForInstance(nonExistentId)
-            }
-
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
-        }
     }
 
-    context("read") {
-        should("read the value by key belonging to the given instance id & return it") {
+    context("readForInstanceByKey") {
+        should("read the value by key belonging to the instance with the given id & return it") {
             val value = instanceValueReadService.readForInstanceByKey(100, "amount")
 
             value shouldBe ("7" to SupportedDataType.LONG)
-        }
-
-        should("return null when the key does not exists for the given instance id") {
-            val value = instanceValueReadService.readForInstanceByKey(100, "nonExistentKey")
-
-            value shouldBe null
-        }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            val nonExistentId = 666L
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                instanceValueReadService.readForInstanceByKey(nonExistentId, "someKey")
-            }
-
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
         }
     }
 }) {

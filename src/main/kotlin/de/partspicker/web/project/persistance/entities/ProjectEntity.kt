@@ -1,7 +1,7 @@
 package de.partspicker.web.project.persistance.entities
 
 import de.partspicker.web.project.business.objects.CreateProject
-import de.partspicker.web.workflow.persistance.entities.InstanceEntity
+import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType

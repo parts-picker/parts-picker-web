@@ -6,8 +6,10 @@ import de.partspicker.web.common.util.logger
 import de.partspicker.web.workflow.api.exceptions.WorkflowStartupReadException
 import de.partspicker.web.workflow.api.json.WorkflowJson
 import de.partspicker.web.workflow.business.WorkflowService
+import de.partspicker.web.workflow.business.exceptions.WorkflowAlreadyExistsException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowLatestVersionIsGreaterException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
@@ -16,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
 import kotlin.jvm.Throws
@@ -37,39 +41,39 @@ class WorkflowStartupReader(
     @EventListener
     @Throws(Exception::class)
     @Suppress("UnusedPrivateMember", "TooGenericExceptionCaught")
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     fun onApplicationEvent(event: ContextRefreshedEvent?) {
         logCollectedResource(resources.size, path)
 
         resources.forEach { resource ->
             logStartProcessing(resource.filename)
 
-            val workflow = objectMapper.readValue(resource.file, WorkflowJson::class.java)
-
-            // check if workflow with same name and version already present in the database
-            if (this.workflowService.exists(workflow.name, workflow.version)) {
-                logWorkflowExists(workflow.name, workflow.version, resource.filename)
-                return
-            }
-
-            // check if new version smaller than or equal to the latest version
-            val latestVersion = this.workflowService.latestVersion(workflow.name)
-            if ((latestVersion != null) && (workflow.version <= latestVersion)) {
-                logVersionToSmall(workflow.name, workflow.version, latestVersion, resource.filename)
-                return
-            }
+            val newWorkflow = objectMapper.readValue(resource.file, WorkflowJson::class.java)
+            val latestWorkflow = this.workflowService.readLatest(newWorkflow.name)
 
             try {
-                this.workflowService.create(WorkflowCreate.from(workflow))
+                this.workflowService.create(WorkflowCreate.from(newWorkflow, latestWorkflow))
             } catch (ex: Exception) {
                 when (ex) {
+                    is WorkflowLatestVersionIsGreaterException -> {
+                        logVersionToSmall(ex.name, ex.requestedVersion, ex.requestedVersion, resource.filename)
+                        return
+                    }
+
+                    is WorkflowAlreadyExistsException -> {
+                        logWorkflowExists(ex.name, ex.version, resource.filename)
+                        return
+                    }
+
                     is WorkflowIllegalStateException,
                     is WorkflowNodeDuplicateException,
                     is WorkflowEdgeDuplicateException,
                     is WorkflowRouteDuplicateException,
-                    is WorkflowSemanticException
+                    is WorkflowSemanticException,
+                    is IllegalArgumentException
                     -> throw WorkflowStartupReadException.from(
-                        name = workflow.name,
-                        version = workflow.version,
+                        name = newWorkflow.name,
+                        version = newWorkflow.version,
                         sourcePath = resource.uri.path,
                         cause = ex
                     )
@@ -78,7 +82,7 @@ class WorkflowStartupReader(
                 }
             }
 
-            logSuccessfulCreation(workflow.name, workflow.version, resource.filename)
+            logSuccessfulCreation(newWorkflow.name, newWorkflow.version, resource.filename)
         }
     }
 

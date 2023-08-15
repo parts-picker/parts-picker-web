@@ -2,19 +2,24 @@ package de.partspicker.web.workflow.business.objects.create
 
 import de.partspicker.web.test.generators.workflow.NodeCreateGenerators
 import de.partspicker.web.test.generators.workflow.WorkflowCreateGenerators
+import de.partspicker.web.test.generators.workflow.WorkflowGenerators
+import de.partspicker.web.workflow.business.exceptions.WorkflowAlreadyExistsException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
+import de.partspicker.web.workflow.business.exceptions.WorkflowLatestVersionIsGreaterException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeHasMoreThanOneTargetException
 import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateException
 import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
+import de.partspicker.web.workflow.business.objects.create.migration.MigrationPlanCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.arbitrary.single
+import io.mockk.mockk
 
 class WorkflowCreateUnitTest : ShouldSpec({
 
@@ -31,12 +36,71 @@ class WorkflowCreateUnitTest : ShouldSpec({
             exception.message shouldBe WorkflowCreate.NAME_IS_BLANK
         }
 
-        should("throw WorkflowIllegalStateException when version smaller than one") {
+        should("throw WorkflowIllegalStateException when name not equal to latestWorkflows name") {
+            val name = "Workflow"
+            val latestWorkflowName = "LatestWorkflow"
+            val latestWorkflow = WorkflowGenerators.generator.single().copy(version = 2L, name = latestWorkflowName)
+
             val exception = shouldThrow<WorkflowIllegalStateException> {
-                WorkflowCreateGenerators.generator.single().copy(version = 0)
+                WorkflowCreateGenerators.generator.single().copy(
+                    version = 3L,
+                    latestWorkflow = latestWorkflow,
+                    name = name
+                )
             }
 
-            exception.message shouldBe WorkflowCreate.VERSION_SMALLER_AS_ONE
+            exception.message shouldBe WorkflowCreate.LATEST_WORKFLOW_NAME_NOT_EQUAL
+        }
+
+        should("throw WorkflowAlreadyExistsException when name & version equal to latestWorkflows values") {
+            val name = "Workflow"
+            val version = 2L
+            val latestWorkflow = WorkflowGenerators.generator.single().copy(version = version, name = name)
+
+            val exception = shouldThrow<WorkflowAlreadyExistsException> {
+                WorkflowCreateGenerators.generator.single().copy(
+                    version = version,
+                    latestWorkflow = latestWorkflow,
+                    name = name
+                )
+            }
+
+            exception.message shouldBe
+                "Workflow with name '$name' and version '$version' already exists"
+        }
+
+        should("throw WorkflowLatestVersionIsGreaterException when version smaller than latestWorkflowVersion") {
+            val name = "Workflow"
+            val version = 2L
+            val latestWorkflow = WorkflowGenerators.generator.single().copy(version = 3, name = name)
+
+            val exception = shouldThrow<WorkflowLatestVersionIsGreaterException> {
+                WorkflowCreateGenerators.generator.single().copy(
+                    version = version,
+                    latestWorkflow = latestWorkflow,
+                    name = name
+                )
+            }
+
+            exception.message shouldBe
+                "The latest version V${latestWorkflow.version} of the workflow '$name' is greater" +
+                " than the requested version V$version for creation"
+        }
+
+        should("throw WorkflowIllegalStateException when migrationPlan is set but latestWorkflow is null") {
+            val name = "Workflow"
+            val version = 2L
+            val migrationPlanCreateMock = mockk<MigrationPlanCreate>()
+
+            val exception = shouldThrow<WorkflowIllegalStateException> {
+                WorkflowCreateGenerators.generator.single().copy(
+                    version = version,
+                    name = name,
+                    defaultMigrationPlan = migrationPlanCreateMock
+                )
+            }
+
+            exception.message shouldBe WorkflowCreate.LATEST_WORKFLOW_MUST_BE_SET
         }
 
         should("throw WorkflowIllegalStateException when no start node present") {

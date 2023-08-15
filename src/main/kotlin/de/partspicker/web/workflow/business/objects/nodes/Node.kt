@@ -2,10 +2,10 @@ package de.partspicker.web.workflow.business.objects.nodes
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowException
 import de.partspicker.web.workflow.business.objects.enums.StartType
-import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.UserActionNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 
 sealed class Node(
     val id: Long,
@@ -40,6 +40,10 @@ sealed class Node(
                 else -> throw WorkflowException()
             }
         }
+    }
+
+    object AsList {
+        fun from(nodeEntities: Iterable<NodeEntity>) = nodeEntities.map { from(it) }
     }
 
     override fun equals(other: Any?): Boolean {

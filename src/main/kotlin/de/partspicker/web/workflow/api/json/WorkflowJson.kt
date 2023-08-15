@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.api.json
 
+import de.partspicker.web.workflow.api.json.migration.ExplicitMigrationPlanJson
 import de.partspicker.web.workflow.api.json.nodes.NodeJson
 
 data class WorkflowJson(
@@ -7,5 +8,7 @@ data class WorkflowJson(
     val version: Long,
 
     val nodes: List<NodeJson>,
-    val edges: List<EdgeJson>
+    val edges: List<EdgeJson>,
+
+    val migrationPlan: ExplicitMigrationPlanJson? = null
 )

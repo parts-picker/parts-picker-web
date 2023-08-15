@@ -7,7 +7,7 @@ import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.collectionRelationName
 import de.partspicker.web.inventory.business.InventoryItemService
 import de.partspicker.web.test.util.TestSetupHelper
-import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.WorkflowMigrationService
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -38,7 +38,7 @@ class RequiredItemTypeControllerIntTest(
     // support classes
     private val mockMvc: MockMvc,
     private val mapper: ObjectMapper,
-    private val workflowInteractionService: WorkflowInteractionService,
+    private val workflowMigrationService: WorkflowMigrationService,
     private val inventoryItemService: InventoryItemService,
     private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
@@ -216,7 +216,7 @@ class RequiredItemTypeControllerIntTest(
         should("return status 422 when project status does not equal 'planning'") {
             // data setup
             val project = testSetupHelper.setupProject()
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(project.workflowInstanceId, "implementation")
             val itemType = testSetupHelper.setupItemType()
 
             // request
@@ -468,7 +468,7 @@ class RequiredItemTypeControllerIntTest(
         should("return status 422 when project status does not equal 'planning'") {
             // data setup
             val project = testSetupHelper.setupProject()
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(project.workflowInstanceId, "implementation")
             val itemType = testSetupHelper.setupItemType()
 
             // request
@@ -582,7 +582,10 @@ class RequiredItemTypeControllerIntTest(
             val itemType = testSetupHelper.setupItemType()
             testSetupHelper.setupRequiredItemType(project.id, itemType.id, 1L)
 
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
 
             // request
             val path = "/projects/${project.id}/required/${itemType.id}"

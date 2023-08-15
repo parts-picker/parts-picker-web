@@ -9,7 +9,7 @@ import de.partspicker.web.item.business.ItemService
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.test.util.TestSetupHelper
-import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.WorkflowMigrationService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
@@ -29,7 +29,7 @@ class InventoryItemServiceIntTest(
     private val cut: InventoryItemService,
     // helpers
     private val itemService: ItemService,
-    private val workflowInteractionService: WorkflowInteractionService,
+    private val workflowMigrationService: WorkflowMigrationService,
     private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
     context("readAllAssignableForItemTypeAndProject") {
@@ -170,7 +170,10 @@ class InventoryItemServiceIntTest(
             val project = testSetupHelper.setupProject()
             val itemType = testSetupHelper.setupItemType()
             testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id)
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
             val item = testSetupHelper.setupItemForType(itemType)
 
             // when & then
@@ -261,7 +264,10 @@ class InventoryItemServiceIntTest(
             val itemType = testSetupHelper.setupItemType()
             testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id)
             val item = testSetupHelper.setupItemForType(itemType, projectId = project.id)
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
 
             // when & then
             shouldThrow<WrongNodeNameRuleException> {
@@ -309,7 +315,10 @@ class InventoryItemServiceIntTest(
                 itemType = itemType,
                 projectId = project.id
             )
-            workflowInteractionService.forceInstanceNode(project.workflowInstanceId, "implementation")
+            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
+                project.workflowInstanceId,
+                "implementation"
+            )
 
             // when
             shouldThrow<WrongNodeNameRuleException> {

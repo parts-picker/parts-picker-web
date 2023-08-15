@@ -11,14 +11,14 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import de.partspicker.web.workflow.business.objects.Instance
 import de.partspicker.web.workflow.business.objects.InstanceInfo
-import de.partspicker.web.workflow.persistance.EdgeRepository
-import de.partspicker.web.workflow.persistance.InstanceRepository
-import de.partspicker.web.workflow.persistance.NodeRepository
-import de.partspicker.web.workflow.persistance.WorkflowRepository
-import de.partspicker.web.workflow.persistance.entities.InstanceEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
+import de.partspicker.web.workflow.persistence.EdgeRepository
+import de.partspicker.web.workflow.persistence.InstanceRepository
+import de.partspicker.web.workflow.persistence.NodeRepository
+import de.partspicker.web.workflow.persistence.WorkflowRepository
+import de.partspicker.web.workflow.persistence.entities.InstanceEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
 import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -97,43 +97,10 @@ class WorkflowInteractionService(
 
         // save instance values
         instanceValues?.let {
-            this.instanceValueService.setMultipleForInstance(savedInstance.id, it)
+            this.instanceValueService.setMultipleWithAutoTypeDetectionForInstance(savedInstance.id, it)
         }
 
         return Instance.from(savedInstance)
-    }
-
-    /**
-     * This method should only be used for version migration and testing.
-     */
-    fun forceInstanceNode(
-        instanceId: Long,
-        nodeName: String,
-        values: Map<String, Any>? = null,
-    ): InstanceInfo? {
-        val instanceEntity = this.instanceRepository.findById(instanceId)
-            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
-
-        val workflow = instanceEntity.workflow!!
-
-        // update instance values
-        values?.let {
-            this.instanceValueService.setMultipleForInstance(instanceId, it)
-        }
-
-        val targetNode = this.nodeRepository.findByWorkflowIdAndName(workflow.id, nodeName)
-            ?: throw WorkflowNodeNameNotFoundException(workflow.name!!, nodeName)
-
-        instanceEntity.currentNode = targetNode
-
-        val savedInstance = this.instanceRepository.save(instanceEntity)
-
-        val options = this.findOptionsBySourceNodeId(targetNode.id)
-        return InstanceInfo.from(
-            Hibernate.unproxy(savedInstance.currentNode!!) as NodeEntity,
-            savedInstance.id,
-            options
-        )
     }
 
     @Transactional(rollbackFor = [Exception::class])
@@ -160,7 +127,7 @@ class WorkflowInteractionService(
 
         // update instance values
         values?.let {
-            this.instanceValueService.setMultipleForInstance(instanceId, it)
+            this.instanceValueService.setMultipleWithAutoTypeDetectionForInstance(instanceId, it)
         }
 
         // check if target is stop node

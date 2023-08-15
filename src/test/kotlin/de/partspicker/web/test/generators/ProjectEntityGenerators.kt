@@ -1,6 +1,7 @@
 package de.partspicker.web.test.generators
 
 import de.partspicker.web.project.persistance.entities.ProjectEntity
+import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.positiveLong
