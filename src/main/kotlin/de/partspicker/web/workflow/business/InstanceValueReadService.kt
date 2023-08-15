@@ -2,9 +2,9 @@ package de.partspicker.web.workflow.business
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
-import de.partspicker.web.workflow.persistance.InstanceRepository
-import de.partspicker.web.workflow.persistance.InstanceValueRepository
-import de.partspicker.web.workflow.persistance.entities.enums.InstanceValueTypeEntity.WORKFLOW
+import de.partspicker.web.workflow.persistence.InstanceRepository
+import de.partspicker.web.workflow.persistence.InstanceValueRepository
+import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity.WORKFLOW
 import org.springframework.stereotype.Service
 
 @Service
@@ -12,7 +12,7 @@ class InstanceValueReadService(
     private val instanceValueRepository: InstanceValueRepository,
     private val instanceRepository: InstanceRepository
 ) {
-    fun readAllForInstance(instanceId: Long): Map<String, Pair<String, SupportedDataType>> {
+    fun readAllForInstance(instanceId: Long): Map<String, Pair<String?, SupportedDataType>> {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
@@ -25,7 +25,7 @@ class InstanceValueReadService(
         return instanceValues.associateBy({ it.key }, { it.value to SupportedDataType.from(it.valueDataType) })
     }
 
-    fun readForInstanceByKey(instanceId: Long, key: String): Pair<String, SupportedDataType>? {
+    fun readForInstanceByKey(instanceId: Long, key: String): Pair<String?, SupportedDataType>? {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }

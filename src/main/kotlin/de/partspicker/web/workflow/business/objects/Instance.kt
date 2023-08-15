@@ -1,7 +1,7 @@
 package de.partspicker.web.workflow.business.objects
 
 import de.partspicker.web.workflow.business.objects.nodes.Node
-import de.partspicker.web.workflow.persistance.entities.InstanceEntity
+import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 
 data class Instance(
     val id: Long,

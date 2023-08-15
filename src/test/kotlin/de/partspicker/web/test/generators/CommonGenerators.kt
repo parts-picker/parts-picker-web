@@ -3,6 +3,7 @@ package de.partspicker.web.test.generators
 import io.kotest.property.Arb
 import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.string
 
@@ -25,3 +26,5 @@ class CommonGenerators private constructor() {
 }
 
 fun Arb.Companion.descriptionLikeString(): Arb<String> = CommonGenerators.descriptionLikeStringGenerator
+
+fun Arb.Companion.id(): Arb<Long> = Arb.long(1)

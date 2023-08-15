@@ -30,6 +30,6 @@ class StartNode(
     }
 
     override fun toString(): String {
-        return "StartNode(displayName='$displayName', startType=$startType)"
+        return "StartNode(name='$name', displayName='$displayName', startType=$startType)"
     }
 }
