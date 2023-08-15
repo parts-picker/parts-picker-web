@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
 @JsonSerialize(using = ErrorCodeSerializer::class)
 enum class ErrorCode(val code: Int) {
-    EntityNotFound(4004);
+    EntityNotFound(4004)
 }
 
 class ErrorCodeSerializer : StdSerializer<ErrorCode>(ErrorCode::class.java) {

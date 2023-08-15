@@ -32,7 +32,10 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
             itemTypeName = requiredItemType.itemType.name!!,
             assignedAmount = requiredItemType.assignedAmount,
             requiredAmount = requiredItemType.requiredAmount,
-            generateDefaultLinks(projectId = requiredItemType.projectId, itemTypeId = requiredItemType.itemType.id),
+            links = generateDefaultLinks(
+                projectId = requiredItemType.projectId,
+                itemTypeId = requiredItemType.itemType.id
+            ),
         )
     }
 
