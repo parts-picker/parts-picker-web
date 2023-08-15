@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business.exceptions
 
-class WorkflowInstanceNotFoundException(instanceId: Long) : Exception(
-    "Workflow instance with id $instanceId could not be found"
-)
+import de.partspicker.web.common.exceptions.EntityNotFoundException
+
+class WorkflowInstanceNotFoundException(instanceId: Long) :
+    EntityNotFoundException("Workflow instance with id $instanceId could not be found")

@@ -1,3 +1,5 @@
 package de.partspicker.web.project.business.exceptions
 
-class GroupNotFoundException(groupId: Long) : Exception("Group with id $groupId could not be found")
+import de.partspicker.web.common.exceptions.EntityNotFoundException
+
+class GroupNotFoundException(groupId: Long) : EntityNotFoundException("Group with id $groupId could not be found")

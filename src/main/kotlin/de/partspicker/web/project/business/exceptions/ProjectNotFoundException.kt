@@ -1,3 +1,6 @@
 package de.partspicker.web.project.business.exceptions
 
-class ProjectNotFoundException(projectId: Long) : Exception("Project with id $projectId could not be found")
+import de.partspicker.web.common.exceptions.EntityNotFoundException
+
+class ProjectNotFoundException(projectId: Long) :
+    EntityNotFoundException("Project with id $projectId could not be found")

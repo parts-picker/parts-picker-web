@@ -1,17 +1,8 @@
 package de.partspicker.web.common.exceptions
 
 import de.partspicker.web.common.business.exceptions.RuleException
-import de.partspicker.web.inventory.business.exceptions.RequiredItemTypeNotFound
-import de.partspicker.web.item.business.exceptions.ItemNotFoundException
-import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
-import de.partspicker.web.project.business.exceptions.GroupNotFoundException
-import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -29,17 +20,7 @@ import java.time.ZonedDateTime
 class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(
-        value = [
-            GroupNotFoundException::class,
-            ProjectNotFoundException::class,
-            ItemNotFoundException::class,
-            ItemTypeNotFoundException::class,
-            WorkflowInstanceNotFoundException::class,
-            WorkflowEdgeNotFoundException::class,
-            WorkflowNodeNameNotFoundException::class,
-            WorkflowNameNotFoundException::class,
-            RequiredItemTypeNotFound::class
-        ],
+        value = [EntityNotFoundException::class],
     )
     fun handleEntityNotFoundException(
         exc: Exception,
