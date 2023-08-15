@@ -1,16 +1,15 @@
 package de.partspicker.web.workflow.business
 
-import de.partspicker.web.workflow.business.exceptions.DatatypeNotSupportedException
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
+import de.partspicker.web.test.generators.workflow.InstanceValueCreateGenerators
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
-import de.partspicker.web.workflow.persistance.InstanceValueRepository
-import de.partspicker.web.workflow.persistance.entities.enums.InstanceValueTypeEntity
-import io.kotest.assertions.throwables.shouldThrow
+import de.partspicker.web.workflow.persistence.InstanceValueRepository
+import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.single
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
@@ -24,7 +23,27 @@ class InstanceValueServiceIntTest(
     private val instanceValueService: InstanceValueService,
     private val instanceValueRepository: InstanceValueRepository
 ) : ShouldSpec({
-    context("setForMultiple") {
+    context("setMultipleForInstance") {
+        should("save all given values") {
+            // given
+            val amount = 10
+            val values = List(amount) { InstanceValueCreateGenerators.generator.single() }
+
+            val instanceId = 101L
+
+            // when
+            instanceValueService.setMultipleForInstance(instanceId, values)
+
+            // then
+            val returnedValues = instanceValueRepository.findAllByWorkflowInstanceIdAndType(
+                instanceId,
+                InstanceValueTypeEntity.WORKFLOW
+            )
+            returnedValues shouldHaveSize amount
+        }
+    }
+
+    context("setMultipleWithAutoTypeDetectionForInstance") {
         should("save all given values") {
             // given
             val values: Map<String, Any> = mapOf(
@@ -35,7 +54,7 @@ class InstanceValueServiceIntTest(
             val instanceId = 100L
 
             // when
-            instanceValueService.setMultipleForInstance(instanceId, values)
+            instanceValueService.setMultipleWithAutoTypeDetectionForInstance(instanceId, values)
 
             // then
             val valuesToCheck = instanceValueRepository.findAllByWorkflowInstanceIdAndType(
@@ -47,42 +66,15 @@ class InstanceValueServiceIntTest(
             valuesToCheck shouldContain "numberValue"
             valuesToCheck shouldContain "stringValue"
         }
-
-        should("throw DatatypeNotSupportedException when given value with unsupported data type") {
-            // given
-            val values: Map<String, Any> = mapOf(
-                "booleanValue" to true
-            )
-
-            val instanceId = 100L
-
-            // when
-            val exception = shouldThrow<DatatypeNotSupportedException> {
-                instanceValueService.setMultipleForInstance(instanceId, values)
-            }
-
-            // then
-            exception.message shouldBe "The given data with datatype 'Boolean' is not supported. " +
-                "Supported types are ${SupportedDataType.values().map { it.name }}"
-        }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            val nonExistentId = 666L
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                instanceValueService.setMultipleForInstance(nonExistentId, emptyMap())
-            }
-
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
-        }
     }
 
-    context("set") {
+    context("setSingleWithAutoTypeDetectionForInstance") {
         should("save given value") {
             // give
             val key = "numberValue"
             val value = 2L
             // when
-            val savedValue = instanceValueService.setForInstance(
+            val savedValue = instanceValueService.setSingleWithAutoTypeDetectionForInstance(
                 100L,
                 key,
                 value
@@ -98,7 +90,7 @@ class InstanceValueServiceIntTest(
             val key = "existing"
             val value = "newValue"
             // when
-            val savedValue = instanceValueService.setForInstance(
+            val savedValue = instanceValueService.setSingleWithAutoTypeDetectionForInstance(
                 100L,
                 key,
                 value
@@ -107,31 +99,6 @@ class InstanceValueServiceIntTest(
             // then
             savedValue.first shouldBe value
             savedValue.second shouldBe SupportedDataType.STRING
-        }
-
-        should("throw DatatypeNotSupportedException when given value with unsupported data type") {
-            // given
-            val value = "booleanValue" to true
-
-            val instanceId = 100L
-
-            // when
-            val exception = shouldThrow<DatatypeNotSupportedException> {
-                instanceValueService.setForInstance(instanceId, value.first, value.second)
-            }
-
-            // then
-            exception.message shouldBe "The given data with datatype 'Boolean' is not supported. " +
-                "Supported types are ${SupportedDataType.values().map { it.name }}"
-        }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            val nonExistentId = 666L
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                instanceValueService.setForInstance(nonExistentId, "key", "value")
-            }
-
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
         }
     }
 }) {

@@ -1,11 +1,11 @@
 package de.partspicker.web.workflow.business.objects
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowException
-import de.partspicker.web.workflow.persistance.entities.EdgeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.NodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StartNodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.StopNodeEntity
-import de.partspicker.web.workflow.persistance.entities.nodes.UserActionNodeEntity
+import de.partspicker.web.workflow.persistence.entities.EdgeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
+import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 
 data class InstanceInfo(
     val nodeId: Long,
@@ -15,7 +15,7 @@ data class InstanceInfo(
     val options: Set<EdgeInfo>
 ) {
     companion object {
-        fun from(nodeEntity: NodeEntity, instanceId: Long, edgeEntities: Iterable<EdgeEntity>): InstanceInfo? {
+        fun from(nodeEntity: NodeEntity, instanceId: Long, edgeEntities: Iterable<EdgeEntity>): InstanceInfo {
             return when (nodeEntity) {
                 is UserActionNodeEntity -> InstanceInfo(
                     nodeId = nodeEntity.id,

@@ -1,13 +1,13 @@
 package de.partspicker.web.workflow.business
 
 import de.partspicker.web.project.persistance.ProjectRepository
-import de.partspicker.web.test.generators.EdgeEntityGenerators
-import de.partspicker.web.test.generators.InstanceEntityGenerators
+import de.partspicker.web.test.generators.workflow.EdgeEntityGenerators
+import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.persistance.EdgeRepository
-import de.partspicker.web.workflow.persistance.InstanceRepository
-import de.partspicker.web.workflow.persistance.NodeRepository
-import de.partspicker.web.workflow.persistance.WorkflowRepository
+import de.partspicker.web.workflow.persistence.EdgeRepository
+import de.partspicker.web.workflow.persistence.InstanceRepository
+import de.partspicker.web.workflow.persistence.NodeRepository
+import de.partspicker.web.workflow.persistence.WorkflowRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldHaveSize

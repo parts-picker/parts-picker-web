@@ -10,7 +10,7 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import de.partspicker.web.workflow.business.objects.EdgeInfo
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
-import de.partspicker.web.workflow.persistance.InstanceRepository
+import de.partspicker.web.workflow.persistence.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
@@ -260,55 +260,6 @@ class WorkflowInteractionServiceIntTest(
             // then
             exception.message shouldBe "The current instance node with id 100 does not match the source node" +
                 " with id 300 of the given edge with id $edgeId to advance the instance state"
-        }
-    }
-
-    context("force instance node") {
-        should("set instance to node with given name & return the updated instance info") {
-            // given
-            val instanceId = 1L
-            val nodeName = "implementation"
-
-            // when
-            val updatedInstance = cut.forceInstanceNode(instanceId, nodeName)!!
-
-            // then
-            updatedInstance.instanceId shouldBe instanceId
-            updatedInstance.name shouldBe nodeName
-            updatedInstance.displayName shouldBe "Implementation"
-        }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existing instance id") {
-            // given
-            val nonExistentId = 666L
-            val nodeName = "implementation"
-
-            // when & then
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.forceInstanceNode(
-                    nonExistentId,
-                    nodeName
-                )!!
-            }
-
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
-        }
-
-        should("throw WorkflowNodeNameNotFoundException when given non-existing node name") {
-            // given
-            val instanceId = 1L
-            val nonExistentNodeName = "non-existent node name"
-
-            // when & then
-            val exception = shouldThrow<WorkflowNodeNameNotFoundException> {
-                cut.forceInstanceNode(
-                    instanceId,
-                    nonExistentNodeName
-                )!!
-            }
-
-            exception.message shouldBe
-                "Workflow node with name $nonExistentNodeName could not be found for workflow with name Testflows"
         }
     }
 }) {

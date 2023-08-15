@@ -16,7 +16,6 @@ sealed class NodeJson(
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        return result
+        return name.hashCode()
     }
 }

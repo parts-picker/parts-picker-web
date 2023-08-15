@@ -1,6 +1,6 @@
 package de.partspicker.web.workflow.business.objects
 
-import de.partspicker.web.workflow.persistance.entities.EdgeEntity
+import de.partspicker.web.workflow.persistence.entities.EdgeEntity
 
 data class EdgeInfo(
     val id: Long,

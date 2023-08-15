@@ -5,5 +5,5 @@ data class EdgeJson(
     val displayName: String,
     val sourceNode: String,
     val targetNode: String,
-    val conditions: List<String>?
+    val conditions: List<String>? = emptyList()
 )

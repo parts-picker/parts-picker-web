@@ -7,7 +7,7 @@ data class EdgeCreate(
     val displayName: String,
     val sourceNode: String,
     val targetNode: String,
-    val conditions: List<String>
+    val conditions: List<String> = emptyList()
 ) {
     init {
         require(name.isNotBlank())

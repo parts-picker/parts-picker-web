@@ -1,6 +1,6 @@
 package de.partspicker.web.workflow.business.objects.enums
 
-import de.partspicker.web.workflow.persistance.entities.enums.SupportedDataTypeEntity
+import de.partspicker.web.workflow.persistence.entities.enums.SupportedDataTypeEntity
 
 enum class SupportedDataType {
     STRING,
