@@ -1,6 +1,6 @@
 ARG CACHE_HOME=/home/gradle/cache_home
 
-FROM gradle:7.3.0-jdk17-alpine AS CACHE
+FROM gradle:8.1.1-jdk17-alpine AS CACHE
 ARG CACHE_HOME
 ENV LOCAL_CACHE_HOME=$CACHE_HOME
 ENV GRADLE_USER_HOME ${LOCAL_CACHE_HOME}
@@ -11,7 +11,7 @@ WORKDIR /home/gradle/build
 RUN gradle clean build -i -x bootJar
 
 
-FROM gradle:7.3.0-jdk17-alpine AS BUILD
+FROM gradle:8.1.1-jdk17-alpine AS BUILD
 ARG CACHE_HOME
 ENV LOCAL_CACHE_HOME=$CACHE_HOME
 ENV BUILD_HOME=/home/gradle/src
