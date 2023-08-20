@@ -1,4 +1,0 @@
-[submodule "src/main/resources/workflows"]
-    branch = main
-	path = src/main/resources/workflows
-	url = git@github.com:parts-picker/workflows.git
