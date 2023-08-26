@@ -1,3 +1,4 @@
 package de.partspicker.web.workflow.business.exceptions
 
-class WorkflowException : Exception("A workflow error occurred - please submit a bug report")
+open class WorkflowException(message: String = "A workflow error occurred - please submit a bug report") :
+    Exception(message)

@@ -2,6 +2,7 @@ package de.partspicker.web.workflow.business.objects.create.migration
 
 import de.partspicker.web.workflow.business.exceptions.migration.WorkflowMigrationDuplicatedInstanceValueKeyException
 import de.partspicker.web.workflow.business.exceptions.migration.WorkflowMigrationIllegalArgumentException
+import de.partspicker.web.workflow.business.objects.create.migration.enums.InstanceValueTypeCreate
 import de.partspicker.web.workflow.business.objects.create.migration.enums.SupportedDataTypeMigrationCreate
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
@@ -18,12 +19,14 @@ class NodeMigrationCreateUnitTest : ShouldSpec({
                     InstanceValueMigrationCreate(
                         key = "KEY",
                         value = "VALUE",
-                        type = SupportedDataTypeMigrationCreate.STRING
+                        dataType = SupportedDataTypeMigrationCreate.STRING,
+                        valueType = InstanceValueTypeCreate.WORKFLOW
                     ),
                     InstanceValueMigrationCreate(
                         key = "KEY2",
                         value = "VALUE",
-                        type = SupportedDataTypeMigrationCreate.STRING
+                        dataType = SupportedDataTypeMigrationCreate.STRING,
+                        valueType = InstanceValueTypeCreate.WORKFLOW
                     )
                 )
             )
@@ -71,12 +74,14 @@ class NodeMigrationCreateUnitTest : ShouldSpec({
                         InstanceValueMigrationCreate(
                             key = "KEY",
                             value = "VALUE",
-                            type = SupportedDataTypeMigrationCreate.STRING
+                            dataType = SupportedDataTypeMigrationCreate.STRING,
+                            valueType = InstanceValueTypeCreate.WORKFLOW
                         ),
                         InstanceValueMigrationCreate(
                             key = "KEY",
                             value = "VALUE",
-                            type = SupportedDataTypeMigrationCreate.STRING
+                            dataType = SupportedDataTypeMigrationCreate.STRING,
+                            valueType = InstanceValueTypeCreate.WORKFLOW
                         )
                     )
                 )

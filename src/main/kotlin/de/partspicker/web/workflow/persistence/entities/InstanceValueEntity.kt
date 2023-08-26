@@ -1,6 +1,6 @@
 package de.partspicker.web.workflow.persistence.entities
 
-import de.partspicker.web.workflow.business.objects.create.InstanceValueCreate
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity
 import de.partspicker.web.workflow.persistence.entities.enums.SupportedDataTypeEntity
 import jakarta.persistence.Entity
@@ -43,16 +43,15 @@ data class InstanceValueEntity(
     companion object {
         fun from(
             id: Long,
-            instanceValueCreate: InstanceValueCreate,
-            instanceId: Long,
-            instanceValueTypeEntity: InstanceValueTypeEntity
+            instanceValue: InstanceValue,
+            instanceEntity: InstanceEntity,
         ) = InstanceValueEntity(
             id = id,
-            workflowInstance = InstanceEntity(id = instanceId),
-            key = instanceValueCreate.key,
-            value = instanceValueCreate.value,
-            valueDataType = SupportedDataTypeEntity.from(instanceValueCreate.type),
-            type = instanceValueTypeEntity
+            workflowInstance = instanceEntity,
+            key = instanceValue.key,
+            value = instanceValue.value,
+            valueDataType = SupportedDataTypeEntity.from(instanceValue.dataType),
+            type = InstanceValueTypeEntity.from(instanceValue.valueType)
         )
     }
 }

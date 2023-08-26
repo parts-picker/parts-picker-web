@@ -1,19 +1,24 @@
 package de.partspicker.web.workflow.business.objects.create.nodes
 
+import de.partspicker.web.common.util.elseThrow
+import de.partspicker.web.workflow.api.json.nodes.AutomatedActionNodeJson
 import de.partspicker.web.workflow.api.json.nodes.NodeJson
 import de.partspicker.web.workflow.api.json.nodes.StartNodeJson
 import de.partspicker.web.workflow.api.json.nodes.StopNodeJson
 import de.partspicker.web.workflow.api.json.nodes.UserActionNodeJson
+import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateException
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 
 sealed class NodeCreate(
     val name: String
 ) {
     init {
-        check(name.isNotBlank())
+        name.isNotBlank() elseThrow WorkflowIllegalStateException(NAME_IS_BLANK)
     }
 
     companion object {
+        const val NAME_IS_BLANK = "Name must not be blank"
+
         fun from(nodeJson: NodeJson): NodeCreate = when (nodeJson) {
             is UserActionNodeJson -> UserActionNodeCreate(
                 name = nodeJson.name,
@@ -29,6 +34,12 @@ sealed class NodeCreate(
             is StopNodeJson -> StopNodeCreate(
                 name = nodeJson.name,
                 displayName = nodeJson.displayName
+            )
+
+            is AutomatedActionNodeJson -> AutomatedActionNodeCreate(
+                name = nodeJson.name,
+                displayName = nodeJson.displayName,
+                automatedActionName = nodeJson.automatedActionName
             )
         }
     }

@@ -1,6 +1,6 @@
 package de.partspicker.web.workflow.persistence.entities.enums
 
-import de.partspicker.web.workflow.business.objects.create.enums.SupportedDataTypeCreate
+import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 
 enum class SupportedDataTypeEntity {
     STRING,
@@ -8,10 +8,10 @@ enum class SupportedDataTypeEntity {
     INTEGER;
 
     companion object {
-        fun from(supportedDataTypeCreate: SupportedDataTypeCreate) = when (supportedDataTypeCreate) {
-            SupportedDataTypeCreate.STRING -> STRING
-            SupportedDataTypeCreate.LONG -> LONG
-            SupportedDataTypeCreate.INTEGER -> INTEGER
+        fun from(supportedDataType: SupportedDataType) = when (supportedDataType) {
+            SupportedDataType.STRING -> STRING
+            SupportedDataType.LONG -> LONG
+            SupportedDataType.INTEGER -> INTEGER
         }
     }
 }

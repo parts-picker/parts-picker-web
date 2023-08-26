@@ -16,5 +16,15 @@ data class Instance(
             active = instanceEntity.active,
             workflowId = instanceEntity.workflow!!.id
         )
+
+        fun fromOrNull(instanceEntity: InstanceEntity?): Instance? {
+            instanceEntity ?: return null
+
+            return from(instanceEntity)
+        }
+    }
+
+    object AsList {
+        fun from(instanceEntities: Iterable<InstanceEntity>) = instanceEntities.map { from(it) }
     }
 }

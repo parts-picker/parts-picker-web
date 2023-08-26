@@ -1,0 +1,66 @@
+{
+  "name": "project_workflow",
+  "version": 1,
+  "nodes": [
+    {
+      "name": "new_project_start",
+      "type": "start",
+      "displayName": "New Project",
+      "startType": "WORKFLOW"
+    },
+    {
+      "name": "planning",
+      "type": "user_action",
+      "displayName": "Planning"
+    },
+    {
+      "name": "check_required_items_assigned",
+      "type": "automated_action",
+      "displayName": "Check required items assigned",
+      "automatedActionName": "required_items_assigned_action"
+    },
+    {
+      "name": "implementation",
+      "type": "user_action",
+      "displayName": "Implementation"
+    },
+    {
+      "name": "successful_completion",
+      "type": "stop",
+      "displayName": "Successful Completion"
+    }
+  ],
+  "edges": [
+    {
+      "name": "new_project_start->planning",
+      "displayName": "Begin planning",
+      "sourceNode": "new_project_start",
+      "targetNode": "planning"
+    },
+    {
+      "name": "planning->check_required_items_assigned",
+      "displayName": "Start implementation",
+      "sourceNode": "planning",
+      "targetNode": "check_required_items_assigned"
+    },
+    {
+      "name": "check_required_items_assigned->implementation",
+      "displayName": "All items assigned",
+      "sourceNode": "check_required_items_assigned",
+      "targetNode": "implementation"
+    },
+    {
+      "name": "check_required_items_assigned->planning",
+      "displayName": "Items missing",
+      "sourceNode": "check_required_items_assigned",
+      "targetNode": "planning"
+    },
+    {
+      "name": "implementation->successful_completion",
+      "displayName": "Successful Completion",
+      "sourceNode": "implementation",
+      "targetNode": "successful_completion"
+    }
+  ]
+}
+

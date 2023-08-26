@@ -1,6 +1,7 @@
 package de.partspicker.web.test.generators.workflow
 
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
+import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.boolean
@@ -19,7 +20,9 @@ class InstanceEntityGenerators private constructor() {
                 id = id,
                 workflow = workflow,
                 currentNode = currentNode,
-                active = active
+                active = active,
+                message = null,
+                displayType = DisplayTypeEntity.DEFAULT
             )
         }
     }

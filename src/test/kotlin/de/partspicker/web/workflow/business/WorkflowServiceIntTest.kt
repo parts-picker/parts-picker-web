@@ -13,7 +13,9 @@ import org.springframework.context.annotation.Import
 @Import(
     WorkflowService::class,
     WorkflowMigrationService::class,
-    InstanceValueService::class
+    InstanceValueService::class,
+    InstanceValueMigrationService::class,
+    SpELConfig::class
 )
 class WorkflowServiceIntTest(
     private val cut: WorkflowService,

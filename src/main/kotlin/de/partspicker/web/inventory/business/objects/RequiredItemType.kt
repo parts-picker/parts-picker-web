@@ -9,6 +9,8 @@ data class RequiredItemType(
     val assignedAmount: Long,
     val requiredAmount: Long
 ) {
+    fun isRequiredAmountAssigned() = assignedAmount == requiredAmount
+
     companion object {
         fun from(requiredItemTypeEntity: RequiredItemTypeEntity, assignedAmount: Long) = RequiredItemType(
             projectId = requiredItemTypeEntity.project.id,

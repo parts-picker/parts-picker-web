@@ -4,18 +4,24 @@ import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
+import de.partspicker.web.workflow.business.objects.Edge
 import de.partspicker.web.workflow.business.objects.Instance
 import de.partspicker.web.workflow.business.objects.InstanceInfo
+import de.partspicker.web.workflow.business.objects.InstanceValue
+import de.partspicker.web.workflow.business.objects.enums.DisplayType
+import de.partspicker.web.workflow.business.objects.nodes.Node
+import de.partspicker.web.workflow.business.rules.InstanceActiveRule
+import de.partspicker.web.workflow.business.rules.UserMayAdvanceNodeRule
 import de.partspicker.web.workflow.persistence.EdgeRepository
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.NodeRepository
 import de.partspicker.web.workflow.persistence.WorkflowRepository
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
+import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
@@ -46,7 +52,7 @@ class WorkflowInteractionService(
             ?: return null
         val options = this.findOptionsBySourceNodeId(currentNodeEntity.id)
 
-        return InstanceInfo.from(currentNodeEntity, instanceId, options)
+        return InstanceInfo.from(currentNodeEntity, instanceEntity, options)
     }
 
     @Transactional(readOnly = true)
@@ -57,23 +63,29 @@ class WorkflowInteractionService(
         return projectEntity.workflowInstance!!.currentNode?.name
     }
 
-    fun startProjectWorkflow(instanceValues: Map<String, Any>? = null) = startWorkflowInstance(
-        workflowName = PROJECT_WORKFLOW_NAME,
-        startNodeName = PROJECT_WORKFLOW_START_NODE,
-        instanceValues = instanceValues,
-    )
+    fun readEdgesBySourceNodeId(sourceNodeId: Long): Set<Edge> {
+        val options = this.findOptionsBySourceNodeId(sourceNodeId = sourceNodeId)
+
+        return Edge.AsSet.from(options)
+    }
+
+    fun startProjectWorkflow(): Instance {
+        return startWorkflowInstance(
+            workflowName = PROJECT_WORKFLOW_NAME,
+            startNodeName = PROJECT_WORKFLOW_START_NODE,
+        )
+    }
 
     @Transactional(rollbackFor = [Exception::class])
     fun startWorkflowInstance(
         workflowName: String,
         startNodeName: String,
-        instanceValues: Map<String, Any>? = null,
+        values: List<InstanceValue>? = null,
+        message: String? = null,
+        displayType: DisplayType = DisplayType.DEFAULT
     ): Instance {
-        val latestVersion = this.workflowRepository.findLatestVersion(workflowName)
+        val workflow = this.workflowRepository.findLatest(workflowName)
             ?: throw WorkflowNameNotFoundException(workflowName)
-
-        // if latestVersion exists -> value is present in db
-        val workflow = this.workflowRepository.findByNameAndVersion(workflowName, latestVersion).get()
 
         val chosenStartNode = this.nodeRepository.findByWorkflowIdAndName(workflow.id, startNodeName)
             ?: throw WorkflowNodeNameNotFoundException(workflowName, startNodeName)
@@ -86,38 +98,76 @@ class WorkflowInteractionService(
         val successor = Hibernate.unproxy(this.edgeRepository.readBySourceId(chosenStartNode.id).target) as NodeEntity
 
         // create new instance
-        val newInstance = InstanceEntity(
+        val newInstanceEntity = InstanceEntity(
             id = 0,
             workflow = workflow,
             currentNode = successor,
             active = true,
+            message = message,
+            displayType = DisplayTypeEntity.from(displayType)
         )
 
-        val savedInstance = this.instanceRepository.save(newInstance)
+        val savedInstance = this.instanceRepository.save(newInstanceEntity)
 
         // save instance values
-        instanceValues?.let {
-            this.instanceValueService.setMultipleWithAutoTypeDetectionForInstance(savedInstance.id, it)
+        values?.let {
+            this.instanceValueService.setMultipleForInstance(savedInstance.id, it)
         }
 
         return Instance.from(savedInstance)
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    fun advanceInstanceNodeThroughEdge(
+    fun advanceInstanceNodeByUser(
         instanceId: Long,
         edgeId: Long,
-        values: Map<String, Any>? = null,
-    ): InstanceInfo? {
+        values: List<InstanceValue>? = null,
+    ): InstanceInfo {
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
-        val currentNode = instanceEntity.currentNode
-        if (currentNode == null || !instanceEntity.active) {
-            throw WorkflowInstanceNotActiveException(instanceId)
-        }
+        UserMayAdvanceNodeRule(Node.fromOrNull(instanceEntity.currentNode)).valid()
 
-        val currentNodeId = currentNode.id
+        return this.advanceInstanceNodeBySystem(
+            instanceEntity = instanceEntity,
+            edgeId = edgeId,
+            values = values
+        )
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun advanceInstanceNodeBySystem(
+        instanceId: Long,
+        edgeId: Long,
+        values: List<InstanceValue>? = null,
+        message: String? = null,
+        displayType: DisplayType = DisplayType.DEFAULT
+    ): InstanceInfo {
+        val instanceEntity = this.instanceRepository.findById(instanceId)
+            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+
+        return this.advanceInstanceNodeBySystem(
+            instanceEntity = instanceEntity,
+            edgeId = edgeId,
+            values = values,
+            message = message,
+            displayType = displayType
+        )
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun advanceInstanceNodeBySystem(
+        instanceEntity: InstanceEntity,
+        edgeId: Long,
+        values: List<InstanceValue>? = null,
+        message: String? = null,
+        displayType: DisplayType = DisplayType.DEFAULT
+    ): InstanceInfo {
+        val currentNode = instanceEntity.currentNode
+
+        InstanceActiveRule(Instance.fromOrNull(instanceEntity)).valid()
+
+        val currentNodeId = currentNode!!.id
         val edge = this.edgeRepository.findById(edgeId)
             .orElseThrow { WorkflowEdgeNotFoundException(edgeId) }
 
@@ -127,7 +177,7 @@ class WorkflowInteractionService(
 
         // update instance values
         values?.let {
-            this.instanceValueService.setMultipleWithAutoTypeDetectionForInstance(instanceId, it)
+            this.instanceValueService.setMultipleForInstance(instanceEntity.id, it)
         }
 
         // check if target is stop node
@@ -137,11 +187,14 @@ class WorkflowInteractionService(
 
         instanceEntity.currentNode = edge.target
 
-        this.instanceRepository.save(instanceEntity)
+        instanceEntity.message = message
+        instanceEntity.displayType = DisplayTypeEntity.from(displayType)
+
+        val updatedInstanceEntity = this.instanceRepository.save(instanceEntity)
 
         val options = this.findOptionsBySourceNodeId(edge.target.id)
 
-        return InstanceInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, instanceId, options)
+        return InstanceInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, updatedInstanceEntity, options)
     }
 
     private fun findOptionsBySourceNodeId(sourceNodeId: Long) = this.edgeRepository.findAllBySourceId(sourceNodeId)

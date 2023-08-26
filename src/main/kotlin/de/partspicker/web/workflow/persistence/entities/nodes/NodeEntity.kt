@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.persistence.entities.nodes
 
+import de.partspicker.web.workflow.business.objects.create.nodes.AutomatedActionNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
@@ -59,6 +60,14 @@ abstract class NodeEntity(
                 workflow = workflow,
                 name = nodeCreate.name,
                 displayName = nodeCreate.displayName
+            )
+
+            is AutomatedActionNodeCreate -> AutomatedActionNodeEntity(
+                id = 0,
+                workflow = workflow,
+                name = nodeCreate.name,
+                displayName = nodeCreate.displayName,
+                automatedActionName = nodeCreate.automatedActionName
             )
         }
     }

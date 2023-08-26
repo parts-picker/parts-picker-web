@@ -42,12 +42,12 @@ data class ProjectEntity(
     val workflowInstance: InstanceEntity? = null
 ) {
     companion object {
-        fun from(project: CreateProject, instanceId: Long) = ProjectEntity(
+        fun from(project: CreateProject, instanceEntity: InstanceEntity) = ProjectEntity(
             id = 0L,
             name = project.name,
             description = project.description,
             group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
-            workflowInstance = InstanceEntity(id = instanceId)
+            workflowInstance = instanceEntity
         )
     }
 }

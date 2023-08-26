@@ -6,6 +6,7 @@ import de.partspicker.web.workflow.api.requests.AdvanceInstanceStateRequest
 import de.partspicker.web.workflow.api.resources.InstanceInfoResource
 import de.partspicker.web.workflow.api.resources.InstanceInfoResourceAssembler
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -34,11 +35,11 @@ class WorkflowInteractionController(
                 "for instance with id $instanceId through edge with id $edgeId"
         )
 
-        val updatedInstanceInfo = this.workflowInteractionService.advanceInstanceNodeThroughEdge(
+        val updatedInstanceInfo = this.workflowInteractionService.advanceInstanceNodeByUser(
             instanceId,
             edgeId,
-            requestBody?.values
-        ) ?: return ResponseEntity(HttpStatus.NO_CONTENT)
+            requestBody?.let { InstanceValue.AsList.fromWithAutoTypeDetection(it.values) }
+        )
 
         return ResponseEntity(instanceInfoResourceAssembler.toModel(updatedInstanceInfo), HttpStatus.OK)
     }

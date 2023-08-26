@@ -2,7 +2,6 @@ package de.partspicker.web.common.exceptions
 
 import de.partspicker.web.common.business.exceptions.RuleException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -47,7 +46,6 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(
         value = [
             WorkflowEdgeSourceNotMatchingException::class,
-            WorkflowInstanceNotActiveException::class,
             WorkflowStartedWithNonStartNodeException::class,
         ],
     )

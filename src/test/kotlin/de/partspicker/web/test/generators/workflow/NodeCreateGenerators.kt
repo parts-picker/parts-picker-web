@@ -1,6 +1,7 @@
 package de.partspicker.web.test.generators.workflow
 
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
+import de.partspicker.web.workflow.business.objects.create.nodes.AutomatedActionNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
@@ -23,6 +24,14 @@ class NodeCreateGenerators private constructor() {
             UserActionNodeCreate(name, displayName)
         }
 
+        val automatedActionNodeCreateGenerator: Arb<AutomatedActionNodeCreate> = Arb.bind(
+            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
+            Arb.string(range = IntRange(3, 16)),
+            Arb.string(range = IntRange(3, 16))
+        ) { name, displayName, automatedActionName ->
+            AutomatedActionNodeCreate(name, displayName, automatedActionName)
+        }
+
         val randomStartTypeGen = Arb.enum<StartTypeCreate>()
 
         val startNodeCreateGenerator: Arb<StartNodeCreate> = Arb.bind(
@@ -40,10 +49,11 @@ class NodeCreateGenerators private constructor() {
             StopNodeCreate(name, displayName)
         }
 
-        val actionNodeGenerator = Arb.choice(userActionNodeCreateGenerator)
+        val actionNodeGenerator = Arb.choice(userActionNodeCreateGenerator, automatedActionNodeCreateGenerator)
 
         val generator: Arb<NodeCreate> = Arb.choose(
-            8 to userActionNodeCreateGenerator,
+            6 to userActionNodeCreateGenerator,
+            4 to automatedActionNodeCreateGenerator,
             1 to startNodeCreateGenerator,
             1 to stopNodeCreateGenerator
         )

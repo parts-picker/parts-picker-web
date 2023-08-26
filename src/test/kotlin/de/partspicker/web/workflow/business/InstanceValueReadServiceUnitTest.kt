@@ -19,9 +19,9 @@ class InstanceValueReadServiceUnitTest : ShouldSpec({
 
     context("readAllForInstance") {
         should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            every { instanceRepositoryMock.existsById(any()) } returns false
-
             val nonExistentId = 666L
+            every { instanceRepositoryMock.existsById(nonExistentId) } returns false
+
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
                 cut.readAllForInstance(nonExistentId)
             }
@@ -32,9 +32,9 @@ class InstanceValueReadServiceUnitTest : ShouldSpec({
 
     context("readForInstanceByKey") {
         should("throw WorkflowInstanceNotFoundException when given non-existent instance") {
-            every { instanceRepositoryMock.existsById(any()) } returns false
-
             val nonExistentId = 666L
+            every { instanceRepositoryMock.existsById(nonExistentId) } returns false
+
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
                 cut.readForInstanceByKey(nonExistentId, "someKey")
             }
@@ -42,11 +42,10 @@ class InstanceValueReadServiceUnitTest : ShouldSpec({
             exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
         }
 
-        should("return null when the key does not exists for the given instance id") {
+        should("return null when the key does not exist for the given instance id") {
             every { instanceRepositoryMock.existsById(any()) } returns true
             every {
-                instanceValueRepositoryMock.findByWorkflowInstanceIdAndTypeAndKey(
-                    any(),
+                instanceValueRepositoryMock.findByWorkflowInstanceIdAndKey(
                     any(),
                     any()
                 )
