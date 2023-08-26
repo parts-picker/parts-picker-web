@@ -1,6 +1,7 @@
 package de.partspicker.web.workflow.business
 
-import de.partspicker.web.test.generators.workflow.InstanceValueCreateGenerators
+import de.partspicker.web.workflow.business.objects.InstanceValue
+import de.partspicker.web.workflow.business.objects.enums.InstanceValueType
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceValueRepository
 import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity
@@ -9,7 +10,6 @@ import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.property.arbitrary.single
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.jdbc.Sql
@@ -27,7 +27,14 @@ class InstanceValueServiceIntTest(
         should("save all given values") {
             // given
             val amount = 10
-            val values = List(amount) { InstanceValueCreateGenerators.generator.single() }
+            val values = List(amount) {
+                InstanceValue(
+                    key = it.toString(),
+                    value = it.toString(),
+                    dataType = SupportedDataType.INTEGER,
+                    valueType = InstanceValueType.WORKFLOW
+                )
+            }
 
             val instanceId = 101L
 

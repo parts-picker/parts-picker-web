@@ -154,7 +154,7 @@ class WorkflowCreateUnitTest : ShouldSpec({
             exception.message shouldBe WorkflowCreate.START_NODE_IS_TARGET
         }
 
-        should("throw WorkflowIllegalStateException when a stope node is the source node of an edge") {
+        should("throw WorkflowIllegalStateException when a stop node is the source node of an edge") {
             val startNode = NodeCreateGenerators.startNodeCreateGenerator.single()
             val stopNode = NodeCreateGenerators.stopNodeCreateGenerator.single()
             val node = NodeCreateGenerators.actionNodeGenerator.single()
@@ -196,7 +196,7 @@ class WorkflowCreateUnitTest : ShouldSpec({
             exception.message shouldBe "Two or more nodes may not have the same name: [duplicated_name]"
         }
 
-        should("throw WorkflowEdgeDuplicateException when two or more nodes have the same name") {
+        should("throw WorkflowEdgeDuplicateException when two or more edges have the same name") {
             val exception = shouldThrow<WorkflowEdgeDuplicateException> {
                 WorkflowCreate(
                     name = "Workflow",
@@ -284,7 +284,7 @@ class WorkflowCreateUnitTest : ShouldSpec({
             exception.message shouldBe "Node with name ${node.name} is not a stop node & is not the source if any edges"
         }
 
-        should("throw Exception when node is no user_action node & is source node of multiple edges") {
+        should("throw Exception when node isn't whitelisted multi-edge node & is source node of multiple edges") {
             val startNode = StartNodeCreate("start_node", "start", StartTypeCreate.WORKFLOW)
             val node = NodeCreateGenerators.actionNodeGenerator.single()
             val stopNode = StopNodeCreate("stop_node", "stop")
@@ -353,6 +353,49 @@ class WorkflowCreateUnitTest : ShouldSpec({
                         name = "edge3",
                         displayName = "user_action_node->stop",
                         sourceNode = userActionNode.name,
+                        targetNode = stopNode.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge4",
+                        displayName = "node->stop",
+                        sourceNode = node.name,
+                        targetNode = stopNode.name,
+                        conditions = emptyList()
+                    )
+                )
+            )
+        }
+
+        should("be valid when node is automated_action node & is source node of multiple edges") {
+            val startNode = StartNodeCreate("start_node", "start", StartTypeCreate.WORKFLOW)
+            val automatedActionNode = NodeCreateGenerators.automatedActionNodeCreateGenerator.single()
+            val node = NodeCreateGenerators.actionNodeGenerator.single()
+            val stopNode = StopNodeCreate("stop_node", "stop")
+
+            WorkflowCreate(
+                name = "Workflow",
+                version = 1L,
+                nodes = listOf(startNode, automatedActionNode, node, stopNode),
+                edges = listOf(
+                    EdgeCreate(
+                        name = "edge1",
+                        displayName = "start->node",
+                        sourceNode = startNode.name,
+                        targetNode = automatedActionNode.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge2",
+                        displayName = "automated_action_node->node",
+                        sourceNode = automatedActionNode.name,
+                        targetNode = node.name,
+                        conditions = emptyList()
+                    ),
+                    EdgeCreate(
+                        name = "edge3",
+                        displayName = "automated_action_node->stop",
+                        sourceNode = automatedActionNode.name,
                         targetNode = stopNode.name,
                         conditions = emptyList()
                     ),

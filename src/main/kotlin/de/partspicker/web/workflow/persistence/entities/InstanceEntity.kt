@@ -1,7 +1,10 @@
 package de.partspicker.web.workflow.persistence.entities
 
+import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.ForeignKey
 import jakarta.persistence.GeneratedValue
@@ -28,5 +31,10 @@ data class InstanceEntity(
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
     var currentNode: NodeEntity? = null,
 
-    var active: Boolean = false
+    var active: Boolean = false,
+
+    var message: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    var displayType: DisplayTypeEntity = DisplayTypeEntity.DEFAULT
 )

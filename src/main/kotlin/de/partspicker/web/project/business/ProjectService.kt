@@ -9,6 +9,7 @@ import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.GroupEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.persistence.InstanceRepository
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -17,7 +18,8 @@ import org.springframework.stereotype.Service
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val groupRepository: GroupRepository,
-    private val workflowInteractionService: WorkflowInteractionService
+    private val workflowInteractionService: WorkflowInteractionService,
+    private val instanceRepository: InstanceRepository
 ) {
 
     @Transactional
@@ -29,9 +31,11 @@ class ProjectService(
         }
 
         val instance = this.workflowInteractionService.startProjectWorkflow()
-        val createdProject = this.projectRepository.save(ProjectEntity.from(project, instance.id))
 
-        return Project.from(createdProject)
+        val instanceEntity = this.instanceRepository.getReferenceById(instance.id)
+        val savedProjectEntity = this.projectRepository.save(ProjectEntity.from(project, instanceEntity))
+
+        return Project.from(savedProjectEntity)
     }
 
     fun exists(id: Long) = this.projectRepository.existsById(id)
@@ -46,6 +50,12 @@ class ProjectService(
         }
 
         return Project.from(projectEntity.get())
+    }
+
+    fun readByInstanceId(instanceId: Long): Project? {
+        val projectEntity = this.projectRepository.findByWorkflowInstanceId(instanceId) ?: return null
+
+        return Project.from(projectEntity)
     }
 
     fun update(projectId: Long, name: String, description: String?, groupId: Long?): Project {

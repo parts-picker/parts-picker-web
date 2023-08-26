@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.persistence.entities.migration
 
+import de.partspicker.web.workflow.persistence.entities.migration.enums.InstanceValueTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.enums.SupportedDataTypeMigrationEntity
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -29,7 +30,10 @@ data class InstanceValueMigrationEntity(
     val value: String?,
 
     @Enumerated(EnumType.STRING)
-    val type: SupportedDataTypeMigrationEntity,
+    val dataType: SupportedDataTypeMigrationEntity,
+
+    @Enumerated(EnumType.STRING)
+    val valueType: InstanceValueTypeMigrationEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "node_migration_id", foreignKey = ForeignKey(name = "fk_node_migration_id"))

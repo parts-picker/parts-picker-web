@@ -10,7 +10,7 @@ import de.partspicker.web.workflow.api.json.nodes.UserActionNodeJson
 import de.partspicker.web.workflow.business.objects.Workflow
 import de.partspicker.web.workflow.business.objects.create.WorkflowCreate
 
-class WorkflowJsonBuilder {
+class SimpleWorkflowJsonBuilder {
     private val nodeNames = mutableListOf<String>()
 
     private var name = "default_name"
@@ -43,7 +43,7 @@ class WorkflowJsonBuilder {
             }
         }
 
-        val egdeJsons = nodeNames.zipWithNext().map { (current, next) ->
+        val edgeJsons = nodeNames.zipWithNext().map { (current, next) ->
             val edgeName = "$current-->$next"
             EdgeJson(name = edgeName, displayName = edgeName, sourceNode = current, targetNode = next)
         }
@@ -52,7 +52,7 @@ class WorkflowJsonBuilder {
             name = name,
             version = version,
             nodes = nodeJsons,
-            edges = egdeJsons,
+            edges = edgeJsons,
             migrationPlan = explicitMigrationPlanJson
         )
 

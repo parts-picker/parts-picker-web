@@ -14,6 +14,7 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowRouteDuplicateExc
 import de.partspicker.web.workflow.business.exceptions.WorkflowSemanticException
 import de.partspicker.web.workflow.business.objects.Workflow
 import de.partspicker.web.workflow.business.objects.create.migration.MigrationPlanCreate
+import de.partspicker.web.workflow.business.objects.create.nodes.AutomatedActionNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StartNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
@@ -86,7 +87,11 @@ data class WorkflowCreate(
         duplicatedRoutes.isEmpty() elseThrow WorkflowRouteDuplicateException(edgesWithDuplicatedRoutes)
 
         // only one edge per node except for user_action nodes
-        val nodesToCheckForMultipleEdges = nodes.filter { it !is UserActionNodeCreate }.map { it.name }
+        val nodesToCheckForMultipleEdges = nodes.filter {
+            it !is UserActionNodeCreate &&
+                it !is AutomatedActionNodeCreate
+        }.map { it.name }
+
         val nodesWithMultipleTargets = edges
             .groupBy { it.sourceNode }
             .filter { nodesToCheckForMultipleEdges.contains(it.key) }

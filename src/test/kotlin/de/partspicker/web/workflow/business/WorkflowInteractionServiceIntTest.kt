@@ -1,24 +1,23 @@
 package de.partspicker.web.workflow.business
 
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.test.util.TestSetupHelper
+import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
-import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotActiveException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowNameNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundException
-import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
 import de.partspicker.web.workflow.business.objects.EdgeInfo
+import de.partspicker.web.workflow.business.objects.InstanceValue
+import de.partspicker.web.workflow.business.objects.enums.InstanceValueType
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.maps.shouldContain
-import io.kotest.matchers.maps.shouldContainAll
-import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.springframework.boot.test.context.SpringBootTest
@@ -34,7 +33,8 @@ class WorkflowInteractionServiceIntTest(
     private val cut: WorkflowInteractionService,
     // support classes
     private val instanceValueReadService: InstanceValueReadService,
-    private val instanceRepository: InstanceRepository
+    private val instanceRepository: InstanceRepository,
+    private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
 
     context("read instance info") {
@@ -78,13 +78,13 @@ class WorkflowInteractionServiceIntTest(
     context("read project status") {
         should("return project status when given existing id") {
             // given
-            val projectId = 1L
+            val project = testSetupHelper.setupProject()
 
             // when
-            val projectStatus = cut.readProjectStatus(projectId)
+            val projectStatus = cut.readProjectStatus(project.id)
 
             // then
-            projectStatus shouldBe "start"
+            projectStatus shouldBe project.status
         }
 
         should("throw ProjectNotFoundException when given non-existing id") {
@@ -100,12 +100,33 @@ class WorkflowInteractionServiceIntTest(
         }
     }
 
+    context("read edges by source node id") {
+        should("return all edges with source node being the node with the given id ") {
+            // given
+            val sourceNodeId = 1000L
+
+            // when
+            val edges = cut.readEdgesBySourceNodeId(sourceNodeId)
+
+            // then
+            edges shouldHaveSize 2
+            edges.map { it.id } shouldContainOnly listOf(1000L, 1002L)
+        }
+    }
+
     context("start workflow instance") {
         should("create an instance for the latest workflow version starting at the successor of the given start") {
             // given
             val workflowName = "Testflows"
             val nodeName = "start"
-            val values = mapOf("amount" to 5L)
+            val values = listOf(
+                InstanceValue(
+                    key = "amount",
+                    value = "5",
+                    dataType = SupportedDataType.LONG,
+                    valueType = InstanceValueType.WORKFLOW
+                )
+            )
 
             // when
             val instance = cut.startWorkflowInstance(workflowName, nodeName, values)
@@ -119,72 +140,38 @@ class WorkflowInteractionServiceIntTest(
             val readValues = instanceValueReadService.readAllForInstance(instance.id)
 
             readValues shouldHaveSize 1
-            readValues shouldContain ("amount" to ("5" to SupportedDataType.LONG))
-        }
-
-        should("throw WorkflowNameNotFoundException when given non-existent workflow name") {
-            // given
-            val nonExistentWorkflowName = "nonExistentName"
-
-            // when
-            val exception = shouldThrow<WorkflowNameNotFoundException> {
-                cut.startWorkflowInstance(nonExistentWorkflowName, "someNode")
-            }
-
-            // then
-            exception.message shouldBe "Workflow with name $nonExistentWorkflowName could not be found"
-        }
-
-        should("throw WorkflowNodeNameNotFoundException when given non-existent workflow name") {
-            // given
-            val workflowName = "Testflows"
-            val nonExistentNode = "nonExistentNode"
-
-            // when
-            val exception = shouldThrow<WorkflowNodeNameNotFoundException> {
-                cut.startWorkflowInstance(workflowName, nonExistentNode)
-            }
-
-            // then
-            exception.message shouldBe "Workflow node with name $nonExistentNode " +
-                "could not be found for workflow with name $workflowName"
-        }
-
-        should("throw WorkflowStartedWithNonStartNodeException when given non-existent workflow name") {
-            // given
-            val workflowName = "Testflows"
-            val nodeName = "planning"
-
-            // when
-            val exception = shouldThrow<WorkflowStartedWithNonStartNodeException> {
-                cut.startWorkflowInstance(workflowName, nodeName)
-            }
-
-            // then
-            exception.message shouldBe "Workflow can only be started at a start node." +
-                " The node with name $nodeName is not a start node of the workflow with name $workflowName"
+            readValues shouldContainOnly listOf(
+                InstanceValue(
+                    key = "amount",
+                    value = "5",
+                    dataType = SupportedDataType.LONG,
+                    valueType = InstanceValueType.WORKFLOW
+                )
+            )
         }
     }
 
-    context("advance workflow instance state") {
+    context("advanceInstanceNodeBySystem") {
         should("advance to the next node with the given values") {
             // given
             val instanceId = 1L
             val edgeId = 100L
-            val values = mapOf("amount" to 3, "owner" to "someone")
+            val values = listOf(
+                InstanceValue("amount", "3", SupportedDataType.INTEGER, InstanceValueType.WORKFLOW),
+                InstanceValue("owner", "someone", SupportedDataType.STRING, InstanceValueType.WORKFLOW)
+            )
 
             // when
-            val instanceInfo = cut.advanceInstanceNodeThroughEdge(instanceId, edgeId, values)
+            val instanceInfo = cut.advanceInstanceNodeBySystem(instanceId, edgeId, values)
 
             // then
-            instanceInfo!!
             instanceInfo.name shouldBe "planning"
             instanceInfo.displayName shouldBe "Planning"
 
             val instanceValues = instanceValueReadService.readAllForInstance(instanceId)
 
             instanceValues shouldHaveSize values.size
-            instanceValues.mapValues { it.value.first } shouldContainAll values.mapValues { it.value.toString() }
+            instanceValues.map { it.key } shouldContainAll values.map { it.key }
         }
 
         should("deactivate the instance when advancing to stop node") {
@@ -193,10 +180,9 @@ class WorkflowInteractionServiceIntTest(
             val edgeId = 400L
 
             // when
-            val instanceInfo = cut.advanceInstanceNodeThroughEdge(instanceId, edgeId)
+            val instanceInfo = cut.advanceInstanceNodeBySystem(instanceId, edgeId)
 
             // then
-            instanceInfo!!
             instanceInfo.name shouldBe "stop"
             instanceInfo.displayName shouldBe "Stop"
 
@@ -212,7 +198,7 @@ class WorkflowInteractionServiceIntTest(
 
             // when
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.advanceInstanceNodeThroughEdge(nonExistentId, edgeId)
+                cut.advanceInstanceNodeBySystem(nonExistentId, edgeId)
             }
 
             // then
@@ -225,12 +211,12 @@ class WorkflowInteractionServiceIntTest(
             val edgeId = 100L
 
             // when
-            val exception = shouldThrow<WorkflowInstanceNotActiveException> {
-                cut.advanceInstanceNodeThroughEdge(instanceId, edgeId)
+            val exception = shouldThrow<InstanceInactiveException> {
+                cut.advanceInstanceNodeBySystem(instanceId, edgeId)
             }
 
             // then
-            exception.message shouldBe "Workflow instance with id $instanceId cannot be edited because it is inactive."
+            exception.message shouldBe "The instance with the given id $instanceId is inactive & cannot be modified"
         }
 
         should("throw WorkflowEdgeNotFoundException when given non-existent instance id ") {
@@ -240,7 +226,7 @@ class WorkflowInteractionServiceIntTest(
 
             // when
             val exception = shouldThrow<WorkflowEdgeNotFoundException> {
-                cut.advanceInstanceNodeThroughEdge(instanceId, nonExistentId)
+                cut.advanceInstanceNodeBySystem(instanceId, nonExistentId)
             }
 
             // then
@@ -254,7 +240,7 @@ class WorkflowInteractionServiceIntTest(
 
             // when
             val exception = shouldThrow<WorkflowEdgeSourceNotMatchingException> {
-                cut.advanceInstanceNodeThroughEdge(instanceId, edgeId)
+                cut.advanceInstanceNodeBySystem(instanceId, edgeId)
             }
 
             // then

@@ -2,6 +2,7 @@ package de.partspicker.web.workflow.business.objects.nodes
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowException
 import de.partspicker.web.workflow.business.objects.enums.StartType
+import de.partspicker.web.workflow.persistence.entities.nodes.AutomatedActionNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
@@ -30,6 +31,14 @@ sealed class Node(
                     startType = StartType.from(nodeEntity.startType)
                 )
 
+                is AutomatedActionNodeEntity -> AutomatedActionNode(
+                    id = nodeEntity.id,
+                    workflowId = nodeEntity.workflow.id,
+                    name = nodeEntity.name,
+                    displayName = nodeEntity.displayName,
+                    automatedActionName = nodeEntity.automatedActionName
+                )
+
                 is StopNodeEntity -> StopNode(
                     id = nodeEntity.id,
                     workflowId = nodeEntity.workflow.id,
@@ -39,6 +48,12 @@ sealed class Node(
 
                 else -> throw WorkflowException()
             }
+        }
+
+        fun fromOrNull(nodeEntity: NodeEntity?): Node? {
+            nodeEntity ?: return null
+
+            return this.from(nodeEntity)
         }
     }
 

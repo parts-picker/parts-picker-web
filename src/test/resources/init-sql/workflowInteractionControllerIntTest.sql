@@ -11,11 +11,12 @@ INSERT INTO workflow_edges VALUES(200, 100, 200, 300, 'implementation_to_report'
 INSERT INTO workflow_edges VALUES(300, 100, 300, 400, 'report_to_stop', 'Finish');
 
 
-INSERT INTO workflow_instances VALUES(100, 100, 100, true);
-INSERT INTO workflow_instances VALUES(200, 100, 100, true);
-INSERT INTO workflow_instances VALUES(300, 100, 200, true);
-INSERT INTO workflow_instances VALUES(400, 100, null, false);
-INSERT INTO workflow_instances VALUES(500, 100, 400, true);
+INSERT INTO workflow_instances VALUES(100, 100, 100, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(200, 100, 100, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(300, 100, 200, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(400, 100, 400, false, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(500, 100, 400, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(600, 100, null, true, null, 'DEFAULT');
 
 INSERT INTO workflow_instance_values VALUES(100, 100, 'userID', 'Leonard', 'STRING', 'WORKFLOW');
 INSERT INTO workflow_instance_values VALUES(200, 100, 'amount', '7', 'LONG', 'WORKFLOW');

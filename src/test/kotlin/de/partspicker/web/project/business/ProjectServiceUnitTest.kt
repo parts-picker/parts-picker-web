@@ -8,14 +8,17 @@ import de.partspicker.web.project.persistance.GroupRepository
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.test.generators.ProjectEntityGenerators
+import de.partspicker.web.test.generators.id
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import de.partspicker.web.workflow.business.objects.Instance
+import de.partspicker.web.workflow.persistence.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.kotest.property.arbitrary.single
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -29,10 +32,12 @@ class ProjectServiceUnitTest : ShouldSpec({
     val projectRepositoryMock = mockk<ProjectRepository>()
     val groupRepositoryMock = mockk<GroupRepository>()
     val workflowInteractionServiceMock = mockk<WorkflowInteractionService>()
+    val instanceRepositoryMock = mockk<InstanceRepository>()
     val cut = ProjectService(
         projectRepository = projectRepositoryMock,
         groupRepository = groupRepositoryMock,
-        workflowInteractionService = workflowInteractionServiceMock
+        workflowInteractionService = workflowInteractionServiceMock,
+        instanceRepository = instanceRepositoryMock
     )
 
     afterTest {
@@ -45,8 +50,9 @@ class ProjectServiceUnitTest : ShouldSpec({
             val projectEntity = ProjectEntityGenerators.generator.next()
             every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns true
             every { projectRepositoryMock.save(any()) } returns projectEntity
-            every { workflowInteractionServiceMock.startProjectWorkflow(any()) } returns
+            every { workflowInteractionServiceMock.startProjectWorkflow() } returns
                 Instance.from(projectEntity.workflowInstance!!)
+            every { instanceRepositoryMock.getReferenceById(any()) } returns mockk()
 
             // when
             val returnedProject = cut.create(
@@ -59,7 +65,7 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             verify(exactly = 1) {
                 projectRepositoryMock.save(any())
-                workflowInteractionServiceMock.startProjectWorkflow(any())
+                workflowInteractionServiceMock.startProjectWorkflow()
             }
 
             returnedProject shouldBe Project.from(projectEntity)
@@ -141,6 +147,34 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe "Project with id $randomId could not be found"
+        }
+    }
+
+    context("readByInstanceId") {
+        should("return correct project when given existent id") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every {
+                projectRepositoryMock.findByWorkflowInstanceId(projectEntity.workflowInstance!!.id)
+            } returns projectEntity
+
+            // when
+            val returnedProject = cut.readByInstanceId(projectEntity.workflowInstance!!.id)
+
+            // then
+            returnedProject shouldBe Project.from(projectEntity)
+        }
+
+        should("return null when given non-existent id") {
+            // given
+            val randomId = Arb.id().single()
+            every { projectRepositoryMock.findByWorkflowInstanceId(randomId) } returns null
+
+            // when
+            val returnedProject = cut.readByInstanceId(randomId)
+
+            // then
+            returnedProject shouldBe null
         }
     }
 

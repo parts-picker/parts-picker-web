@@ -9,7 +9,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 
 @Component
-@ConditionalOnProperty(prefix = "workflow.input", name = ["auto-migration"])
+@ConditionalOnProperty(prefix = "workflow.migration", name = ["auto-migration"])
 class StartupWorkflowMigrator(
     val workflowMigrationService: WorkflowMigrationService
 ) {

@@ -24,4 +24,8 @@ data class Edge(
     object AsList {
         fun from(edgeEntities: List<EdgeEntity>) = edgeEntities.map { from(it) }
     }
+
+    object AsSet {
+        fun from(edgeEntities: List<EdgeEntity>) = AsList.from(edgeEntities).toSet()
+    }
 }

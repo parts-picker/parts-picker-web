@@ -1,10 +1,9 @@
 package de.partspicker.web.workflow.business
 
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.InstanceValueRepository
-import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity.WORKFLOW
 import org.springframework.stereotype.Service
 
 @Service
@@ -12,31 +11,28 @@ class InstanceValueReadService(
     private val instanceValueRepository: InstanceValueRepository,
     private val instanceRepository: InstanceRepository
 ) {
-    fun readAllForInstance(instanceId: Long): Map<String, Pair<String?, SupportedDataType>> {
+    fun readAllForInstance(instanceId: Long): List<InstanceValue> {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
 
-        val instanceValues = this.instanceValueRepository.findAllByWorkflowInstanceIdAndType(
+        val instanceValueEntities = this.instanceValueRepository.findAllByWorkflowInstanceId(
             workflowInstanceId = instanceId,
-            type = WORKFLOW
         )
 
-        return instanceValues.associateBy({ it.key }, { it.value to SupportedDataType.from(it.valueDataType) })
+        return InstanceValue.AsList.from(instanceValueEntities)
     }
 
-    fun readForInstanceByKey(instanceId: Long, key: String): Pair<String?, SupportedDataType>? {
+    fun readForInstanceByKey(instanceId: Long, key: String): InstanceValue? {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
 
-        val instanceValueEntity = this.instanceValueRepository.findByWorkflowInstanceIdAndTypeAndKey(
+        val instanceValueEntity = this.instanceValueRepository.findByWorkflowInstanceIdAndKey(
             workflowInstanceId = instanceId,
-            type = WORKFLOW,
             key = key
-
         ) ?: return null
 
-        return instanceValueEntity.value to SupportedDataType.from(instanceValueEntity.valueDataType)
+        return InstanceValue.from(instanceValueEntity)
     }
 }

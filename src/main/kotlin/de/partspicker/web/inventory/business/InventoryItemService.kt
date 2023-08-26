@@ -4,6 +4,7 @@ import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.util.elseThrow
 import de.partspicker.web.inventory.business.objects.AssignableItem
 import de.partspicker.web.inventory.business.objects.AssignedItem
+import de.partspicker.web.inventory.business.objects.enums.CheckRequiredItemsResult
 import de.partspicker.web.inventory.business.rules.RequiredGreaterAssignedAmountRule
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
 import de.partspicker.web.item.business.objects.Item
@@ -63,6 +64,20 @@ class InventoryItemService(
                 pageable,
             ),
         )
+    }
+
+    fun checkRequiredItemsAssignedToProject(projectId: Long): CheckRequiredItemsResult {
+        val requiredItemTypes = this.requiredItemTypeReadService.readAllByProjectId(
+            projectId,
+            pageable = Pageable.unpaged()
+        )
+
+        val allAssigned = requiredItemTypes.all { it.isRequiredAmountAssigned() }
+        return when {
+            requiredItemTypes.isEmpty -> CheckRequiredItemsResult.NO_REQUIRED
+            allAssigned -> CheckRequiredItemsResult.ALL_ASSIGNED
+            else -> CheckRequiredItemsResult.MISSING
+        }
     }
 
     fun assignToProject(itemId: Long, newProjectId: Long): AssignedItem {

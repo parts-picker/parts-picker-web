@@ -1,15 +1,17 @@
 package de.partspicker.web.workflow.business
 
 import de.partspicker.web.test.annotations.ReducedSpringTestContext
-import de.partspicker.web.test.builders.WorkflowJsonBuilder
+import de.partspicker.web.test.builders.SimpleWorkflowJsonBuilder
 import de.partspicker.web.workflow.api.json.migration.ExplicitMigrationPlanJson
 import de.partspicker.web.workflow.api.json.migration.InstanceValueMigrationJson
 import de.partspicker.web.workflow.api.json.migration.NodeMigrationJson
+import de.partspicker.web.workflow.api.json.migration.enums.InstanceValueTypeJson
 import de.partspicker.web.workflow.api.json.migration.enums.SupportedDataTypeJson
-import de.partspicker.web.workflow.business.objects.create.InstanceValueCreate
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.business.objects.create.WorkflowCreate
-import de.partspicker.web.workflow.business.objects.create.enums.SupportedDataTypeCreate
 import de.partspicker.web.workflow.business.objects.create.migration.MigrationPlanCreate
+import de.partspicker.web.workflow.business.objects.enums.InstanceValueType
+import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.MigrationPlanRepository
 import de.partspicker.web.workflow.persistence.NodeMigrationRepository
@@ -17,7 +19,6 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.springframework.context.annotation.Import
@@ -28,7 +29,10 @@ import org.springframework.context.annotation.Import
     WorkflowService::class,
     WorkflowMigrationService::class,
     InstanceValueService::class,
-    WorkflowInteractionService::class
+    WorkflowInteractionService::class,
+    WorkflowMigrationService::class,
+    InstanceValueMigrationService::class,
+    SpELConfig::class
 )
 @Suppress("LongParameterList")
 class WorkflowMigrationServiceIntTest(
@@ -45,14 +49,14 @@ class WorkflowMigrationServiceIntTest(
         should("create the given migration plan") {
             // given
             // setup workflows
-            val sourceWorkflowCreate = WorkflowJsonBuilder()
+            val sourceWorkflowCreate = SimpleWorkflowJsonBuilder()
                 .withName("test_flow")
                 .withVersion(2L)
                 .append("start", "stop")
                 .buildAndConvertToCreate()
             val sourceWorkflow = workflowService.create(sourceWorkflowCreate)
 
-            val targetWorkflowJson = WorkflowJsonBuilder()
+            val targetWorkflowJson = SimpleWorkflowJsonBuilder()
                 .withName(sourceWorkflowCreate.name)
                 .withVersion(sourceWorkflowCreate.version + 1)
                 .append("start", "node1", "stop")
@@ -102,7 +106,7 @@ class WorkflowMigrationServiceIntTest(
             val startNodeName = "start"
             val firstNodeName = "node1"
 
-            val sourceWorkflowCreate = WorkflowJsonBuilder()
+            val sourceWorkflowCreate = SimpleWorkflowJsonBuilder()
                 .withName(workflowName)
                 .withVersion(2L)
                 .append(startNodeName, firstNodeName, "stop")
@@ -114,7 +118,7 @@ class WorkflowMigrationServiceIntTest(
                 startNodeName
             )
 
-            val targetWorkflowCreate = WorkflowJsonBuilder()
+            val targetWorkflowCreate = SimpleWorkflowJsonBuilder()
                 .withName(workflowName)
                 .withVersion(3L)
                 .append(startNodeName, firstNodeName, "node2", "stop")
@@ -130,7 +134,7 @@ class WorkflowMigrationServiceIntTest(
             instanceEntity.isPresent shouldBe true
             instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
             instanceEntity.get().currentNode!!.workflow.id shouldBe createdTargetWorkflow.id
-            // node is moved from start to the first non-automatic node automatically
+            // node is moved from start to the first non-automated node automatically
             instanceEntity.get().currentNode!!.name shouldBe firstNodeName
         }
 
@@ -142,7 +146,7 @@ class WorkflowMigrationServiceIntTest(
             val firstNodeName = "node1"
             val secondNodeName = "node2"
 
-            val sourceWorkflowCreate = WorkflowJsonBuilder()
+            val sourceWorkflowCreate = SimpleWorkflowJsonBuilder()
                 .withName(workflowName)
                 .withVersion(2L)
                 .append(startNodeName, firstNodeName, "stop")
@@ -165,14 +169,15 @@ class WorkflowMigrationServiceIntTest(
                             InstanceValueMigrationJson(
                                 instanceValueKey,
                                 instanceValue,
-                                SupportedDataTypeJson.INTEGER
+                                SupportedDataTypeJson.INTEGER,
+                                InstanceValueTypeJson.WORKFLOW
                             )
                         )
                     )
                 )
             )
 
-            val targetWorkflowCreate = WorkflowJsonBuilder()
+            val targetWorkflowCreate = SimpleWorkflowJsonBuilder()
                 .withName(workflowName)
                 .withVersion(3L)
                 .withExplicitMigrationPlanJson(explicitMigrationPlanJson)
@@ -189,14 +194,14 @@ class WorkflowMigrationServiceIntTest(
             instanceEntity.isPresent shouldBe true
             instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
             instanceEntity.get().currentNode!!.workflow.id shouldBe createdTargetWorkflow.id
-            // node is moved from start to the first non-automatic node automatically
+            // node is moved from start to the first non-automated node automatically
             // & then migrated through explicit rule
             instanceEntity.get().currentNode!!.name shouldBe secondNodeName
 
             // check instance values
             val instanceValues = instanceValueReadService.readAllForInstance(instanceEntity.get().id)
             instanceValues shouldHaveSize 1
-            instanceValues[instanceValueKey]!!.first shouldBe instanceValue
+            instanceValues[0].value shouldBe instanceValue
         }
     }
 
@@ -207,7 +212,7 @@ class WorkflowMigrationServiceIntTest(
             val startNodeName = "start"
 
             // create workflow
-            val workflowCreate = WorkflowJsonBuilder()
+            val workflowCreate = SimpleWorkflowJsonBuilder()
                 .withName("test_flow")
                 .withVersion(2L)
                 .append(startNodeName, nodeName, "stop")
@@ -215,23 +220,30 @@ class WorkflowMigrationServiceIntTest(
             val createdWorkflow = workflowService.create(workflowCreate)
 
             // create instance & instance values
-            val instanceValueToCreate = "key" to 9L
+            val instanceValueToCreate = InstanceValue(
+                key = "key",
+                value = "9",
+                SupportedDataType.INTEGER,
+                InstanceValueType.WORKFLOW
+            )
             val instance = workflowInteractionService.startWorkflowInstance(
                 createdWorkflow.name,
                 startNodeName,
-                mapOf(instanceValueToCreate)
+                listOf(instanceValueToCreate)
             )
 
             // when
-            val instanceValueCreate = InstanceValueCreate(
-                key = instanceValueToCreate.first,
+            val instanceValue = InstanceValue(
+                key = instanceValueToCreate.key,
                 value = "someString",
-                SupportedDataTypeCreate.STRING
+                SupportedDataType.STRING,
+                InstanceValueType.WORKFLOW
+
             )
             val updatedInstance = cut.forceSetInstanceNodeWithinWorkflow(
                 instance.id,
                 nodeName,
-                listOf(instanceValueCreate)
+                listOf(instanceValue)
             )
 
             // then
@@ -246,7 +258,7 @@ class WorkflowMigrationServiceIntTest(
 
             val instanceValues = instanceValueReadService.readAllForInstance(instance.id)
             instanceValues shouldHaveSize 1
-            instanceValues[instanceValueCreate.key]!!.first shouldBe instanceValueCreate.value
+            instanceValues[0].value shouldBe instanceValue.value
         }
     }
 }) {

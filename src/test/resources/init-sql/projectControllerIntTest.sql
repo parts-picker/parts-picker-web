@@ -3,10 +3,10 @@ INSERT INTO "groups" VALUES(1, 'GROUP 1', 'Description for group 1');
 INSERT INTO workflows VALUES(nextval('workflow_id_seq'), 'Testflows', 1, now());
 INSERT INTO workflow_nodes VALUES(nextval('node_id_seq'), currval('workflow_id_seq'), 'start', 'start', 'Start', 'WORKFLOW');
 
-INSERT INTO workflow_instances VALUES(1, currval('workflow_id_seq'), currval('node_id_seq'), true);
-INSERT INTO workflow_instances VALUES(2, currval('workflow_id_seq'), currval('node_id_seq'), true);
-INSERT INTO workflow_instances VALUES(3, currval('workflow_id_seq'), currval('node_id_seq'), true);
-INSERT INTO workflow_instances VALUES(4, currval('workflow_id_seq'), currval('node_id_seq'), true);
+INSERT INTO workflow_instances VALUES(1, currval('workflow_id_seq'), currval('node_id_seq'), true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(2, currval('workflow_id_seq'), currval('node_id_seq'), true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(3, currval('workflow_id_seq'), currval('node_id_seq'), true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(4, currval('workflow_id_seq'), currval('node_id_seq'), true, null, 'DEFAULT');
 ALTER SEQUENCE instance_id_seq RESTART WITH 10;
 
 INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1', 1, 1);

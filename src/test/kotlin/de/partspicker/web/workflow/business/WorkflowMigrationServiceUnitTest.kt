@@ -15,6 +15,7 @@ import de.partspicker.web.workflow.persistence.NodeRepository
 import de.partspicker.web.workflow.persistence.WorkflowRepository
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import de.partspicker.web.workflow.persistence.entities.WorkflowEntity
+import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
 import de.partspicker.web.workflow.persistence.entities.migration.MigrationPlanEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 import io.kotest.assertions.throwables.shouldThrow
@@ -38,6 +39,7 @@ class WorkflowMigrationServiceUnitTest : ShouldSpec({
     val instanceValueServiceMock = mockk<InstanceValueService>()
     val instanceRepositoryMock = mockk<InstanceRepository>()
     val instanceValueMigrationRepositoryMock = mockk<InstanceValueMigrationRepository>()
+    val instanceValueMigrationServiceMock = mockk<InstanceValueMigrationService>()
     val cut = WorkflowMigrationService(
         migrationPlanRepository = migrationPlanRepositoryMock,
         nodeMigrationRepository = nodeMigrationRepositoryMock,
@@ -46,8 +48,8 @@ class WorkflowMigrationServiceUnitTest : ShouldSpec({
         edgeRepository = edgeRepositoryMock,
         instanceValueService = instanceValueServiceMock,
         instanceRepository = instanceRepositoryMock,
-        instanceValueMigrationRepository = instanceValueMigrationRepositoryMock
-
+        instanceValueMigrationRepository = instanceValueMigrationRepositoryMock,
+        instanceValueMigrationService = instanceValueMigrationServiceMock
     )
 
     context("create") {
@@ -148,7 +150,9 @@ class WorkflowMigrationServiceUnitTest : ShouldSpec({
             val instanceEntity = InstanceEntity(
                 id = 1L,
                 workflow = sourceWorkflowEntity,
-                currentNode = currentNodeEntity
+                currentNode = currentNodeEntity,
+                message = null,
+                displayType = DisplayTypeEntity.DEFAULT
             )
             every { instanceRepositoryMock.findAllByWorkflowId(sourceWorkflowEntity.id) } returns listOf(instanceEntity)
 

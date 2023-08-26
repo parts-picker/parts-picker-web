@@ -1,9 +1,12 @@
 package de.partspicker.web.inventory.business.objects
 
 import de.partspicker.web.item.business.objects.ItemType
+import de.partspicker.web.test.generators.ItemTypeGenerators
 import de.partspicker.web.test.generators.inventory.RequiredItemTypeGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.single
 import io.kotest.property.checkAll
 
 class RequiredItemTypeUnitTest : ShouldSpec({
@@ -34,6 +37,40 @@ class RequiredItemTypeUnitTest : ShouldSpec({
                     requiredAmount = 1
                 )
             }
+        }
+    }
+
+    context("isRequiredAmountAssigned") {
+        should("return true when assignedAmount equals requiredAmount") {
+            // given
+            val cut = RequiredItemType(
+                projectId = 1L,
+                itemType = ItemTypeGenerators.generator.single(),
+                assignedAmount = 2L,
+                requiredAmount = 2L
+            )
+
+            // when
+            val result = cut.isRequiredAmountAssigned()
+
+            // then
+            result shouldBe true
+        }
+
+        should("return false when assignedAmount not equal to requiredAmount") {
+            // given
+            val cut = RequiredItemType(
+                projectId = 1L,
+                itemType = ItemTypeGenerators.generator.single(),
+                assignedAmount = 1L,
+                requiredAmount = 2L
+            )
+
+            // when
+            val result = cut.isRequiredAmountAssigned()
+
+            // then
+            result shouldBe false
         }
     }
 })

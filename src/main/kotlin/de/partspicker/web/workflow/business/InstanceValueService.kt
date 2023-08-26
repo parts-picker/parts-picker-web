@@ -2,11 +2,10 @@ package de.partspicker.web.workflow.business
 
 import de.partspicker.web.workflow.business.exceptions.UnsupportedDataTypeException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
-import de.partspicker.web.workflow.business.objects.create.InstanceValueCreate
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.InstanceValueRepository
-import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import de.partspicker.web.workflow.persistence.entities.InstanceValueEntity
 import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity
 import de.partspicker.web.workflow.persistence.entities.enums.SupportedDataTypeEntity
@@ -20,33 +19,31 @@ class InstanceValueService(
     private val instanceValueRepository: InstanceValueRepository,
     private val instanceRepository: InstanceRepository
 ) {
-    companion object {
-        const val VALUES_IS_EMPTY = "At least one value must be given to create, but values was empty"
-    }
-
-    fun setMultipleForInstance(instanceId: Long, values: List<InstanceValueCreate>) {
+    fun setMultipleForInstance(instanceId: Long, values: List<InstanceValue>) {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
         }
 
+        val instanceEntity = this.instanceRepository.getReferenceById(instanceId)
+
         val valuesToSave = values.map {
             val existingId = this.instanceValueRepository.findByWorkflowInstanceIdAndTypeAndKey(
                 instanceId,
-                InstanceValueTypeEntity.WORKFLOW,
+                InstanceValueTypeEntity.from(it.valueType),
                 it.key
             )?.id ?: 0L
 
             InstanceValueEntity.from(
                 id = existingId,
-                instanceValueCreate = it,
-                instanceId = instanceId,
-                instanceValueTypeEntity = InstanceValueTypeEntity.WORKFLOW
+                instanceValue = it,
+                instanceEntity = instanceEntity,
             )
         }
 
         this.instanceValueRepository.saveAll(valuesToSave)
     }
 
+    @Deprecated("Use InstanceValue.fromWithAutoTypeDetection instead")
     fun setMultipleWithAutoTypeDetectionForInstance(instanceId: Long, values: Map<String, Any>) {
         if (!this.instanceRepository.existsById(instanceId)) {
             throw WorkflowInstanceNotFoundException(instanceId)
@@ -57,6 +54,7 @@ class InstanceValueService(
         this.instanceValueRepository.saveAll(valuesToSave)
     }
 
+    @Deprecated("Use InstanceValue.fromWithAutoTypeDetection instead")
     fun setSingleWithAutoTypeDetectionForInstance(
         instanceId: Long,
         key: String,
@@ -87,9 +85,10 @@ class InstanceValueService(
             else -> throw UnsupportedDataTypeException(value.javaClass.simpleName)
         }
 
+        val instanceEntity = this.instanceRepository.getReferenceById(instanceId)
         return InstanceValueEntity(
             id = existingId ?: 0,
-            workflowInstance = InstanceEntity(id = instanceId),
+            workflowInstance = instanceEntity,
             key = key,
             value = convertedPair.first,
             valueDataType = convertedPair.second,

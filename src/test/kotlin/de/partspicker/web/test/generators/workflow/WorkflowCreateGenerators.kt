@@ -12,7 +12,7 @@ class WorkflowCreateGenerators private constructor() {
         val generator: Arb<WorkflowCreate> = Arb.bind(
             Arb.string(range = IntRange(3, 16)),
             Arb.long(1, 1000),
-            Arb.list(NodeCreateGenerators.actionNodeGenerator, IntRange(4, 10)),
+            Arb.list(NodeCreateGenerators.userActionNodeCreateGenerator, IntRange(4, 10)),
             NodeCreateGenerators.startNodeCreateGenerator,
             NodeCreateGenerators.stopNodeCreateGenerator
         ) { name, version, nodes, startNode, stopNode ->

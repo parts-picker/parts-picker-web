@@ -25,7 +25,7 @@ class TestSetupHelper(
     private val projectService: ProjectService,
     private val requiredItemTypeService: RequiredItemTypeService,
     private val itemTypeService: ItemTypeService,
-    private val itemService: ItemService,
+    private val itemService: ItemService
 ) {
     /**
      * Useful if flush & clear is needed for changes to be visible for search or cache refresh.

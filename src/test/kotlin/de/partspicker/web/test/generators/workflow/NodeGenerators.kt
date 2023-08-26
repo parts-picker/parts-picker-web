@@ -1,6 +1,7 @@
 package de.partspicker.web.test.generators.workflow
 
 import de.partspicker.web.workflow.business.objects.enums.StartType
+import de.partspicker.web.workflow.business.objects.nodes.AutomatedActionNode
 import de.partspicker.web.workflow.business.objects.nodes.Node
 import de.partspicker.web.workflow.business.objects.nodes.StartNode
 import de.partspicker.web.workflow.business.objects.nodes.StopNode
@@ -28,6 +29,22 @@ class NodeGenerators private constructor() {
                 workflowId = workflowId,
                 name = name,
                 displayName = displayName
+            )
+        }
+
+        val automatedActionNodeGenerator: Arb<AutomatedActionNode> = Arb.bind(
+            Arb.positiveLong(),
+            Arb.positiveLong(),
+            Arb.string(range = MIN_NAME_LENGTH..16),
+            Arb.string(range = 3..16),
+            Arb.string(range = 3..16)
+        ) { id, workflowId, name, displayName, automatedActionName ->
+            AutomatedActionNode(
+                id = id,
+                workflowId = workflowId,
+                name = name,
+                displayName = displayName,
+                automatedActionName = automatedActionName
             )
         }
 
@@ -63,7 +80,7 @@ class NodeGenerators private constructor() {
             )
         }
 
-        val actionNodeGenerator = Arb.choice(userActionNodeGenerator)
+        val actionNodeGenerator = Arb.choice(userActionNodeGenerator, automatedActionNodeGenerator)
 
         val generator: Arb<Node> = Arb.choose(
             8 to userActionNodeGenerator,

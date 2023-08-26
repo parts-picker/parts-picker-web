@@ -3,6 +3,7 @@ package de.partspicker.web.workflow.api.resources
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.workflow.api.WorkflowInteractionController
+import de.partspicker.web.workflow.api.resources.enums.DisplayTypeInfoResource
 import de.partspicker.web.workflow.business.objects.InstanceInfo
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.server.RepresentationModelAssembler
@@ -18,6 +19,8 @@ class InstanceInfoResourceAssembler(
             name = instanceInfo.name,
             displayName = instanceInfo.displayName,
             options = instanceInfo.options.map { edgeInfoResourceAssembler.toModel(it) },
+            message = instanceInfo.message,
+            displayType = DisplayTypeInfoResource.from(instanceInfo.displayType),
             links = generateDefaultLinks(instanceInfo.instanceId)
         )
     }

@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.test.generators.workflow.InstanceValueCreateGenerators
 import de.partspicker.web.workflow.business.exceptions.UnsupportedDataTypeException
 import de.partspicker.web.workflow.business.exceptions.WorkflowInstanceNotFoundException
@@ -7,11 +8,11 @@ import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.InstanceValueRepository
 import de.partspicker.web.workflow.persistence.entities.InstanceValueEntity
-import de.partspicker.web.workflow.persistence.entities.enums.InstanceValueTypeEntity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.single
 import io.mockk.every
 import io.mockk.mockk
@@ -28,19 +29,21 @@ class InstanceValueServiceUnitTest : ShouldSpec({
     context("setMultipleForInstance") {
         should("overwrite value when given value with existing key") {
             // given
-            every { instanceRepositoryMock.existsById(any()) } returns true
+            val instanceId = 100L
+            every { instanceRepositoryMock.existsById(instanceId) } returns true
+            every { instanceRepositoryMock.getReferenceById(instanceId) } returns
+                InstanceEntityGenerators.generator.next()
 
             val existingKey = "existing"
             val values = listOf(InstanceValueCreateGenerators.generator.single().copy(key = existingKey))
 
-            val instanceId = 100L
             val existingInstanceValueId = 5L
             val existingInstanceValueMock = mockk<InstanceValueEntity>()
             every { existingInstanceValueMock.id } returns existingInstanceValueId
             every {
                 instanceValueRepositoryMock.findByWorkflowInstanceIdAndTypeAndKey(
                     instanceId,
-                    InstanceValueTypeEntity.WORKFLOW,
+                    any(),
                     existingKey
                 )
             } returns existingInstanceValueMock

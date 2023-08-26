@@ -7,7 +7,7 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowNodeNameNotFoundE
 import de.partspicker.web.workflow.business.exceptions.WorkflowNotFoundException
 import de.partspicker.web.workflow.business.exceptions.migration.WorkflowMigrationMissingNodeRuleException
 import de.partspicker.web.workflow.business.objects.InstanceInfo
-import de.partspicker.web.workflow.business.objects.create.InstanceValueCreate
+import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.business.objects.create.migration.MigrationPlanCreate
 import de.partspicker.web.workflow.persistence.EdgeRepository
 import de.partspicker.web.workflow.persistence.InstanceRepository
@@ -21,6 +21,7 @@ import de.partspicker.web.workflow.persistence.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistence.entities.migration.InstanceValueMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.MigrationPlanEntity
 import de.partspicker.web.workflow.persistence.entities.migration.NodeMigrationEntity
+import de.partspicker.web.workflow.persistence.entities.migration.enums.InstanceValueTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.enums.SupportedDataTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import org.hibernate.Hibernate
@@ -37,7 +38,8 @@ class WorkflowMigrationService(
     private val edgeRepository: EdgeRepository,
     private val instanceValueService: InstanceValueService,
     private val instanceRepository: InstanceRepository,
-    private val instanceValueMigrationRepository: InstanceValueMigrationRepository
+    private val instanceValueMigrationRepository: InstanceValueMigrationRepository,
+    private val instanceValueMigrationService: InstanceValueMigrationService
 ) {
     companion object : LoggingUtil {
         val logger = logger()
@@ -123,7 +125,8 @@ class WorkflowMigrationService(
                     id = 0L,
                     key = it.key,
                     value = it.value,
-                    type = SupportedDataTypeMigrationEntity.from(it.type),
+                    dataType = SupportedDataTypeMigrationEntity.from(it.dataType),
+                    valueType = InstanceValueTypeMigrationEntity.from(it.valueType),
                     nodeMigration = savedNodeMigrationEntity
                 )
             }
@@ -163,7 +166,7 @@ class WorkflowMigrationService(
     fun forceSetInstanceNodeWithinWorkflow(
         instanceId: Long,
         nodeName: String,
-        values: List<InstanceValueCreate>? = null,
+        values: List<InstanceValue>? = null,
     ): InstanceInfo {
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
@@ -172,12 +175,14 @@ class WorkflowMigrationService(
         val targetNodeEntity = this.nodeRepository.findByWorkflowIdAndName(workflow.id, nodeName)
             ?: throw WorkflowNodeNameNotFoundException(workflow.name, nodeName)
 
-        val savedInstance = this.instanceRepository.save(forceSetInstanceNode(instanceEntity, targetNodeEntity, values))
+        val savedInstanceEntity = this.instanceRepository.save(
+            forceSetInstanceNode(instanceEntity, targetNodeEntity, values)
+        )
 
-        val options = this.edgeRepository.findAllBySourceId(savedInstance.currentNode!!.id)
+        val options = this.edgeRepository.findAllBySourceId(savedInstanceEntity.currentNode!!.id)
         return InstanceInfo.from(
-            Hibernate.unproxy(savedInstance.currentNode!!) as NodeEntity,
-            savedInstance.id,
+            Hibernate.unproxy(savedInstanceEntity.currentNode!!) as NodeEntity,
+            savedInstanceEntity,
             options
         )
     }
@@ -188,7 +193,7 @@ class WorkflowMigrationService(
     private fun forceSetInstanceNode(
         instanceEntity: InstanceEntity,
         targetNodeEntity: NodeEntity,
-        values: List<InstanceValueCreate>?
+        values: List<InstanceValue>?
     ): InstanceEntity {
         // update instance values
         values?.let {
@@ -218,15 +223,15 @@ class WorkflowMigrationService(
                     val nodeMigrationRuleEntity = nodeMigrationEntities[currentNode.name]
                         ?: throw WorkflowMigrationMissingNodeRuleException(migrationPlanEntity.id, currentNode.name)
 
-                    val instanceValueCreates =
-                        InstanceValueCreate.AsList.from(
-                            this.instanceValueMigrationRepository.findAllByNodeMigrationId(nodeMigrationRuleEntity.id)
-                        )
+                    val instanceValuesToCreate = this.instanceValueMigrationService.convertToInstanceValues(
+                        nodeMigrationRuleId = nodeMigrationRuleEntity.id,
+                        instanceEntity = instanceEntity
+                    )
 
                     this.forceSetInstanceNode(
                         instanceEntity = instanceEntity,
                         targetNodeEntity = nodeMigrationRuleEntity.target,
-                        values = instanceValueCreates
+                        values = instanceValuesToCreate
                     )
                 } else {
                     instanceEntity.workflow = newVersion

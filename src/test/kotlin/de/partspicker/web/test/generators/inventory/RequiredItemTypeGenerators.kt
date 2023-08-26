@@ -33,5 +33,18 @@ class RequiredItemTypeGenerators private constructor() {
                 requiredAmount = amountPair.second
             )
         }
+
+        val requiredEqualAssignedGenerator: Arb<RequiredItemType> = Arb.bind(
+            Arb.positiveLong(),
+            ItemTypeGenerators.generator,
+            Arb.positiveLong()
+        ) { projectId, itemType, amount ->
+            RequiredItemType(
+                projectId = projectId,
+                itemType = itemType,
+                assignedAmount = amount,
+                requiredAmount = amount
+            )
+        }
     }
 }
