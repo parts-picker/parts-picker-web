@@ -1,14 +1,10 @@
 package de.partspicker.web.workflow.business
 
-import de.partspicker.web.inventory.business.InventoryItemReadService
-import de.partspicker.web.inventory.business.InventoryItemService
-import de.partspicker.web.inventory.business.RequiredItemTypeReadService
-import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.test.annotations.ReducedSpringTestContext
 import de.partspicker.web.test.builders.WorkflowCreateBuilder
 import de.partspicker.web.test.generators.workflow.NodeCreateGenerators
+import de.partspicker.web.test.util.AutomatedTestAction
 import de.partspicker.web.test.util.WorkflowTestSetupHelper
-import de.partspicker.web.workflow.business.automated.actions.RequiredItemsAssignedAction
 import de.partspicker.web.workflow.business.objects.create.nodes.AutomatedActionNodeCreate
 import de.partspicker.web.workflow.business.objects.nodes.AutomatedActionNode
 import io.kotest.core.spec.style.ShouldSpec
@@ -28,11 +24,7 @@ import org.springframework.context.annotation.Import
     SpELConfig::class,
     WorkflowTestSetupHelper::class,
     WorkflowService::class,
-    RequiredItemsAssignedAction::class,
-    InventoryItemService::class,
-    RequiredItemTypeReadService::class,
-    ProjectService::class,
-    InventoryItemReadService::class
+    AutomatedTestAction::class,
 )
 class InstanceServiceIntTest(
     cut: InstanceService,
@@ -47,7 +39,7 @@ class InstanceServiceIntTest(
             val automatedActionNodeCreate = AutomatedActionNodeCreate(
                 name = "automatedAction",
                 displayName = "Automated Action",
-                automatedActionName = RequiredItemsAssignedAction.NAME
+                automatedActionName = AutomatedTestAction.NAME
             )
             val workflowCreate = WorkflowCreateBuilder(NodeCreateGenerators.startNodeCreateGenerator.single())
                 .append(NodeCreateGenerators.userActionNodeCreateGenerator.single())
