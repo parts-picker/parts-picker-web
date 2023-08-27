@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 class RequiredItemsAssignedAction(
     private val inventoryItemService: InventoryItemService,
     private val projectService: ProjectService
-) : AutomatedAction() {
+) : AutomatedAction {
     companion object : LoggingUtil {
         const val NAME = "required_items_assigned_action"
 

@@ -6,11 +6,11 @@ import de.partspicker.web.workflow.business.objects.enums.DisplayType
 import org.springframework.stereotype.Component
 
 @Component
-abstract class AutomatedAction {
+fun interface AutomatedAction {
     /**
      * Executes an automated action & returns the name of the edge that should be used to advance the state.
      */
-    abstract fun execute(
+    fun execute(
         instance: Instance,
         instanceValues: List<InstanceValue>
     ): AutomatedActionResult

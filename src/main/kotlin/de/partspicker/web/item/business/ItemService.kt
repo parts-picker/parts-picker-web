@@ -8,6 +8,8 @@ import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.persistance.ProjectRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service
 class ItemService(
     private val itemRepository: ItemRepository,
     private val itemTypeRepository: ItemTypeRepository,
+    private val projectRepository: ProjectRepository
 ) {
 
     fun create(itemToCreate: Item): Item {
@@ -22,7 +25,12 @@ class ItemService(
             throw ItemTypeNotFoundException(itemToCreate.type.id)
         }
 
-        val createdItem = this.itemRepository.save(ItemEntity.from(itemToCreate))
+        val projectEntity = itemToCreate.assignedProjectId?.let {
+            this.projectRepository.getNullableReferenceById(it)
+                ?: throw ProjectNotFoundException(it)
+        }
+
+        val createdItem = this.itemRepository.save(ItemEntity.from(itemToCreate, projectEntity))
 
         return Item.from(createdItem)
     }

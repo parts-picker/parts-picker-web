@@ -6,16 +6,19 @@ import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.test.generators.ItemEntityGenerators
 import de.partspicker.web.test.generators.ItemGenerators
-import de.partspicker.web.test.generators.ItemTypeEntityGenerators
+import de.partspicker.web.test.generators.ProjectEntityGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
+import io.kotest.property.arbitrary.single
+import io.mockk.called
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -33,6 +36,7 @@ class ItemServiceUnitTest : ShouldSpec({
     val cut = ItemService(
         itemRepository = itemRepositoryMock,
         itemTypeRepository = itemTypeRepositoryMock,
+        projectRepository = projectRepositoryMock
     )
 
     afterTest {
@@ -40,33 +44,52 @@ class ItemServiceUnitTest : ShouldSpec({
     }
 
     context("create") {
-        should("create new item & return it") {
+        should("create new item with project entity & return it when given valid project id") {
             // given
-            val typeEntity = ItemTypeEntityGenerators.generator.next()
-            val entity = ItemEntityGenerators.generator.next().copy(type = typeEntity)
-            every { itemRepositoryMock.save(any()) } returns entity
-            every { itemTypeRepositoryMock.existsById(typeEntity.id) } returns true
+            val item = ItemGenerators.generator.single().copy(assignedProjectId = 1L)
+            every { itemRepositoryMock.save(any()) } returnsArgument 0
+            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
+            every {
+                projectRepositoryMock.getNullableReferenceById(item.assignedProjectId!!)
+            } returns ProjectEntityGenerators.generator.single().copy(id = item.assignedProjectId!!)
 
             // when
-            val returnedItem = cut.create(Item.from(entity))
+            val returnedItem = cut.create(item)
 
             // then
-            verify(exactly = 1) {
+            verify {
                 itemRepositoryMock.save(any())
-                itemTypeRepositoryMock.existsById(typeEntity.id)
             }
-            returnedItem shouldBe Item.from(entity)
+
+            returnedItem shouldBe item
         }
 
-        should("throw ItemTypeNotFoundException when given non-existent type") {
+        should("create new item & return it") {
             // given
-            val typeEntity = ItemTypeEntityGenerators.generator.next()
-            val entity = ItemEntityGenerators.generator.next().copy(type = typeEntity)
-            every { itemTypeRepositoryMock.existsById(typeEntity.id) } returns false
+            val item = ItemGenerators.generator.single().copy(assignedProjectId = null)
+            every { itemRepositoryMock.save(any()) } returnsArgument 0
+            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
+
+            // when
+            val returnedItem = cut.create(item)
+
+            // then
+            verify {
+                itemRepositoryMock.save(any())
+                projectRepositoryMock wasNot called
+            }
+
+            returnedItem shouldBe item
+        }
+
+        should("throw ItemTypeNotFoundException when given non-existent item type id") {
+            // given
+            val item = ItemGenerators.generator.single()
+            every { itemTypeRepositoryMock.existsById(item.type.id) } returns false
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
-                cut.create(Item.from(entity))
+                cut.create(item)
             }
 
             // then
@@ -74,7 +97,27 @@ class ItemServiceUnitTest : ShouldSpec({
                 itemRepositoryMock.save(any())
             }
 
-            exception.message shouldBe "ItemType with id ${typeEntity.id} could not be found"
+            exception.message shouldBe "ItemType with id ${item.type.id} could not be found"
+        }
+
+        should("throw ProjectNotFoundException when given non-existent project id") {
+            // given
+            val item = ItemGenerators.generator.single().copy(assignedProjectId = 666L)
+            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
+
+            every { projectRepositoryMock.getNullableReferenceById(item.assignedProjectId!!) } returns null
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.create(item)
+            }
+
+            // then
+            verify(exactly = 0) {
+                itemRepositoryMock.save(any())
+            }
+
+            exception.message shouldBe "Project with id ${item.assignedProjectId} could not be found"
         }
     }
 

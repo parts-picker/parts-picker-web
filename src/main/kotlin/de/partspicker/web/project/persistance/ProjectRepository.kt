@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface ProjectRepository : JpaRepository<ProjectEntity, Long> {
+    fun getNullableReferenceById(projectId: Long): ProjectEntity?
     fun findAllByGroupId(groupId: Long): List<ProjectEntity>
     fun findByWorkflowInstanceId(instanceId: Long): ProjectEntity?
 }

@@ -8,8 +8,11 @@ import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
+import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.longs.shouldBeGreaterThan
@@ -49,7 +52,19 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // given
             val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
 
-            every { projectRepositoryMock.existsById(createOrUpdateRequiredItemType.projectId) } returns true
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = mockk(),
+                name = "planning",
+                displayName = "displayName"
+            )
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                ProjectEntityGenerators.generator.single().copy(
+                    workflowInstance = instanceEntity,
+                    id = createOrUpdateRequiredItemType.projectId
+                )
+
             every { itemTypeRepositoryMock.existsById(createOrUpdateRequiredItemType.itemTypeId) } returns true
             every { requiredItemTypeRepositoryMock.save(any()) } returnsArgument 0
             every {
@@ -58,13 +73,11 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     createOrUpdateRequiredItemType.projectId
                 )
             } returns 0L
-            every {
-                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
-            } returns "planning"
 
             // when
             val returnedRequiredItemType = cut.createOrUpdate(createOrUpdateRequiredItemType)
 
+            // then
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.save(any())
             }
@@ -76,9 +89,11 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
         should("throw ProjectNotFoundException when given non-existent project") {
             // given
-            every { projectRepositoryMock.existsById(any()) } returns false
-
             val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -93,7 +108,19 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // given
             val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
 
-            every { projectRepositoryMock.existsById(any()) } returns true
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = mockk(),
+                name = "planning",
+                displayName = "displayName"
+            )
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                ProjectEntityGenerators.generator.single().copy(
+                    workflowInstance = instanceEntity,
+                    id = createOrUpdateRequiredItemType.projectId
+                )
+
             every { itemTypeRepositoryMock.existsById(any()) } returns false
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -101,9 +128,6 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     createOrUpdateRequiredItemType.projectId
                 )
             } returns 0L
-            every {
-                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
-            } returns "planning"
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
@@ -123,7 +147,9 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 requiredAmount = requiredAmount
             )
 
-            every { projectRepositoryMock.existsById(any()) } returns true
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                mockk()
+
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -142,7 +168,19 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // given
             val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
 
-            every { projectRepositoryMock.existsById(any()) } returns true
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = mockk(),
+                name = "something else",
+                displayName = "displayName"
+            )
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                ProjectEntityGenerators.generator.single().copy(
+                    workflowInstance = instanceEntity,
+                    id = createOrUpdateRequiredItemType.projectId
+                )
+
             every { itemTypeRepositoryMock.existsById(any()) } returns false
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -150,9 +188,6 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     createOrUpdateRequiredItemType.projectId
                 )
             } returns 0L
-            every {
-                workflowInteractionsServiceMock.readProjectStatus(createOrUpdateRequiredItemType.projectId)
-            } returns "not-planning"
 
             // when & then
             shouldThrow<WrongNodeNameRuleException> {

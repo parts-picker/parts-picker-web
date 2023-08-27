@@ -51,7 +51,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns true
             every { projectRepositoryMock.save(any()) } returns projectEntity
             every { workflowInteractionServiceMock.startProjectWorkflow() } returns
-                Instance.from(projectEntity.workflowInstance!!)
+                Instance.from(projectEntity.workflowInstance)
             every { instanceRepositoryMock.getReferenceById(any()) } returns mockk()
 
             // when
@@ -155,11 +155,11 @@ class ProjectServiceUnitTest : ShouldSpec({
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
             every {
-                projectRepositoryMock.findByWorkflowInstanceId(projectEntity.workflowInstance!!.id)
+                projectRepositoryMock.findByWorkflowInstanceId(projectEntity.workflowInstance.id)
             } returns projectEntity
 
             // when
-            val returnedProject = cut.readByInstanceId(projectEntity.workflowInstance!!.id)
+            val returnedProject = cut.readByInstanceId(projectEntity.workflowInstance.id)
 
             // then
             returnedProject shouldBe Project.from(projectEntity)
@@ -226,7 +226,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             updatedProject.name shouldBe projectEntity.name
             updatedProject.description shouldBe projectEntity.description
             updatedProject.group!!.id shouldBe projectEntity.group!!.id
-            updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance!!.id
+            updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance.id
         }
 
         should("throw ProjectNotFoundException when given non-existent id") {

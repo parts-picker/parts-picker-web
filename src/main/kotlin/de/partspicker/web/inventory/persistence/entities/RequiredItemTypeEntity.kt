@@ -1,6 +1,5 @@
 package de.partspicker.web.inventory.persistence.entities
 
-import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
@@ -32,18 +31,10 @@ data class RequiredItemTypeEntity(
     @Column(nullable = false)
     val requiredAmount: Long
 ) {
-    constructor(projectId: Long, itemTypeId: Long, requiredAmount: Long) : this(
-        id = RequiredItemTypeId(projectId = projectId, itemTypeId = itemTypeId),
-        project = ProjectEntity(id = projectId),
+    constructor(projectEntity: ProjectEntity, itemTypeId: Long, requiredAmount: Long) : this(
+        id = RequiredItemTypeId(projectId = projectEntity.id, itemTypeId = itemTypeId),
+        project = projectEntity,
         itemType = ItemTypeEntity(id = itemTypeId),
         requiredAmount = requiredAmount
     )
-
-    companion object {
-        fun from(requiredItemType: CreateOrUpdateRequiredItemType) = RequiredItemTypeEntity(
-            projectId = requiredItemType.projectId,
-            itemTypeId = requiredItemType.itemTypeId,
-            requiredAmount = requiredItemType.requiredAmount
-        )
-    }
 }
