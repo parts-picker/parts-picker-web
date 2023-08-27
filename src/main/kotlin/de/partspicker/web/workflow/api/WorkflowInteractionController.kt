@@ -49,7 +49,6 @@ class WorkflowInteractionController(
         logger.info("=> GET request for the current node of the instance with id $instanceId")
 
         val instanceInfo = this.workflowInteractionService.readInstanceInfo(instanceId)
-            ?: return ResponseEntity(HttpStatus.NO_CONTENT)
 
         return ResponseEntity(instanceInfoResourceAssembler.toModel(instanceInfo), HttpStatus.OK)
     }

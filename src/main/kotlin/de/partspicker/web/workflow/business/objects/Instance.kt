@@ -12,7 +12,7 @@ data class Instance(
     companion object {
         fun from(instanceEntity: InstanceEntity) = Instance(
             id = instanceEntity.id,
-            currentNode = instanceEntity.currentNode?.let { Node.from(it) },
+            currentNode = Node.from(instanceEntity.currentNode),
             active = instanceEntity.active,
             workflowId = instanceEntity.workflow!!.id
         )

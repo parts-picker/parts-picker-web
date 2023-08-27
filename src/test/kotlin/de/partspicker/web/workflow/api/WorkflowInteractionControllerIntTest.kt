@@ -47,15 +47,6 @@ class WorkflowInteractionControllerIntTest(
                 }
         }
 
-        should("return status 204 when called & no node is assigned to the instance with the given id") {
-            val id = 600
-
-            mockMvc.get("/instance/$id/node")
-                .andExpect {
-                    status { isNoContent() }
-                }
-        }
-
         should("return status 404 when no instance with the requested id exists") {
             val nonExistentId = 666
 
@@ -116,8 +107,7 @@ class WorkflowInteractionControllerIntTest(
                 }
         }
 
-        // test will be enabled after currentNode is non-nullable
-        should("return status 422 when given inactive instance").config(enabled = false) {
+        should("return status 422 when given inactive instance") {
             val instanceId = 400L
             val path = "/instance/$instanceId/edges/100"
 
@@ -130,7 +120,7 @@ class WorkflowInteractionControllerIntTest(
                     jsonPath("$.errorCode") { nullValue() }
                     jsonPath(
                         "$.message",
-                        `is`("Workflow instance with id $instanceId cannot be edited because it is inactive.")
+                        `is`("The instance with the given id $instanceId is inactive & cannot be modified")
                     )
                     jsonPath("$.path", `is`(path))
                     jsonPath("$.timestamp", notNullValue())

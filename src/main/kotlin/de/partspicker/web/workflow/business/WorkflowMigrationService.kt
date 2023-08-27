@@ -179,9 +179,9 @@ class WorkflowMigrationService(
             forceSetInstanceNode(instanceEntity, targetNodeEntity, values)
         )
 
-        val options = this.edgeRepository.findAllBySourceId(savedInstanceEntity.currentNode!!.id)
+        val options = this.edgeRepository.findAllBySourceId(savedInstanceEntity.currentNode.id)
         return InstanceInfo.from(
-            Hibernate.unproxy(savedInstanceEntity.currentNode!!) as NodeEntity,
+            Hibernate.unproxy(savedInstanceEntity.currentNode) as NodeEntity,
             savedInstanceEntity,
             options
         )
@@ -219,24 +219,19 @@ class WorkflowMigrationService(
             .map { instanceEntity ->
                 val currentNode = instanceEntity.currentNode
 
-                if (currentNode != null) {
-                    val nodeMigrationRuleEntity = nodeMigrationEntities[currentNode.name]
-                        ?: throw WorkflowMigrationMissingNodeRuleException(migrationPlanEntity.id, currentNode.name)
+                val nodeMigrationRuleEntity = nodeMigrationEntities[currentNode.name]
+                    ?: throw WorkflowMigrationMissingNodeRuleException(migrationPlanEntity.id, currentNode.name)
 
-                    val instanceValuesToCreate = this.instanceValueMigrationService.convertToInstanceValues(
-                        nodeMigrationRuleId = nodeMigrationRuleEntity.id,
-                        instanceEntity = instanceEntity
-                    )
+                val instanceValuesToCreate = this.instanceValueMigrationService.convertToInstanceValues(
+                    nodeMigrationRuleId = nodeMigrationRuleEntity.id,
+                    instanceEntity = instanceEntity
+                )
 
-                    this.forceSetInstanceNode(
-                        instanceEntity = instanceEntity,
-                        targetNodeEntity = nodeMigrationRuleEntity.target,
-                        values = instanceValuesToCreate
-                    )
-                } else {
-                    instanceEntity.workflow = newVersion
-                    instanceEntity
-                }
+                this.forceSetInstanceNode(
+                    instanceEntity = instanceEntity,
+                    targetNodeEntity = nodeMigrationRuleEntity.target,
+                    values = instanceValuesToCreate
+                )
             }
         instanceRepository.saveAll(migratedInstanceEntities)
 

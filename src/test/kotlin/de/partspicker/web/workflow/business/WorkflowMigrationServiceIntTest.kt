@@ -133,9 +133,9 @@ class WorkflowMigrationServiceIntTest(
 
             instanceEntity.isPresent shouldBe true
             instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
-            instanceEntity.get().currentNode!!.workflow.id shouldBe createdTargetWorkflow.id
+            instanceEntity.get().currentNode.workflow.id shouldBe createdTargetWorkflow.id
             // node is moved from start to the first non-automated node automatically
-            instanceEntity.get().currentNode!!.name shouldBe firstNodeName
+            instanceEntity.get().currentNode.name shouldBe firstNodeName
         }
 
         should("migrate all instances of workflows with the given name by implicit & explicit migration rules") {
@@ -193,10 +193,10 @@ class WorkflowMigrationServiceIntTest(
 
             instanceEntity.isPresent shouldBe true
             instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
-            instanceEntity.get().currentNode!!.workflow.id shouldBe createdTargetWorkflow.id
+            instanceEntity.get().currentNode.workflow.id shouldBe createdTargetWorkflow.id
             // node is moved from start to the first non-automated node automatically
             // & then migrated through explicit rule
-            instanceEntity.get().currentNode!!.name shouldBe secondNodeName
+            instanceEntity.get().currentNode.name shouldBe secondNodeName
 
             // check instance values
             val instanceValues = instanceValueReadService.readAllForInstance(instanceEntity.get().id)
