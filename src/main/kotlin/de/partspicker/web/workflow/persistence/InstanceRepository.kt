@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query
 
 interface InstanceRepository : JpaRepository<InstanceEntity, Long> {
 
-    fun findAllByWorkflowId(id: Long): List<InstanceEntity>
+    fun findAllByCurrentNodeWorkflowId(id: Long): List<InstanceEntity>
 
     // query will fail if name of class AutomatedActionNodeEntity was changed
     @Lock(LockModeType.PESSIMISTIC_READ)

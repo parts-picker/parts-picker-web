@@ -24,7 +24,6 @@ import de.partspicker.web.workflow.persistence.entities.migration.NodeMigrationE
 import de.partspicker.web.workflow.persistence.entities.migration.enums.InstanceValueTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.enums.SupportedDataTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
-import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -171,7 +170,7 @@ class WorkflowMigrationService(
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
-        val workflow = instanceEntity.workflow!!
+        val workflow = instanceEntity.currentNode.workflow
         val targetNodeEntity = this.nodeRepository.findByWorkflowIdAndName(workflow.id, nodeName)
             ?: throw WorkflowNodeNameNotFoundException(workflow.name, nodeName)
 
@@ -181,7 +180,7 @@ class WorkflowMigrationService(
 
         val options = this.edgeRepository.findAllBySourceId(savedInstanceEntity.currentNode.id)
         return InstanceInfo.from(
-            Hibernate.unproxy(savedInstanceEntity.currentNode) as NodeEntity,
+            savedInstanceEntity.currentNode,
             savedInstanceEntity,
             options
         )
@@ -201,7 +200,6 @@ class WorkflowMigrationService(
         }
 
         instanceEntity.currentNode = targetNodeEntity
-        instanceEntity.workflow = targetNodeEntity.workflow
 
         return instanceEntity
     }
@@ -215,7 +213,7 @@ class WorkflowMigrationService(
             .findAllByMigrationPlanId(migrationPlanEntity.id)
             .associateBy { it.source.name }
 
-        val migratedInstanceEntities = this.instanceRepository.findAllByWorkflowId(previousVersion.id)
+        val migratedInstanceEntities = this.instanceRepository.findAllByCurrentNodeWorkflowId(previousVersion.id)
             .map { instanceEntity ->
                 val currentNode = instanceEntity.currentNode
 

@@ -59,7 +59,7 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
             every { instanceValueReadServiceMock.readAllForInstance(instances[0].id) } returns emptyList()
 
             val edgeId = 1L
-            every { workflowInteractionServiceMock.readEdgesBySourceNodeId(instances[0].currentNode!!.id) } returns
+            every { workflowInteractionServiceMock.readEdgesBySourceNodeId(instances[0].currentNode.id) } returns
                 setOf(
                     Edge(
                         id = edgeId,
@@ -179,7 +179,7 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
 
             every { instanceValueReadServiceMock.readAllForInstance(instances[0].id) } returns emptyList()
 
-            every { workflowInteractionServiceMock.readEdgesBySourceNodeId(instances[0].currentNode!!.id) } returns
+            every { workflowInteractionServiceMock.readEdgesBySourceNodeId(instances[0].currentNode.id) } returns
                 emptySet()
 
             // when
@@ -187,7 +187,7 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe
-                "The current node with id ${instances[0].currentNode!!.id} has no edge with the given name $edgeName"
+                "The current node with id ${instances[0].currentNode.id} has no edge with the given name $edgeName"
         }
     }
 })

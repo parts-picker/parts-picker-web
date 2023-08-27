@@ -24,10 +24,6 @@ data class InstanceEntity(
     val id: Long,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workflow_id", foreignKey = ForeignKey(name = "fk_instance_workflow_id"))
-    var workflow: WorkflowEntity? = null,
-
-    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
     var currentNode: NodeEntity,
 

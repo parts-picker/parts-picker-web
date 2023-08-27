@@ -12,13 +12,11 @@ class InstanceEntityGenerators private constructor() {
     companion object {
         val generator: Arb<InstanceEntity> = Arb.bind(
             Arb.long(1),
-            WorkflowEntityGenerators.generator,
             NodeEntityGenerators.generator,
             Arb.boolean()
-        ) { id, workflow, currentNode, active ->
+        ) { id, currentNode, active ->
             InstanceEntity(
                 id = id,
-                workflow = workflow,
                 currentNode = currentNode,
                 active = active,
                 message = null,

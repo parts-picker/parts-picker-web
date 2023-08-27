@@ -22,10 +22,8 @@ import de.partspicker.web.workflow.persistence.NodeRepository
 import de.partspicker.web.workflow.persistence.WorkflowRepository
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
-import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
-import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -94,12 +92,11 @@ class WorkflowInteractionService(
         }
 
         // fetch first successor of start node
-        val successor = Hibernate.unproxy(this.edgeRepository.readBySourceId(chosenStartNode.id).target) as NodeEntity
+        val successor = this.edgeRepository.readBySourceId(chosenStartNode.id).target
 
         // create new instance
         val newInstanceEntity = InstanceEntity(
             id = 0,
-            workflow = workflow,
             currentNode = successor,
             active = true,
             message = message,
@@ -162,7 +159,7 @@ class WorkflowInteractionService(
         message: String? = null,
         displayType: DisplayType = DisplayType.DEFAULT
     ): InstanceInfo {
-        InstanceActiveRule(Instance.fromOrNull(instanceEntity)).valid()
+        InstanceActiveRule(Instance.from(instanceEntity)).valid()
 
         val currentNodeId = instanceEntity.currentNode.id
         val edge = this.edgeRepository.findById(edgeId)
@@ -191,7 +188,7 @@ class WorkflowInteractionService(
 
         val options = this.findOptionsBySourceNodeId(edge.target.id)
 
-        return InstanceInfo.from(Hibernate.unproxy(edge.target) as NodeEntity, updatedInstanceEntity, options)
+        return InstanceInfo.from(edge.target, updatedInstanceEntity, options)
     }
 
     private fun findOptionsBySourceNodeId(sourceNodeId: Long) = this.edgeRepository.findAllBySourceId(sourceNodeId)

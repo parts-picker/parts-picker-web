@@ -7,6 +7,8 @@ import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
+import org.hibernate.Hibernate
+import org.hibernate.proxy.HibernateProxy
 
 sealed class Node(
     val id: Long,
@@ -15,35 +17,37 @@ sealed class Node(
 ) {
     companion object {
         fun from(nodeEntity: NodeEntity): Node {
-            return when (nodeEntity) {
+            val unproxiedEntity = if (nodeEntity is HibernateProxy) Hibernate.unproxy(nodeEntity) else nodeEntity
+
+            return when (unproxiedEntity) {
                 is UserActionNodeEntity -> UserActionNode(
-                    id = nodeEntity.id,
-                    workflowId = nodeEntity.workflow.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName
+                    id = unproxiedEntity.id,
+                    workflowId = unproxiedEntity.workflow.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName
                 )
 
                 is StartNodeEntity -> StartNode(
-                    id = nodeEntity.id,
-                    workflowId = nodeEntity.workflow.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
-                    startType = StartType.from(nodeEntity.startType)
+                    id = unproxiedEntity.id,
+                    workflowId = unproxiedEntity.workflow.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
+                    startType = StartType.from(unproxiedEntity.startType)
                 )
 
                 is AutomatedActionNodeEntity -> AutomatedActionNode(
-                    id = nodeEntity.id,
-                    workflowId = nodeEntity.workflow.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
-                    automatedActionName = nodeEntity.automatedActionName
+                    id = unproxiedEntity.id,
+                    workflowId = unproxiedEntity.workflow.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
+                    automatedActionName = unproxiedEntity.automatedActionName
                 )
 
                 is StopNodeEntity -> StopNode(
-                    id = nodeEntity.id,
-                    workflowId = nodeEntity.workflow.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName
+                    id = unproxiedEntity.id,
+                    workflowId = unproxiedEntity.workflow.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName
                 )
 
                 else -> throw WorkflowException()

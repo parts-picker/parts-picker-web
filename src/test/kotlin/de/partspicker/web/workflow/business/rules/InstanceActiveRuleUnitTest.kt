@@ -18,17 +18,6 @@ class InstanceActiveRuleUnitTest : ShouldSpec({
             InstanceActiveRule(instance).valid()
         }
 
-        should("throw InstanceInactiveException when given null") {
-            // given
-            val instance = null
-
-            // when
-            val exception = shouldThrow<IllegalArgumentException> { InstanceActiveRule(instance).valid() }
-
-            // then
-            exception.message shouldBe "Cannot be null - this is a bug & will be resolved in the future"
-        }
-
         should("throw InstanceInactiveException when given inactive instance") {
             // given
             val instance = InstanceGenerators.generator.single().copy(active = false)

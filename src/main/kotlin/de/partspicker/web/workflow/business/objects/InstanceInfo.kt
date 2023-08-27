@@ -9,6 +9,8 @@ import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
+import org.hibernate.Hibernate
+import org.hibernate.proxy.HibernateProxy
 
 data class InstanceInfo(
     val nodeId: Long,
@@ -25,11 +27,13 @@ data class InstanceInfo(
             instanceEntity: InstanceEntity,
             edgeEntities: Iterable<EdgeEntity>
         ): InstanceInfo {
-            return when (nodeEntity) {
+            val unproxiedEntity = if (nodeEntity is HibernateProxy) Hibernate.unproxy(nodeEntity) else nodeEntity
+
+            return when (unproxiedEntity) {
                 is UserActionNodeEntity -> InstanceInfo(
-                    nodeId = nodeEntity.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
+                    nodeId = unproxiedEntity.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
                     displayType = DisplayTypeInfo.from(instanceEntity.displayType),
                     message = instanceEntity.message,
                     options = EdgeInfo.AsSet.from(edgeEntities, instanceEntity.id),
@@ -37,9 +41,9 @@ data class InstanceInfo(
                 )
 
                 is AutomatedActionNodeEntity -> InstanceInfo(
-                    nodeId = nodeEntity.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
+                    nodeId = unproxiedEntity.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
                     displayType = DisplayTypeInfo.from(instanceEntity.displayType),
                     message = instanceEntity.message,
                     options = emptySet(),
@@ -47,9 +51,9 @@ data class InstanceInfo(
                 )
 
                 is StartNodeEntity -> InstanceInfo(
-                    nodeId = nodeEntity.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
+                    nodeId = unproxiedEntity.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
                     displayType = DisplayTypeInfo.from(instanceEntity.displayType),
                     message = instanceEntity.message,
                     options = EdgeInfo.AsSet.from(edgeEntities, instanceEntity.id),
@@ -57,9 +61,9 @@ data class InstanceInfo(
                 )
 
                 is StopNodeEntity -> InstanceInfo(
-                    nodeId = nodeEntity.id,
-                    name = nodeEntity.name,
-                    displayName = nodeEntity.displayName,
+                    nodeId = unproxiedEntity.id,
+                    name = unproxiedEntity.name,
+                    displayName = unproxiedEntity.displayName,
                     displayType = DisplayTypeInfo.from(instanceEntity.displayType),
                     message = instanceEntity.message,
                     options = emptySet(),
