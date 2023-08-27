@@ -188,7 +188,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
-                name = projectEntity.name!!,
+                name = projectEntity.name,
                 description = projectEntity.description,
                 groupId = null
             )
@@ -212,7 +212,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
-                name = projectEntity.name!!,
+                name = projectEntity.name,
                 description = projectEntity.description,
                 groupId = projectEntity.group!!.id
             )

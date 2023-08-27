@@ -2,7 +2,6 @@ package de.partspicker.web.project.persistance.entities
 
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
-import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.ForeignKey
@@ -27,15 +26,14 @@ data class ProjectEntity(
     var id: Long = 0,
 
     @FullTextField
-    @Column(nullable = false)
-    var name: String? = null,
+    var name: String,
 
     @FullTextField
-    var description: String? = null,
+    var description: String?,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
-    var group: GroupEntity? = null,
+    var group: GroupEntity?,
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instance_id", foreignKey = ForeignKey(name = "fk_instance"))

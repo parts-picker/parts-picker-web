@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page
 
 data class Project(
     val id: Long,
-    val name: String? = null,
+    val name: String,
     val description: String? = null,
     var group: Group? = null,
     var workflowInstanceId: Long,
