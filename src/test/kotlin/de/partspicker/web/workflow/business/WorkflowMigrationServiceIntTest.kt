@@ -132,7 +132,6 @@ class WorkflowMigrationServiceIntTest(
             val instanceEntity = instanceRepository.findById(instance.id)
 
             instanceEntity.isPresent shouldBe true
-            instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
             instanceEntity.get().currentNode.workflow.id shouldBe createdTargetWorkflow.id
             // node is moved from start to the first non-automated node automatically
             instanceEntity.get().currentNode.name shouldBe firstNodeName
@@ -192,7 +191,6 @@ class WorkflowMigrationServiceIntTest(
             val instanceEntity = instanceRepository.findById(instance.id)
 
             instanceEntity.isPresent shouldBe true
-            instanceEntity.get().workflow!!.id shouldBe createdTargetWorkflow.id
             instanceEntity.get().currentNode.workflow.id shouldBe createdTargetWorkflow.id
             // node is moved from start to the first non-automated node automatically
             // & then migrated through explicit rule
@@ -254,7 +252,6 @@ class WorkflowMigrationServiceIntTest(
 
             val instanceEntity = instanceRepository.findById(updatedInstance.instanceId)
             instanceEntity.isPresent shouldBe true
-            instanceEntity.get().workflow!!.id shouldBe createdWorkflow.id
 
             val instanceValues = instanceValueReadService.readAllForInstance(instance.id)
             instanceValues shouldHaveSize 1

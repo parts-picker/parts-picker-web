@@ -133,8 +133,8 @@ class WorkflowInteractionServiceIntTest(
 
             // then
             instance.id shouldNotBe null
-            instance.currentNode!!.name shouldNotBe nodeName
-            instance.currentNode!!.name shouldBe "planning"
+            instance.currentNode.name shouldNotBe nodeName
+            instance.currentNode.name shouldBe "planning"
             instance.active shouldBe true
 
             val readValues = instanceValueReadService.readAllForInstance(instance.id)

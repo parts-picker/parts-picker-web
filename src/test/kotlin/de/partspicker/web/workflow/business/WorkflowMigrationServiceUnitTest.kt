@@ -149,12 +149,12 @@ class WorkflowMigrationServiceUnitTest : ShouldSpec({
             )
             val instanceEntity = InstanceEntity(
                 id = 1L,
-                workflow = sourceWorkflowEntity,
                 currentNode = currentNodeEntity,
                 message = null,
                 displayType = DisplayTypeEntity.DEFAULT
             )
-            every { instanceRepositoryMock.findAllByWorkflowId(sourceWorkflowEntity.id) } returns listOf(instanceEntity)
+            every { instanceRepositoryMock.findAllByCurrentNodeWorkflowId(sourceWorkflowEntity.id) } returns
+                listOf(instanceEntity)
 
             // when
             val exception = shouldThrow<WorkflowMigrationMissingNodeRuleException> {
@@ -205,7 +205,7 @@ class WorkflowMigrationServiceUnitTest : ShouldSpec({
 
             exception.message shouldBe
                 "Workflow node with name $nonExistentNodeName could not be found for workflow" +
-                " with name ${instanceEntity.workflow?.name}"
+                " with name ${instanceEntity.currentNode.workflow.name}"
         }
     }
 })

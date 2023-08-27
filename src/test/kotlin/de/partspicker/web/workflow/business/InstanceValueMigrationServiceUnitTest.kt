@@ -1,13 +1,13 @@
 package de.partspicker.web.workflow.business
 
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.workflow.WorkflowEntityGenerators
 import de.partspicker.web.workflow.business.exceptions.ProjectWorkflowInstanceHasNoProjectException
 import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.business.objects.enums.InstanceValueType
 import de.partspicker.web.workflow.business.objects.enums.SupportedDataType
 import de.partspicker.web.workflow.persistence.InstanceValueMigrationRepository
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
-import de.partspicker.web.workflow.persistence.entities.WorkflowEntity
 import de.partspicker.web.workflow.persistence.entities.migration.InstanceValueMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.enums.InstanceValueTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.migration.enums.SupportedDataTypeMigrationEntity
@@ -17,6 +17,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.single
 import io.mockk.every
 import io.mockk.mockk
 import org.springframework.expression.Expression
@@ -35,16 +36,16 @@ class InstanceValueMigrationServiceUnitTest : ShouldSpec({
     context("convertToInstanceValues") {
         should("return a list of instance value based on the instance value migration rule") {
             // given
-            val nodeEntity = mockk<NodeEntity>()
-            every { nodeEntity.name } returns "some node name"
+            val nodeEntityMock = mockk<NodeEntity>()
+            every { nodeEntityMock.name } returns "some node name"
+
+            val workflowEntity = WorkflowEntityGenerators.generator.single()
+            every { nodeEntityMock.workflow } returns workflowEntity
+
             val instanceEntity = InstanceEntity(
                 id = 1L,
-                workflow = WorkflowEntity(
-                    id = 1L,
-                    name = "sometestflow",
-                    version = 1L
-                ),
-                currentNode = nodeEntity
+                currentNode = nodeEntityMock,
+                active = true
             )
 
             val instanceValueMigrationEntity = InstanceValueMigrationEntity(
@@ -79,16 +80,18 @@ class InstanceValueMigrationServiceUnitTest : ShouldSpec({
 
         should("throw Exception when workflow is project_workflow & no project found") {
             // given
+            val nodeEntityMock = mockk<NodeEntity>()
+            every { nodeEntityMock.name } returns "some node name"
+
             val instanceEntity = InstanceEntity(
                 id = 1L,
-                workflow = WorkflowEntity(
-                    id = 1L,
-                    name = WorkflowInteractionService.PROJECT_WORKFLOW_NAME,
-                    version = 1L
-                ),
-                currentNode = mockk()
+                currentNode = nodeEntityMock,
+                active = true
             )
-            every { projectRepositoryMock.findByWorkflowInstanceId(instanceEntity.workflow!!.id) } returns null
+            every { projectRepositoryMock.findByWorkflowInstanceId(any()) } returns null
+
+            val workflowEntity = WorkflowEntityGenerators.generator.single().copy(name = "project_workflow")
+            every { nodeEntityMock.workflow } returns workflowEntity
 
             // when
             val exception = shouldThrow<ProjectWorkflowInstanceHasNoProjectException> {

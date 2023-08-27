@@ -24,7 +24,7 @@ class InstanceValueMigrationService(
     ): List<InstanceValue> {
         // fetch projectId if instance of project workflow
         var projectId: Long? = null
-        if (instanceEntity.workflow!!.name == PROJECT_WORKFLOW_NAME) {
+        if (instanceEntity.currentNode.workflow.name == PROJECT_WORKFLOW_NAME) {
             projectId = this.projectRepository.findByWorkflowInstanceId(instanceId = instanceEntity.id)?.id
                 ?: throw ProjectWorkflowInstanceHasNoProjectException(instanceEntity.id)
         }
@@ -72,8 +72,8 @@ data class InstanceContext(
 ) {
     companion object {
         fun from(instanceEntity: InstanceEntity) = InstanceContext(
-            workflowName = instanceEntity.workflow!!.name,
-            workflowVersion = instanceEntity.workflow!!.version,
+            workflowName = instanceEntity.currentNode.workflow.name,
+            workflowVersion = instanceEntity.currentNode.workflow.version,
             status = instanceEntity.currentNode.name,
             active = instanceEntity.active
         )

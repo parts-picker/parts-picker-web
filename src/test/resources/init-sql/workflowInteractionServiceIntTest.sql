@@ -13,9 +13,9 @@ INSERT INTO workflow_edges VALUES(200, 200, 200, 300, 'planning_to_implementatio
 INSERT INTO workflow_edges VALUES(300, 200, 300, 400, 'implementation_to_report', 'Go to report');
 INSERT INTO workflow_edges VALUES(400, 200, 400, 500, 'report_to_stop', 'Stop');
 
-INSERT INTO workflow_instances VALUES(1, 200, 100, true, null, 'DEFAULT');
-INSERT INTO workflow_instances VALUES(2, 200, 500, false, null, 'DEFAULT');
-INSERT INTO workflow_instances VALUES(3, 200, 400, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(1, 100, true, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(2, 500, false, null, 'DEFAULT');
+INSERT INTO workflow_instances VALUES(3, 400, true, null, 'DEFAULT');
 ALTER SEQUENCE instance_id_seq RESTART WITH 10;
 
 INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1', null, 1);
