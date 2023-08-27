@@ -18,7 +18,7 @@ data class Project(
             description = projectEntity.description,
             group = projectEntity.group?.let { groupEntity -> Group.from(groupEntity) },
             workflowInstanceId = projectEntity.workflowInstance!!.id,
-            status = projectEntity.workflowInstance!!.currentNode!!.name
+            status = projectEntity.workflowInstance!!.currentNode.name
         )
     }
 

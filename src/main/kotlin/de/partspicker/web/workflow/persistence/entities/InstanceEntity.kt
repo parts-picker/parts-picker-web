@@ -29,7 +29,7 @@ data class InstanceEntity(
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_node_id", foreignKey = ForeignKey(name = "fk_current_node"))
-    var currentNode: NodeEntity? = null,
+    var currentNode: NodeEntity,
 
     var active: Boolean = false,
 

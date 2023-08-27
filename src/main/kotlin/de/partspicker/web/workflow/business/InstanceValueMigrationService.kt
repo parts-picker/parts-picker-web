@@ -74,7 +74,7 @@ data class InstanceContext(
         fun from(instanceEntity: InstanceEntity) = InstanceContext(
             workflowName = instanceEntity.workflow!!.name,
             workflowVersion = instanceEntity.workflow!!.version,
-            status = instanceEntity.currentNode!!.name,
+            status = instanceEntity.currentNode.name,
             active = instanceEntity.active
         )
     }

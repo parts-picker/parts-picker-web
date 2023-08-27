@@ -86,7 +86,7 @@ class InstanceValueMigrationServiceUnitTest : ShouldSpec({
                     name = WorkflowInteractionService.PROJECT_WORKFLOW_NAME,
                     version = 1L
                 ),
-                currentNode = null
+                currentNode = mockk()
             )
             every { projectRepositoryMock.findByWorkflowInstanceId(instanceEntity.workflow!!.id) } returns null
 

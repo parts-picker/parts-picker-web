@@ -43,24 +43,23 @@ class WorkflowInteractionService(
         const val PROJECT_WORKFLOW_START_NODE = "new_project_start"
     }
 
-    fun readInstanceInfo(instanceId: Long): InstanceInfo? {
+    fun readInstanceInfo(instanceId: Long): InstanceInfo {
         val instanceEntity = this.instanceRepository.findById(
             instanceId,
         ).orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
         val currentNodeEntity = instanceEntity.currentNode
-            ?: return null
         val options = this.findOptionsBySourceNodeId(currentNodeEntity.id)
 
         return InstanceInfo.from(currentNodeEntity, instanceEntity, options)
     }
 
     @Transactional(readOnly = true)
-    fun readProjectStatus(projectId: Long): String? {
+    fun readProjectStatus(projectId: Long): String {
         val projectEntity = this.projectRepository.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId) }
 
-        return projectEntity.workflowInstance!!.currentNode?.name
+        return projectEntity.workflowInstance!!.currentNode.name
     }
 
     fun readEdgesBySourceNodeId(sourceNodeId: Long): Set<Edge> {
@@ -126,7 +125,7 @@ class WorkflowInteractionService(
         val instanceEntity = this.instanceRepository.findById(instanceId)
             .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
 
-        UserMayAdvanceNodeRule(Node.fromOrNull(instanceEntity.currentNode)).valid()
+        UserMayAdvanceNodeRule(Node.from(instanceEntity.currentNode)).valid()
 
         return this.advanceInstanceNodeBySystem(
             instanceEntity = instanceEntity,
@@ -163,11 +162,9 @@ class WorkflowInteractionService(
         message: String? = null,
         displayType: DisplayType = DisplayType.DEFAULT
     ): InstanceInfo {
-        val currentNode = instanceEntity.currentNode
-
         InstanceActiveRule(Instance.fromOrNull(instanceEntity)).valid()
 
-        val currentNodeId = currentNode!!.id
+        val currentNodeId = instanceEntity.currentNode.id
         val edge = this.edgeRepository.findById(edgeId)
             .orElseThrow { WorkflowEdgeNotFoundException(edgeId) }
 

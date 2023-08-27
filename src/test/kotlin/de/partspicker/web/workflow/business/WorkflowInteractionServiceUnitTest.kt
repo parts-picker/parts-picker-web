@@ -63,26 +63,13 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
             every { edgeRepositoryMock.findAllBySourceId(currentNodeEntity.id) } returns options
 
             // when
-            val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)!!
-
-            // then
-            returnedNodeInfo.nodeId shouldBe instanceEntity.currentNode!!.id
-            returnedNodeInfo.name shouldBe instanceEntity.currentNode!!.name
-            returnedNodeInfo.instanceId shouldBe instanceEntity.id
-            returnedNodeInfo.options shouldHaveSize options.size
-        }
-
-        should("return null when instance has no current node assigned") {
-            // given
-            val instanceEntity = InstanceEntityGenerators.generator.next().copy(currentNode = null)
-
-            every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
-
-            // when
             val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)
 
             // then
-            returnedNodeInfo shouldBe null
+            returnedNodeInfo.nodeId shouldBe instanceEntity.currentNode.id
+            returnedNodeInfo.name shouldBe instanceEntity.currentNode.name
+            returnedNodeInfo.instanceId shouldBe instanceEntity.id
+            returnedNodeInfo.options shouldHaveSize options.size
         }
 
         should("throw WorkflowInstanceNotFoundException when given non-existent id") {

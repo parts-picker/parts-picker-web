@@ -47,7 +47,7 @@ class WorkflowInteractionServiceIntTest(
 
             // then
             instanceInfo shouldNotBe null
-            instanceInfo!!.name shouldBe "start"
+            instanceInfo.name shouldBe "start"
             instanceInfo.displayName shouldBe "Start"
             instanceInfo.nodeId shouldBe 100L
             instanceInfo.instanceId shouldBe instanceId
@@ -188,7 +188,7 @@ class WorkflowInteractionServiceIntTest(
 
             val instance = instanceRepository.findById(instanceId).get()
             instance.active shouldBe true
-            instance.currentNode!!.name shouldBe "stop"
+            instance.currentNode.name shouldBe "stop"
         }
 
         should("throw WorkflowInstanceNotFoundException when given non-existent instance id ") {
