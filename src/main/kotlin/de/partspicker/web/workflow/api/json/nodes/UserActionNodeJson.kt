@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeName("user_action")
 class UserActionNodeJson(
     name: String,
-    val displayName: String
-) : NodeJson(name) {
+    displayName: String
+) : NodeJson(name, displayName) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is UserActionNodeJson) return false

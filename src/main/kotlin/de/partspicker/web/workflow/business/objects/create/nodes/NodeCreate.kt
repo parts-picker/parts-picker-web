@@ -10,7 +10,8 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateExcep
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 
 sealed class NodeCreate(
-    val name: String
+    val name: String,
+    val displayName: String
 ) {
     init {
         name.isNotBlank() elseThrow WorkflowIllegalStateException(NAME_IS_BLANK)

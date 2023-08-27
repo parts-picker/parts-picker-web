@@ -10,11 +10,12 @@ class AutomatedActionNodeEntity(
     id: Long,
     workflow: WorkflowEntity,
     name: String,
+    displayName: String,
 
-    val displayName: String,
     val automatedActionName: String
 ) : NodeEntity(
     id = id,
     workflow = workflow,
-    name = name
+    name = name,
+    displayName = displayName
 )

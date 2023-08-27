@@ -27,7 +27,8 @@ data class InstanceInfo(
             instanceEntity: InstanceEntity,
             edgeEntities: Iterable<EdgeEntity>
         ): InstanceInfo {
-            val unproxiedEntity = if (nodeEntity is HibernateProxy) Hibernate.unproxy(nodeEntity) else nodeEntity
+            val unproxiedEntity =
+                if (nodeEntity is HibernateProxy) Hibernate.unproxy(nodeEntity) as NodeEntity else nodeEntity
 
             return when (unproxiedEntity) {
                 is UserActionNodeEntity -> InstanceInfo(

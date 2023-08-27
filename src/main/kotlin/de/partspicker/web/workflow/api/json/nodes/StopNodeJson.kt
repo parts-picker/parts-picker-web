@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeName("stop")
 class StopNodeJson(
     name: String,
-    val displayName: String
-) : NodeJson(name) {
+    displayName: String
+) : NodeJson(name, displayName) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is StopNodeJson) return false
