@@ -1,7 +1,6 @@
 package de.partspicker.web.workflow.persistence.entities.nodes
 
 import de.partspicker.web.workflow.persistence.entities.WorkflowEntity
-import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 
@@ -11,11 +10,11 @@ class StopNodeEntity(
     id: Long,
     workflow: WorkflowEntity,
     name: String,
+    displayName: String,
 
-    @Column
-    val displayName: String
 ) : NodeEntity(
     id = id,
     workflow = workflow,
-    name = name
+    name = name,
+    displayName = displayName
 )

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 sealed class NodeJson(
-    val name: String
+    val name: String,
+    val displayName: String
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

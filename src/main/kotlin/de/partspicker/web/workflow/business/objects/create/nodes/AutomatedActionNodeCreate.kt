@@ -5,9 +5,9 @@ import de.partspicker.web.workflow.business.exceptions.WorkflowIllegalStateExcep
 
 class AutomatedActionNodeCreate(
     name: String,
-    val displayName: String,
+    displayName: String,
     val automatedActionName: String
-) : NodeCreate(name = name) {
+) : NodeCreate(name = name, displayName = displayName) {
     companion object {
         const val DISPLAY_NAME_IS_BLANK = "Display name must not be blank"
         const val AUTOMATED_ACTION_NAME_IS_BLANK = "Automated action name must not be blank"

@@ -14,9 +14,7 @@ class StartNodeEntity(
     id: Long,
     workflow: WorkflowEntity,
     name: String,
-
-    @Column
-    val displayName: String,
+    displayName: String,
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -24,5 +22,6 @@ class StartNodeEntity(
 ) : NodeEntity(
     id = id,
     workflow = workflow,
-    name = name
+    name = name,
+    displayName = displayName
 )

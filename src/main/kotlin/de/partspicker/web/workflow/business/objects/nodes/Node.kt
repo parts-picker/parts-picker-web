@@ -13,7 +13,8 @@ import org.hibernate.proxy.HibernateProxy
 sealed class Node(
     val id: Long,
     val workflowId: Long,
-    val name: String
+    val name: String,
+    val displayName: String
 ) {
     companion object {
         fun from(nodeEntity: NodeEntity): Node {
@@ -52,12 +53,6 @@ sealed class Node(
 
                 else -> throw WorkflowException()
             }
-        }
-
-        fun fromOrNull(nodeEntity: NodeEntity?): Node? {
-            nodeEntity ?: return null
-
-            return this.from(nodeEntity)
         }
     }
 

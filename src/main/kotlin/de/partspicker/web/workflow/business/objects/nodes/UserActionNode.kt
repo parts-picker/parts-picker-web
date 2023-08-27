@@ -4,8 +4,8 @@ class UserActionNode(
     id: Long,
     workflowId: Long,
     name: String,
-    val displayName: String
-) : Node(id, workflowId, name) {
+    displayName: String
+) : Node(id, workflowId, name, displayName) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is UserActionNode) return false

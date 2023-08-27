@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 @JsonTypeName("automated_action")
 class AutomatedActionNodeJson(
     name: String,
-    val displayName: String,
+    displayName: String,
     val automatedActionName: String
-) : NodeJson(name = name) {
+) : NodeJson(name = name, displayName = displayName) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -2,8 +2,8 @@ package de.partspicker.web.workflow.business.objects.create.nodes
 
 class StopNodeCreate(
     name: String,
-    val displayName: String
-) : NodeCreate(name) {
+    displayName: String
+) : NodeCreate(name, displayName) {
     init {
         check(displayName.isNotBlank())
     }

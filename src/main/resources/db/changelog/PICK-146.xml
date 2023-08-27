@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+
+    <changeSet id="PICK-146:addNonNullConstraintToDisplayNameColumnInNodeTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflow_nodes" columnName="display_name"/>
+        </preConditions>
+        <sql>
+            UPDATE workflow_nodes SET display_name = name WHERE display_name is null;
+        </sql>
+        <addNotNullConstraint tableName="workflow_nodes" columnName="display_name"/>
+    </changeSet>
+</databaseChangeLog>

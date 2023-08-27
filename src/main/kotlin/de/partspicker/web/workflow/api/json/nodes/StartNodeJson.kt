@@ -6,9 +6,9 @@ import de.partspicker.web.workflow.api.json.enums.StartTypeJson
 @JsonTypeName("start")
 class StartNodeJson(
     name: String,
-    val displayName: String,
+    displayName: String,
     val startType: StartTypeJson
-) : NodeJson(name) {
+) : NodeJson(name, displayName) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is StartNodeJson) return false

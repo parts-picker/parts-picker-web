@@ -4,9 +4,9 @@ import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 
 class StartNodeCreate(
     name: String,
-    val displayName: String,
+    displayName: String,
     val startType: StartTypeCreate
-) : NodeCreate(name) {
+) : NodeCreate(name, displayName) {
     init {
         check(displayName.isNotBlank())
     }

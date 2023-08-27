@@ -36,7 +36,9 @@ abstract class NodeEntity(
     @JoinColumn(name = "workflow_id", foreignKey = ForeignKey(name = "fk_node_workflow_id"))
     val workflow: WorkflowEntity,
 
-    val name: String
+    val name: String,
+
+    val displayName: String,
 ) {
     companion object {
         fun from(nodeCreate: NodeCreate, workflow: WorkflowEntity): NodeEntity = when (nodeCreate) {
