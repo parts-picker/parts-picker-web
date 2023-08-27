@@ -8,11 +8,12 @@ import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
-import de.partspicker.web.project.persistance.entities.ProjectEntity
+import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.inventory.AssignableItemGenerators
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.single
 import io.kotest.property.checkAll
 
 class AssignableItemUnitTest : ShouldSpec({
@@ -89,7 +90,7 @@ class AssignableItemUnitTest : ShouldSpec({
                     ItemEntity(
                         id = itemId,
                         type = ItemTypeEntity(id = 1L),
-                        assignedProject = ProjectEntity(id = 1L),
+                        assignedProject = ProjectEntityGenerators.generator.single(),
                         status = ItemStatusEntity.IN_STOCK,
                         condition = ItemConditionEntity.WRAPPED,
                         note = null

@@ -59,7 +59,7 @@ class WorkflowInteractionService(
         val projectEntity = this.projectRepository.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId) }
 
-        return projectEntity.workflowInstance!!.currentNode.name
+        return projectEntity.workflowInstance.currentNode.name
     }
 
     fun readEdgesBySourceNodeId(sourceNodeId: Long): Set<Edge> {

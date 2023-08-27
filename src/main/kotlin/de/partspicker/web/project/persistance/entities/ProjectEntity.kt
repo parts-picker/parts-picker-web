@@ -39,7 +39,7 @@ data class ProjectEntity(
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instance_id", foreignKey = ForeignKey(name = "fk_instance"))
-    val workflowInstance: InstanceEntity? = null
+    val workflowInstance: InstanceEntity
 ) {
     companion object {
         fun from(project: CreateProject, instanceEntity: InstanceEntity) = ProjectEntity(

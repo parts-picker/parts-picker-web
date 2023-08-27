@@ -10,6 +10,7 @@ import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
+import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import org.springframework.stereotype.Service
@@ -23,26 +24,29 @@ class RequiredItemTypeService(
     private val inventoryItemReadService: InventoryItemReadService,
     private val inventoryItemService: InventoryItemService
 ) {
-    fun createOrUpdate(requiredItemType: CreateOrUpdateRequiredItemType): RequiredItemType {
-        if (!this.projectRepository.existsById(requiredItemType.projectId)) {
-            throw ProjectNotFoundException(projectId = requiredItemType.projectId)
-        }
+    fun createOrUpdate(requiredItemTypeToUpdate: CreateOrUpdateRequiredItemType): RequiredItemType {
+        val projectEntity = this.projectRepository.getNullableReferenceById(requiredItemTypeToUpdate.projectId)
+            ?: throw ProjectNotFoundException(projectId = requiredItemTypeToUpdate.projectId)
 
         val assignedAmount = this.inventoryItemReadService.countAssignedForItemTypeAndProject(
-            projectId = requiredItemType.projectId,
-            itemTypeId = requiredItemType.itemTypeId
+            projectId = requiredItemTypeToUpdate.projectId,
+            itemTypeId = requiredItemTypeToUpdate.itemTypeId
         )
-        RequiredItemTypeAmountNotSmallerAssignedRule(requiredItemType.requiredAmount, assignedAmount).valid()
+        RequiredItemTypeAmountNotSmallerAssignedRule(requiredItemTypeToUpdate.requiredAmount, assignedAmount).valid()
 
-        val projectStatus = this.workflowInteractionService.readProjectStatus(requiredItemType.projectId)
+        val projectStatus = Project.from(projectEntity).status
         NodeNameEqualsRule(projectStatus, "planning").valid()
 
-        if (!this.itemTypeRepository.existsById(requiredItemType.itemTypeId)) {
-            throw ItemTypeNotFoundException(requiredItemType.itemTypeId)
+        if (!this.itemTypeRepository.existsById(requiredItemTypeToUpdate.itemTypeId)) {
+            throw ItemTypeNotFoundException(requiredItemTypeToUpdate.itemTypeId)
         }
 
         val createdRequiredItemType = this.requiredItemTypeRepository.save(
-            RequiredItemTypeEntity.from(requiredItemType),
+            RequiredItemTypeEntity(
+                projectEntity = projectEntity,
+                itemTypeId = requiredItemTypeToUpdate.itemTypeId,
+                requiredAmount = requiredItemTypeToUpdate.requiredAmount
+            )
         )
 
         return RequiredItemType.from(createdRequiredItemType, assignedAmount)

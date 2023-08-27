@@ -36,7 +36,7 @@ data class AssignedItem(
                 itemTypeId = itemEntity.type.id,
                 projectId = itemEntity.assignedProject!!.id,
                 condition = InventoryItemCondition.from(itemEntity.condition),
-                projectStatus = itemEntity.assignedProject!!.workflowInstance?.currentNode!!.name
+                projectStatus = itemEntity.assignedProject!!.workflowInstance.currentNode.name
             )
         }
     }
