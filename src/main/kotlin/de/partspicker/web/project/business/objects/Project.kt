@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page
 data class Project(
     val id: Long,
     val name: String,
-    val description: String? = null,
+    val shortDescription: String? = null,
     var group: Group? = null,
     var workflowInstanceId: Long,
     val status: String
@@ -15,7 +15,7 @@ data class Project(
         fun from(projectEntity: ProjectEntity) = Project(
             id = projectEntity.id,
             name = projectEntity.name,
-            description = projectEntity.description,
+            shortDescription = projectEntity.shortDescription,
             group = projectEntity.group?.let { groupEntity -> Group.from(groupEntity) },
             workflowInstanceId = projectEntity.workflowInstance.id,
             status = projectEntity.workflowInstance.currentNode.name

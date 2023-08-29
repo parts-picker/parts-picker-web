@@ -4,13 +4,13 @@ import de.partspicker.web.project.api.requests.ProjectPostRequest
 
 data class CreateProject(
     val name: String,
-    val description: String? = null,
+    val shortDescription: String? = null,
     var groupId: Long? = null
 ) {
     companion object {
         fun from(projectPostRequest: ProjectPostRequest) = CreateProject(
             name = projectPostRequest.name,
-            description = projectPostRequest.description,
+            shortDescription = projectPostRequest.shortDescription,
             groupId = projectPostRequest.groupId
         )
     }

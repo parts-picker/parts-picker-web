@@ -16,11 +16,11 @@ class ProjectEntityGenerators private constructor() {
             Arb.descriptionLikeString(),
             GroupEntityGenerators.generator,
             InstanceEntityGenerators.generator
-        ) { id, name, description, group, instanceId ->
+        ) { id, name, shortDescription, group, instanceId ->
             ProjectEntity(
                 id = id,
                 name = name,
-                description = description,
+                shortDescription = shortDescription,
                 group = group,
                 workflowInstance = instanceId
             )

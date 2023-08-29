@@ -58,7 +58,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             val returnedProject = cut.create(
                 CreateProject(
                     name = projectEntity.name,
-                    description = projectEntity.description,
+                    shortDescription = projectEntity.shortDescription,
                     groupId = projectEntity.group?.id
                 )
             )
@@ -81,7 +81,7 @@ class ProjectServiceUnitTest : ShouldSpec({
                 cut.create(
                     CreateProject(
                         name = projectEntity.name,
-                        description = projectEntity.description,
+                        shortDescription = projectEntity.shortDescription,
                         groupId = projectEntity.group?.id
                     )
                 )
@@ -189,7 +189,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
                 name = projectEntity.name,
-                description = projectEntity.description,
+                shortDescription = projectEntity.shortDescription,
                 groupId = null
             )
 
@@ -199,7 +199,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             }
 
             updatedProject.name shouldBe projectEntity.name
-            updatedProject.description shouldBe projectEntity.description
+            updatedProject.shortDescription shouldBe projectEntity.shortDescription
         }
 
         should("update the project with the given id & return it") {
@@ -213,7 +213,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
                 name = projectEntity.name,
-                description = projectEntity.description,
+                shortDescription = projectEntity.shortDescription,
                 groupId = projectEntity.group!!.id
             )
 
@@ -224,7 +224,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             }
 
             updatedProject.name shouldBe projectEntity.name
-            updatedProject.description shouldBe projectEntity.description
+            updatedProject.shortDescription shouldBe projectEntity.shortDescription
             updatedProject.group!!.id shouldBe projectEntity.group!!.id
             updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance.id
         }
@@ -239,7 +239,7 @@ class ProjectServiceUnitTest : ShouldSpec({
                 cut.update(
                     projectId = nonExistentId,
                     name = "name",
-                    description = "description",
+                    shortDescription = "description",
                     groupId = null
                 )
             }
@@ -264,7 +264,7 @@ class ProjectServiceUnitTest : ShouldSpec({
                 cut.update(
                     projectId = projectEntity.id,
                     name = "name",
-                    description = "description",
+                    shortDescription = "description",
                     groupId = nonExistentId
                 )
             }

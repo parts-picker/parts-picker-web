@@ -61,7 +61,7 @@ class ProjectController(
     }
 
     @PatchMapping("/projects/{id}")
-    fun handlePutProject(
+    fun handlePatchProject(
         @PathVariable id: Long,
         @RequestBody body: ProjectPatchRequest
     ): ResponseEntity<ProjectResource> {
@@ -70,7 +70,7 @@ class ProjectController(
         val updatedProject = this.projectService.update(
             projectId = id,
             name = body.name,
-            description = body.description,
+            shortDescription = body.shortDescription,
             groupId = body.groupId
         )
         val projectResource = this.projectResourceAssembler.toModel(updatedProject)
