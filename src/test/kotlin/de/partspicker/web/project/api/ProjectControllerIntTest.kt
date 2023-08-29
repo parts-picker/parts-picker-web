@@ -37,7 +37,7 @@ class ProjectControllerIntTest(
         should("return status 200 & the resource with the newly created project when called") {
             val postRequestBody = ProjectPostRequest(
                 name = "Project name",
-                description = "Project description",
+                shortDescription = "Project description",
                 groupId = 1L
             )
 
@@ -51,7 +51,7 @@ class ProjectControllerIntTest(
                     jsonPath("$.*", hasSize<Any>(5))
                     jsonPath("$.id", notNullValue())
                     jsonPath("$.name", `is`(postRequestBody.name))
-                    jsonPath("$.description", `is`(postRequestBody.description))
+                    jsonPath("$.shortDescription", `is`(postRequestBody.shortDescription))
                     jsonPath("$.groupId", `is`(1))
                     jsonPath("$._links", notNullValue())
                 }
@@ -106,7 +106,7 @@ class ProjectControllerIntTest(
                         jsonPath("$.*", hasSize<Any>(5))
                         jsonPath("$.id", `is`(id))
                         jsonPath("$.name", `is`("PROJECT 1"))
-                        jsonPath("$.description", `is`("Description for project 1"))
+                        jsonPath("$.shortDescription", `is`("Description for project 1"))
                         jsonPath("$.groupId", `is`(1))
                         jsonPath("$._links", notNullValue())
                     }
@@ -137,7 +137,7 @@ class ProjectControllerIntTest(
         should("return status 200 & the updated item when called") {
             val putRequestBody = ProjectPatchRequest(
                 name = "Updated name",
-                description = "Updated description",
+                shortDescription = "Updated description",
                 groupId = 2
             )
 
@@ -153,7 +153,7 @@ class ProjectControllerIntTest(
                     jsonPath("$.*", hasSize<Any>(5))
                     jsonPath("$.id", `is`(id))
                     jsonPath("$.name", `is`(putRequestBody.name))
-                    jsonPath("$.description", `is`(putRequestBody.description))
+                    jsonPath("$.shortDescription", `is`(putRequestBody.shortDescription))
                     jsonPath("$.groupId", `is`(2))
                     jsonPath("$._links", notNullValue())
                 }
@@ -162,7 +162,7 @@ class ProjectControllerIntTest(
         should("return status 404 when no project with the requested id exists") {
             val putRequestBody = ProjectPatchRequest(
                 name = "Updated name",
-                description = "Updated description",
+                shortDescription = "Updated description",
                 groupId = null
             )
 

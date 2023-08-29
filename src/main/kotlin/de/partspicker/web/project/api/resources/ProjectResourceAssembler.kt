@@ -29,7 +29,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
         return ProjectResource(
             id = project.id,
             name = project.name,
-            description = project.description,
+            shortDescription = project.shortDescription,
             groupId = project.group?.id,
             links = generateDefaultLinks(project.id, project.workflowInstanceId)
         )
@@ -44,7 +44,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             linkTo<ProjectController> { handleGetProjectById(projectId) }
                 .withSelfRel()
                 .withName(READ),
-            linkTo<ProjectController> { handlePutProject(projectId, ProjectPatchRequest.DUMMY) }
+            linkTo<ProjectController> { handlePatchProject(projectId, ProjectPatchRequest.DUMMY) }
                 .withSelfRel()
                 .withName(UPDATE),
             linkTo<ProjectController> { handleDeleteProject(projectId) }

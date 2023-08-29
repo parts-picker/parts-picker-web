@@ -58,13 +58,13 @@ class ProjectService(
         return Project.from(projectEntity)
     }
 
-    fun update(projectId: Long, name: String, description: String?, groupId: Long?): Project {
+    fun update(projectId: Long, name: String, shortDescription: String?, groupId: Long?): Project {
         val projectEntity = this.projectRepository.findById(projectId).orElseThrow {
             throw ProjectNotFoundException(projectId)
         }
 
         projectEntity.name = name
-        projectEntity.description = description
+        projectEntity.shortDescription = shortDescription
 
         groupId?.let { id ->
             if (!this.groupRepository.existsById(id)) {

@@ -29,7 +29,7 @@ data class ProjectEntity(
     var name: String,
 
     @FullTextField
-    var description: String?,
+    var shortDescription: String?,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
@@ -43,7 +43,7 @@ data class ProjectEntity(
         fun from(project: CreateProject, instanceEntity: InstanceEntity) = ProjectEntity(
             id = 0L,
             name = project.name,
-            description = project.description,
+            shortDescription = project.shortDescription,
             group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
             workflowInstance = instanceEntity
         )
