@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-167:addDescriptionColumnToProjectTable" author="RobinGuth">
+        <preConditions>
+            <not>
+                <columnExists tableName="projects" columnName="description"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="projects">
+            <column name="description" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

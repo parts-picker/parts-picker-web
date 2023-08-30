@@ -30,6 +30,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             id = project.id,
             name = project.name,
             shortDescription = project.shortDescription,
+            description = project.description,
             groupId = project.group?.id,
             links = generateDefaultLinks(project.id, project.workflowInstanceId)
         )
