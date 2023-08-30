@@ -9,6 +9,7 @@ class ProjectResource(
     val id: Long,
     val name: String,
     val shortDescription: String?,
+    val description: String?,
     var groupId: Long?,
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<ProjectResource>(links) {
@@ -27,6 +28,7 @@ class ProjectResource(
         if (id != other.id) return false
         if (name != other.name) return false
         if (shortDescription != other.shortDescription) return false
+        if (description != other.description) return false
         if (groupId != other.groupId) return false
 
         return true
@@ -37,11 +39,13 @@ class ProjectResource(
         result = 31 * result + id.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + (shortDescription?.hashCode() ?: 0)
+        result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + (groupId?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "ProjectResource(id=$id, name='$name', shortDescription=$shortDescription, groupId=$groupId)"
+        return "ProjectResource(id=$id, name='$name', shortDescription=$shortDescription," +
+            " description=$description, groupId=$groupId)"
     }
 }

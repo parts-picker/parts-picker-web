@@ -14,13 +14,15 @@ class ProjectEntityGenerators private constructor() {
             Arb.positiveLong(),
             Arb.string(range = IntRange(3, 16)),
             Arb.descriptionLikeString(),
+            Arb.descriptionLikeString(),
             GroupEntityGenerators.generator,
             InstanceEntityGenerators.generator
-        ) { id, name, shortDescription, group, instanceId ->
+        ) { id, name, shortDescription, description, group, instanceId ->
             ProjectEntity(
                 id = id,
                 name = name,
                 shortDescription = shortDescription,
+                description = description,
                 group = group,
                 workflowInstance = instanceId
             )

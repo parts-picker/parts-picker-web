@@ -10,6 +10,7 @@ import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
@@ -48,10 +49,11 @@ class ProjectControllerIntTest(
                 status { isOk() }
                 content {
                     contentType("application/hal+json")
-                    jsonPath("$.*", hasSize<Any>(5))
+                    jsonPath("$.*", hasSize<Any>(6))
                     jsonPath("$.id", notNullValue())
                     jsonPath("$.name", `is`(postRequestBody.name))
                     jsonPath("$.shortDescription", `is`(postRequestBody.shortDescription))
+                    jsonPath("$.description", nullValue())
                     jsonPath("$.groupId", `is`(1))
                     jsonPath("$._links", notNullValue())
                 }
@@ -103,10 +105,11 @@ class ProjectControllerIntTest(
                     status { isOk() }
                     content {
                         contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(5))
+                        jsonPath("$.*", hasSize<Any>(6))
                         jsonPath("$.id", `is`(id))
                         jsonPath("$.name", `is`("PROJECT 1"))
                         jsonPath("$.shortDescription", `is`("Description for project 1"))
+                        jsonPath("$.description", nullValue())
                         jsonPath("$.groupId", `is`(1))
                         jsonPath("$._links", notNullValue())
                     }
@@ -150,10 +153,11 @@ class ProjectControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(5))
+                    jsonPath("$.*", hasSize<Any>(6))
                     jsonPath("$.id", `is`(id))
                     jsonPath("$.name", `is`(putRequestBody.name))
                     jsonPath("$.shortDescription", `is`(putRequestBody.shortDescription))
+                    jsonPath("$.description", nullValue())
                     jsonPath("$.groupId", `is`(2))
                     jsonPath("$._links", notNullValue())
                 }

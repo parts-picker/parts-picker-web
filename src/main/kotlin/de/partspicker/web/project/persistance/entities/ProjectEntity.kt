@@ -31,6 +31,8 @@ data class ProjectEntity(
     @FullTextField
     var shortDescription: String?,
 
+    var description: String?,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(foreignKey = ForeignKey(name = "fk_group_of_project"))
     var group: GroupEntity?,
@@ -44,6 +46,7 @@ data class ProjectEntity(
             id = 0L,
             name = project.name,
             shortDescription = project.shortDescription,
+            description = null,
             group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
             workflowInstance = instanceEntity
         )
