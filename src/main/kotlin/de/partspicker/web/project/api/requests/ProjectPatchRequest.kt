@@ -1,15 +1,6 @@
 package de.partspicker.web.project.api.requests
 
-data class ProjectPatchRequest(
-    val name: String,
-    val shortDescription: String?,
-    val groupId: Long?
-) {
-    companion object {
-        val DUMMY = ProjectPatchRequest(
-            "",
-            null,
-            null
-        )
-    }
-}
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+sealed interface ProjectPatchRequest
