@@ -1,5 +1,6 @@
 package de.partspicker.web.test.generators.workflow
 
+import de.partspicker.web.test.util.AutomatedTestAction
 import de.partspicker.web.workflow.business.objects.create.enums.StartTypeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.AutomatedActionNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.NodeCreate
@@ -27,9 +28,8 @@ class NodeCreateGenerators private constructor() {
         val automatedActionNodeCreateGenerator: Arb<AutomatedActionNodeCreate> = Arb.bind(
             Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
             Arb.string(range = IntRange(3, 16)),
-            Arb.string(range = IntRange(3, 16))
-        ) { name, displayName, automatedActionName ->
-            AutomatedActionNodeCreate(name, displayName, automatedActionName)
+        ) { name, displayName ->
+            AutomatedActionNodeCreate(name, displayName, AutomatedTestAction.NAME)
         }
 
         val randomStartTypeGen = Arb.enum<StartTypeCreate>()
