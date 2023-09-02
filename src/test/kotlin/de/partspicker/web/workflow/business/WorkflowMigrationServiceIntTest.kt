@@ -2,6 +2,9 @@ package de.partspicker.web.workflow.business
 
 import de.partspicker.web.test.annotations.ReducedSpringTestContext
 import de.partspicker.web.test.builders.SimpleWorkflowJsonBuilder
+import de.partspicker.web.test.builders.WorkflowCreateBuilder
+import de.partspicker.web.test.generators.workflow.NodeCreateGenerators
+import de.partspicker.web.test.util.AutomatedTestAction
 import de.partspicker.web.workflow.api.json.migration.ExplicitMigrationPlanJson
 import de.partspicker.web.workflow.api.json.migration.InstanceValueMigrationJson
 import de.partspicker.web.workflow.api.json.migration.NodeMigrationJson
@@ -21,6 +24,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.property.arbitrary.single
 import org.springframework.context.annotation.Import
 
 @ReducedSpringTestContext
@@ -32,7 +36,8 @@ import org.springframework.context.annotation.Import
     WorkflowInteractionService::class,
     WorkflowMigrationService::class,
     InstanceValueMigrationService::class,
-    SpELConfig::class
+    SpELConfig::class,
+    AutomatedTestAction::class
 )
 @Suppress("LongParameterList")
 class WorkflowMigrationServiceIntTest(
@@ -256,6 +261,43 @@ class WorkflowMigrationServiceIntTest(
             val instanceValues = instanceValueReadService.readAllForInstance(instance.id)
             instanceValues shouldHaveSize 1
             instanceValues[0].value shouldBe instanceValue.value
+        }
+
+        should("set instance to given stop node and active to false & return the updated instance info") {
+            // given
+            // create workflow
+            val startNodeCreate = NodeCreateGenerators.startNodeCreateGenerator.single()
+            val stopNodeCreate = NodeCreateGenerators.stopNodeCreateGenerator.single()
+
+            val workflowCreate = WorkflowCreateBuilder(startNodeCreate)
+                .append(NodeCreateGenerators.actionNodeGenerator.single())
+                .build(stopNodeCreate)
+            val createdWorkflow = workflowService.create(workflowCreate)
+
+            // create instance
+            val instance = workflowInteractionService.startWorkflowInstance(
+                createdWorkflow.name,
+                startNodeCreate.name
+            )
+
+            // when
+            val updatedInstance = cut.forceSetInstanceNodeWithinWorkflow(
+                instance.id,
+                stopNodeCreate.name
+            )
+
+            // then
+            updatedInstance shouldNotBe null
+            updatedInstance.instanceId shouldBe instance.id
+            updatedInstance.name shouldBe stopNodeCreate.name
+            updatedInstance.displayName shouldBe stopNodeCreate.displayName
+
+            val instanceEntity = instanceRepository.findById(updatedInstance.instanceId)
+            instanceEntity.isPresent shouldBe true
+            instanceEntity.get().active shouldBe false
+
+            val instanceValues = instanceValueReadService.readAllForInstance(instance.id)
+            instanceValues shouldHaveSize 0
         }
     }
 }) {
