@@ -4,6 +4,7 @@ import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.project.business.rules.ProjectActiveRule
 import de.partspicker.web.project.persistance.GroupRepository
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.GroupEntity
@@ -63,6 +64,8 @@ class ProjectService(
             throw ProjectNotFoundException(projectId)
         }
 
+        ProjectActiveRule(Project.from(projectEntity)).valid()
+
         projectEntity.name = name
         projectEntity.shortDescription = shortDescription
 
@@ -73,6 +76,19 @@ class ProjectService(
 
             projectEntity.group = GroupEntity(id = id)
         }
+
+        val updatedProject = this.projectRepository.save(projectEntity)
+
+        return Project.from(updatedProject)
+    }
+
+    fun updateDescription(projectId: Long, description: String?): Project {
+        val projectEntity = this.projectRepository.getNullableReferenceById(projectId)
+            ?: throw ProjectNotFoundException(projectId)
+
+        ProjectActiveRule(Project.from(projectEntity)).valid()
+
+        projectEntity.description = description
 
         val updatedProject = this.projectRepository.save(projectEntity)
 

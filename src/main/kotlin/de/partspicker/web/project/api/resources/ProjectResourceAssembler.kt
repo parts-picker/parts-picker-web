@@ -4,6 +4,7 @@ import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
+import de.partspicker.web.common.hal.LinkListBuilder
 import de.partspicker.web.common.hal.RelationName
 import de.partspicker.web.common.hal.RelationName.ASSIGNED
 import de.partspicker.web.common.hal.RelationName.AVAILABLE
@@ -13,9 +14,10 @@ import de.partspicker.web.common.hal.generateSearchItemsByNameLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
 import de.partspicker.web.project.api.ProjectController
-import de.partspicker.web.project.api.requests.ProjectPatchRequest
+import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.project.business.rules.ProjectActiveRule
 import de.partspicker.web.workflow.api.WorkflowInteractionController
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
@@ -32,35 +34,50 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             shortDescription = project.shortDescription,
             description = project.description,
             groupId = project.group?.id,
-            links = generateDefaultLinks(project.id, project.workflowInstanceId)
+            links = generateDefaultLinks(project)
         )
     }
 
-    private fun generateDefaultLinks(projectId: Long, instanceId: Long): List<Link> {
-        return listOf(
-            linkTo<ProjectController> { handlePostProject(ProjectPostRequest.DUMMY) }
-                .withRel(IanaLinkRelations.COLLECTION)
-                .withName(CREATE),
-            generateGetAllProjectsLink(IanaLinkRelations.COLLECTION),
-            linkTo<ProjectController> { handleGetProjectById(projectId) }
-                .withSelfRel()
-                .withName(READ),
-            linkTo<ProjectController> { handlePatchProject(projectId, ProjectPatchRequest.DUMMY) }
-                .withSelfRel()
-                .withName(UPDATE),
-            linkTo<ProjectController> { handleDeleteProject(projectId) }
-                .withSelfRel()
-                .withName(DELETE),
+    private fun generateDefaultLinks(project: Project): List<Link> {
+        return LinkListBuilder()
+            .with(
+                linkTo<ProjectController> { handlePostProject(ProjectPostRequest.DUMMY) }
+                    .withRel(IanaLinkRelations.COLLECTION)
+                    .withName(CREATE)
+            )
+            .with(generateGetAllProjectsLink(IanaLinkRelations.COLLECTION))
+            .with(
+                linkTo<ProjectController> { handleGetProjectById(project.id) }
+                    .withSelfRel()
+                    .withName(READ)
+            )
+            .with(
+                linkTo<ProjectController> { handlePatchProject(project.id, ProjectMetaInfoPatchRequest.DUMMY) }
+                    .withSelfRel()
+                    .withName(UPDATE),
+                ProjectActiveRule(project)
+            )
+            .with(
+                linkTo<ProjectController> { handleDeleteProject(project.id) }
+                    .withSelfRel()
+                    .withName(DELETE)
+            )
             // availableItemType
-            generateSearchItemsByNameLink(AVAILABLE, projectId),
+            .with(
+                generateSearchItemsByNameLink(AVAILABLE, project.id)
+            )
             // requiredItemType
-            generateGetAllRequiredItemTypesLink(ASSIGNED, projectId),
+            .with(
+                generateGetAllRequiredItemTypesLink(ASSIGNED, project.id)
+            )
             // workflow
-            linkTo<WorkflowInteractionController> {
-                handleGetInstanceInfo(instanceId)
-            }
-                .withRel(RelationName.STATUS)
-                .withName(READ)
-        )
+            .with(
+                linkTo<WorkflowInteractionController> {
+                    handleGetInstanceInfo(project.workflowInstanceId)
+                }
+                    .withRel(RelationName.STATUS)
+                    .withName(READ)
+            )
+            .build()
     }
 }

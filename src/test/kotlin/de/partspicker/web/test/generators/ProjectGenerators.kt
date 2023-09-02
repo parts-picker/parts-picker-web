@@ -3,6 +3,7 @@ package de.partspicker.web.test.generators
 import de.partspicker.web.project.business.objects.Project
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
+import io.kotest.property.arbitrary.boolean
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.string
 
@@ -16,8 +17,9 @@ class ProjectGenerators private constructor() {
             Arb.descriptionLikeString(),
             GroupGenerators.generator,
             Arb.long(1),
-            Arb.string(range = IntRange(3, 16))
-        ) { id, name, shortDescription, description, group, instanceId, status ->
+            Arb.string(range = IntRange(3, 16)),
+            Arb.boolean()
+        ) { id, name, shortDescription, description, group, instanceId, status, active ->
             Project(
                 id = id,
                 name = name,
@@ -25,7 +27,8 @@ class ProjectGenerators private constructor() {
                 description = description,
                 group = group,
                 workflowInstanceId = instanceId,
-                status = status
+                status = status,
+                active = active
             )
         }
     }

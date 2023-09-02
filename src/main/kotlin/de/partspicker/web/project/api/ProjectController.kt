@@ -2,6 +2,8 @@ package de.partspicker.web.project.api
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
+import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
+import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.resources.ProjectResource
@@ -9,6 +11,7 @@ import de.partspicker.web.project.api.resources.ProjectResourceAssembler
 import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
+import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.PagedModel
@@ -63,16 +66,24 @@ class ProjectController(
     @PatchMapping("/projects/{id}")
     fun handlePatchProject(
         @PathVariable id: Long,
-        @RequestBody body: ProjectPatchRequest
+        @Valid @RequestBody body: ProjectPatchRequest
     ): ResponseEntity<ProjectResource> {
         logger.info("=> PATCH request to modify project with $id")
 
-        val updatedProject = this.projectService.update(
-            projectId = id,
-            name = body.name,
-            shortDescription = body.shortDescription,
-            groupId = body.groupId
-        )
+        val updatedProject = when (body) {
+            is ProjectDescriptionPatchRequest -> this.projectService.updateDescription(
+                projectId = id,
+                description = body.description
+            )
+
+            is ProjectMetaInfoPatchRequest -> this.projectService.update(
+                projectId = id,
+                name = body.name,
+                shortDescription = body.shortDescription,
+                groupId = body.groupId
+            )
+        }
+
         val projectResource = this.projectResourceAssembler.toModel(updatedProject)
 
         return ResponseEntity(projectResource, HttpStatus.OK)

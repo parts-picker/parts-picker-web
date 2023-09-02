@@ -9,7 +9,9 @@ import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.id
+import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
 import de.partspicker.web.workflow.business.objects.Instance
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import io.kotest.assertions.throwables.shouldThrow
@@ -19,6 +21,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.single
+import io.kotest.property.arbitrary.string
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -181,7 +184,11 @@ class ProjectServiceUnitTest : ShouldSpec({
     context("update") {
         should("update the project with the given id with no group & return it") {
             // given
-            val projectEntity = ProjectEntityGenerators.generator.next().copy(group = null)
+            val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                group = null,
+                workflowInstance = activeInstanceEntity
+            )
             every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { projectRepositoryMock.save(projectEntity) } returns projectEntity
 
@@ -204,7 +211,8 @@ class ProjectServiceUnitTest : ShouldSpec({
 
         should("update the project with the given id & return it") {
             // given
-            val projectEntity = ProjectEntityGenerators.generator.next()
+            val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = activeInstanceEntity)
             every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { projectRepositoryMock.save(any()) } returns projectEntity
             every { groupRepositoryMock.existsById(projectEntity.group!!.id) } returns true
@@ -252,9 +260,37 @@ class ProjectServiceUnitTest : ShouldSpec({
             exception.message shouldBe "Project with id $nonExistentId could not be found"
         }
 
+        should("throw InstanceInactiveException when given inactive instance") {
+            // given
+            val inactiveInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = false)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = inactiveInstanceEntity
+            )
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+
+            // when
+            val exception = shouldThrow<InstanceInactiveException> {
+                cut.update(
+                    projectId = projectEntity.id,
+                    name = "name",
+                    shortDescription = "description",
+                    groupId = null
+                )
+            }
+
+            // then
+            verify(exactly = 0) {
+                projectRepositoryMock.save(any())
+            }
+
+            exception.message shouldBe
+                "The instance with the given id ${inactiveInstanceEntity.id} is inactive & cannot be modified"
+        }
+
         should("throw GroupNotFoundException when given non-existent group") {
             // given
-            val projectEntity = ProjectEntityGenerators.generator.next()
+            val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = activeInstanceEntity)
             val nonExistentId = 666L
             every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { groupRepositoryMock.existsById(nonExistentId) } returns false
@@ -275,6 +311,84 @@ class ProjectServiceUnitTest : ShouldSpec({
             }
 
             exception.message shouldBe "Group with id $nonExistentId could not be found"
+        }
+    }
+
+    context("updateDescription") {
+        should("update the description of the project with the given id & return it") {
+            // given
+            val inactiveInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = inactiveInstanceEntity
+            )
+            every { projectRepositoryMock.getNullableReferenceById(projectEntity.id) } returns projectEntity
+            every { projectRepositoryMock.save(any()) } returns projectEntity
+
+            val description = Arb.string(200..400).single()
+            // when
+            val updatedProject = cut.updateDescription(
+                projectId = projectEntity.id,
+                description = description
+            )
+
+            // then
+            verify {
+                projectRepositoryMock.save(any())
+            }
+
+            updatedProject.name shouldBe projectEntity.name
+            updatedProject.shortDescription shouldBe projectEntity.shortDescription
+            updatedProject.description shouldBe description
+            updatedProject.group?.id shouldBe projectEntity.group?.id
+            updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance.id
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val nonExistentId = 666L
+            every { projectRepositoryMock.getNullableReferenceById(nonExistentId) } returns null
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.updateDescription(
+                    projectId = nonExistentId,
+                    description = "description"
+                )
+            }
+
+            // then
+            verify(exactly = 0) {
+                projectRepositoryMock.save(any())
+            }
+
+            exception.message shouldBe "Project with id $nonExistentId could not be found"
+        }
+
+        should("throw InstanceInactiveException when given inactive instance") {
+            // given
+            val inactiveInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = false)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = inactiveInstanceEntity
+            )
+            every { projectRepositoryMock.getNullableReferenceById(projectEntity.id) } returns projectEntity
+
+            val description = Arb.string(200..400).single()
+
+            // when
+            val exception = shouldThrow<InstanceInactiveException> {
+                cut.updateDescription(
+                    projectId = projectEntity.id,
+                    description = description
+                )
+            }
+
+            // then
+            verify(exactly = 0) {
+                projectRepositoryMock.save(any())
+            }
+
+            exception.message shouldBe
+                "The instance with the given id ${inactiveInstanceEntity.id} is inactive & cannot be modified"
         }
     }
 

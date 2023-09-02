@@ -1,12 +1,21 @@
 package de.partspicker.web.project.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import de.partspicker.web.common.exceptions.ErrorCode
-import de.partspicker.web.project.api.requests.ProjectPatchRequest
+import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
+import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.resources.ProjectResource
+import de.partspicker.web.test.util.TestSetupHelper
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.single
+import io.kotest.property.arbitrary.string
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -31,7 +40,8 @@ import org.springframework.transaction.annotation.Transactional
 @Sql("classpath:/init-sql/projectControllerIntTest.sql")
 class ProjectControllerIntTest(
     private val mockMvc: MockMvc,
-    private val mapper: ObjectMapper
+    private val mapper: ObjectMapper,
+    private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
 
     context("POST project") {
@@ -136,9 +146,9 @@ class ProjectControllerIntTest(
         }
     }
 
-    context("UPDATE project") {
-        should("return status 200 & the updated item when called") {
-            val putRequestBody = ProjectPatchRequest(
+    context("UPDATE project meta info") {
+        should("return status 200 & the updated project when called") {
+            val requestBody = ProjectMetaInfoPatchRequest(
                 name = "Updated name",
                 shortDescription = "Updated description",
                 groupId = 2
@@ -148,15 +158,15 @@ class ProjectControllerIntTest(
 
             mockMvc.patch("/projects/$id") {
                 contentType = MediaType.APPLICATION_JSON
-                content = mapper.writeValueAsString(putRequestBody)
+                content = mapper.writeValueAsString(requestBody)
             }
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(6))
                     jsonPath("$.id", `is`(id))
-                    jsonPath("$.name", `is`(putRequestBody.name))
-                    jsonPath("$.shortDescription", `is`(putRequestBody.shortDescription))
+                    jsonPath("$.name", `is`(requestBody.name))
+                    jsonPath("$.shortDescription", `is`(requestBody.shortDescription))
                     jsonPath("$.description", nullValue())
                     jsonPath("$.groupId", `is`(2))
                     jsonPath("$._links", notNullValue())
@@ -164,7 +174,7 @@ class ProjectControllerIntTest(
         }
 
         should("return status 404 when no project with the requested id exists") {
-            val putRequestBody = ProjectPatchRequest(
+            val requestBody = ProjectMetaInfoPatchRequest(
                 name = "Updated name",
                 shortDescription = "Updated description",
                 groupId = null
@@ -175,7 +185,99 @@ class ProjectControllerIntTest(
 
             mockMvc.patch(path) {
                 contentType = MediaType.APPLICATION_JSON
-                content = mapper.writeValueAsString(putRequestBody)
+                content = mapper.writeValueAsString(requestBody)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath("$.message", `is`("Project with id $nonExistentId could not be found"))
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+    }
+
+    context("UPDATE project description") {
+        should("return status 200 & the updated project when called") {
+            // data setup
+            val project = testSetupHelper.setupProject()
+
+            // request
+            val requestBody = ProjectDescriptionPatchRequest(
+                description = "Updated description",
+            )
+
+            val mvcResult = mockMvc.patch("/projects/${project.id}") {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(requestBody)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(6))
+                }
+                .andReturn()
+
+            val responseResource = mapper.readValue<ProjectResource>(mvcResult.response.contentAsString)
+
+            responseResource.id shouldBe project.id
+            responseResource.name shouldBe project.name
+            responseResource.shortDescription shouldBe project.shortDescription
+            responseResource.description shouldBe requestBody.description
+            responseResource.groupId shouldBe project.group?.id
+            responseResource.links shouldNotBe null
+        }
+
+        should("return status 422 when given description with size bigger than max allowed size") {
+            // data setup
+            val project = testSetupHelper.setupProject()
+
+            // request
+            val requestBody = ProjectDescriptionPatchRequest(
+                description = Arb.string(ProjectDescriptionPatchRequest.MAX_DESCRIPTION_SIZE + 1).single(),
+            )
+
+            val path = "/projects/${project.id}"
+
+            mockMvc.patch(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(requestBody)
+            }
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                    jsonPath(
+                        "$.message",
+                        `is`("Validation for object projectPatchRequest failed with 1 error(s)")
+                    )
+                    jsonPath<Map<out String, String>>("$.errors", Matchers.aMapWithSize(1))
+                    jsonPath(
+                        "$.errors.description",
+                        `is`(ProjectDescriptionPatchRequest.MAX_DESCRIPTION_SIZE_MESSAGE)
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 404 when no project with the requested id exists") {
+            val requestBody = ProjectDescriptionPatchRequest(
+                description = "Updated description",
+            )
+
+            val nonExistentId = 666
+            val path = "/projects/$nonExistentId"
+
+            mockMvc.patch(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(requestBody)
             }
                 .andExpect {
                     status { isNotFound() }

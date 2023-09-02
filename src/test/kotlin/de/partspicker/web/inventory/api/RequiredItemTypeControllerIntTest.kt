@@ -157,9 +157,7 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath(
                             "$.message",
-                            `is`(
-                                "Validation for object requiredItemTypePostRequest failed with 1 error(s)"
-                            )
+                            `is`("Validation for object requiredItemTypePostRequest failed with 1 error(s)")
                         )
                         jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
                         jsonPath("$.errors.requiredAmount", `is`("must be greater than or equal to 1"))
