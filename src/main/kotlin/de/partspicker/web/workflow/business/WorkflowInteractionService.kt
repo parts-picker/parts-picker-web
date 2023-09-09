@@ -24,6 +24,7 @@ import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import de.partspicker.web.workflow.persistence.entities.enums.DisplayTypeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StartNodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
+import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -175,7 +176,7 @@ class WorkflowInteractionService(
         }
 
         // check if target is stop node
-        if (edge.target is StopNodeEntity) {
+        if (Hibernate.unproxy(edge.target) is StopNodeEntity) {
             instanceEntity.active = false
         }
 

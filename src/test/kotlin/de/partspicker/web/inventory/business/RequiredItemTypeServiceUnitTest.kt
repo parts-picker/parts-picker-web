@@ -12,6 +12,7 @@ import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
 import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
@@ -58,7 +59,9 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 name = "planning",
                 displayName = "displayName"
             )
-            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity).copy(
+                active = true
+            )
             every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
                 ProjectEntityGenerators.generator.single().copy(
                     workflowInstance = instanceEntity,
@@ -114,7 +117,10 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 name = "planning",
                 displayName = "displayName"
             )
-            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(
+                currentNode = nodeEntity,
+                active = true
+            )
             every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
                 ProjectEntityGenerators.generator.single().copy(
                     workflowInstance = instanceEntity,
@@ -137,6 +143,79 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // then
             exception.message shouldBe
                 "ItemType with id ${createOrUpdateRequiredItemType.itemTypeId} could not be found"
+        }
+
+        should("throw WrongNodeNameRuleException when given project without status 'planning'") {
+            // given
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = mockk(),
+                name = "not-planning",
+                displayName = "displayName"
+            )
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                ProjectEntityGenerators.generator.single().copy(
+                    workflowInstance = instanceEntity,
+                    id = createOrUpdateRequiredItemType.projectId
+                )
+
+            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every {
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns 0L
+
+            // when
+            val exception = shouldThrow<WrongNodeNameRuleException> {
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
+            }
+
+            // then
+            exception.message shouldBe
+                "Expected project status is planning, but actual status is ${nodeEntity.name}"
+        }
+
+        should("throw InstanceInactiveException when given inactive project") {
+            // given
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = mockk(),
+                name = "planning",
+                displayName = "displayName"
+            )
+            val instanceEntity = InstanceEntityGenerators.generator.single().copy(
+                currentNode = nodeEntity,
+                active = false
+            )
+            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
+                ProjectEntityGenerators.generator.single().copy(
+                    workflowInstance = instanceEntity,
+                    id = createOrUpdateRequiredItemType.projectId
+                )
+
+            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every {
+                inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
+                    createOrUpdateRequiredItemType.itemTypeId,
+                    createOrUpdateRequiredItemType.projectId
+                )
+            } returns 0L
+
+            // when
+            val exception = shouldThrow<InstanceInactiveException> {
+                cut.createOrUpdate(createOrUpdateRequiredItemType)
+            }
+
+            // then
+            exception.message shouldBe
+                "The instance with the given id ${instanceEntity.id} is inactive & cannot be modified"
         }
 
         should("throw RequiredItemTypeAmountSmallerThanAssignedException when given required smaller assigned") {

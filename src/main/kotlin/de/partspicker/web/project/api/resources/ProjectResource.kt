@@ -5,9 +5,11 @@ import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
 @Relation(collectionRelation = ProjectResource.collectionRelationName)
+@Suppress("LongParameterList")
 class ProjectResource(
     val id: Long,
     val name: String,
+    val status: String,
     val shortDescription: String?,
     val description: String?,
     var groupId: Long?,

@@ -1,9 +1,11 @@
 package de.partspicker.web.inventory.api.resources
 
+import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
+import de.partspicker.web.common.hal.LinkListBuilder
 import de.partspicker.web.common.hal.RelationName.ASSIGNABLE
 import de.partspicker.web.common.hal.RelationName.ASSIGNED
 import de.partspicker.web.common.hal.RelationName.ASSIGNED_TO
@@ -33,38 +35,79 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
             assignedAmount = requiredItemType.assignedAmount,
             requiredAmount = requiredItemType.requiredAmount,
             links = generateDefaultLinks(
-                projectId = requiredItemType.projectId,
-                itemTypeId = requiredItemType.itemType.id
+                requiredItemType = requiredItemType
             ),
         )
     }
 
-    private fun generateDefaultLinks(projectId: Long, itemTypeId: Long): List<Link> {
-        return listOf(
-            linkTo<ProjectController> { handleGetProjectById(projectId) }
-                .withRel(ASSIGNED_TO)
-                .withName(READ),
-            linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
-                .withRel(DESCRIBED_BY)
-                .withName(READ),
+    @Suppress("LongMethod")
+    private fun generateDefaultLinks(requiredItemType: RequiredItemType): List<Link> {
+        val projectStatusPlanningRule = NodeNameEqualsRule(requiredItemType.projectStatus, "planning")
+
+        return LinkListBuilder()
+            .with(
+                linkTo<ProjectController> { handleGetProjectById(requiredItemType.projectId) }
+                    .withRel(ASSIGNED_TO)
+                    .withName(READ)
+            )
+            .with(
+                linkTo<ItemTypeController> { handleGetItemTypeById(requiredItemType.itemType.id) }
+                    .withRel(DESCRIBED_BY)
+                    .withName(READ)
+            )
+            // collection related links
+            .with(
+                linkTo<RequiredItemTypeController> {
+                    handlePostRequiredItemTypes(
+                        requiredItemType.projectId,
+                        requiredItemType.itemType.id,
+                        RequiredItemTypePostRequest.DUMMY
+                    )
+                }
+                    .withRel(COLLECTION)
+                    .withName(CREATE),
+                projectStatusPlanningRule,
+            )
+            .with(generateGetAllRequiredItemTypesLink(COLLECTION, requiredItemType.projectId))
             // self-related links
-            linkTo<RequiredItemTypeController> {
-                handlePostRequiredItemTypes(projectId, itemTypeId, RequiredItemTypePostRequest.DUMMY)
-            }
-                .withRel(COLLECTION)
-                .withName(CREATE),
-            generateGetAllRequiredItemTypesLink(COLLECTION, projectId),
-            linkTo<RequiredItemTypeController> {
-                handlePatchByProjectIdAndItemTypeId(projectId, itemTypeId, RequiredItemTypePatchRequest.DUMMY)
-            }
-                .withSelfRel()
-                .withName(UPDATE),
-            linkTo<RequiredItemTypeController> { handleDeleteByProjectIdAndItemTypeId(projectId, itemTypeId) }
-                .withSelfRel()
-                .withName(DELETE),
+            .with(
+                linkTo<RequiredItemTypeController> {
+                    handlePatchByProjectIdAndItemTypeId(
+                        requiredItemType.projectId,
+                        requiredItemType.itemType.id,
+                        RequiredItemTypePatchRequest.DUMMY
+                    )
+                }
+                    .withSelfRel()
+                    .withName(UPDATE),
+                projectStatusPlanningRule
+            )
+            .with(
+                linkTo<RequiredItemTypeController> {
+                    handleDeleteByProjectIdAndItemTypeId(
+                        requiredItemType.projectId,
+                        requiredItemType.itemType.id
+                    )
+                }
+                    .withSelfRel()
+                    .withName(DELETE),
+                projectStatusPlanningRule
+            )
             // item related links
-            generateGetAllAssignableItemsLink(ASSIGNABLE, projectId, itemTypeId),
-            generateGetAllAssignedItemsLink(ASSIGNED, projectId, itemTypeId),
-        )
+            .with(
+                generateGetAllAssignableItemsLink(
+                    ASSIGNABLE,
+                    requiredItemType.projectId,
+                    requiredItemType.itemType.id
+                )
+            )
+            .with(
+                generateGetAllAssignedItemsLink(
+                    ASSIGNED,
+                    requiredItemType.projectId,
+                    requiredItemType.itemType.id
+                )
+            )
+            .build()
     }
 }

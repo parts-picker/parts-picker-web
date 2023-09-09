@@ -9,13 +9,13 @@ data class AvailableItemType(
      * The id of the project which may use this item type.
      */
     val projectId: Long,
-    val projectStatus: String?
+    val projectStatus: String
 ) {
     companion object {
         fun from(
             availableItemTypeResult: AvailableItemTypeResult,
             projectId: Long,
-            projectStatus: String?
+            projectStatus: String
         ) = AvailableItemType(
             id = availableItemTypeResult.id,
             name = availableItemTypeResult.name,
@@ -25,7 +25,7 @@ data class AvailableItemType(
     }
 
     object AsList {
-        fun from(availableItemTypeResults: Iterable<AvailableItemTypeResult>, projectId: Long, projectStatus: String?) =
+        fun from(availableItemTypeResults: Iterable<AvailableItemTypeResult>, projectId: Long, projectStatus: String) =
             availableItemTypeResults.map { from(it, projectId, projectStatus) }
     }
 }

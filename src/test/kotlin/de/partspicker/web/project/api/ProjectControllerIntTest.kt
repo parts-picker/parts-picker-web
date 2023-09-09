@@ -59,9 +59,10 @@ class ProjectControllerIntTest(
                 status { isOk() }
                 content {
                     contentType("application/hal+json")
-                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.*", hasSize<Any>(7))
                     jsonPath("$.id", notNullValue())
                     jsonPath("$.name", `is`(postRequestBody.name))
+                    jsonPath("$.status", `is`("planning"))
                     jsonPath("$.shortDescription", `is`(postRequestBody.shortDescription))
                     jsonPath("$.description", nullValue())
                     jsonPath("$.groupId", `is`(1))
@@ -115,9 +116,10 @@ class ProjectControllerIntTest(
                     status { isOk() }
                     content {
                         contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.id", `is`(id))
                         jsonPath("$.name", `is`("PROJECT 1"))
+                        jsonPath("$.status", `is`("start"))
                         jsonPath("$.shortDescription", `is`("Description for project 1"))
                         jsonPath("$.description", nullValue())
                         jsonPath("$.groupId", `is`(1))
@@ -163,9 +165,10 @@ class ProjectControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.*", hasSize<Any>(7))
                     jsonPath("$.id", `is`(id))
                     jsonPath("$.name", `is`(requestBody.name))
+                    jsonPath("$.status", `is`("start"))
                     jsonPath("$.shortDescription", `is`(requestBody.shortDescription))
                     jsonPath("$.description", nullValue())
                     jsonPath("$.groupId", `is`(2))
@@ -218,7 +221,7 @@ class ProjectControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.*", hasSize<Any>(7))
                 }
                 .andReturn()
 
@@ -226,6 +229,7 @@ class ProjectControllerIntTest(
 
             responseResource.id shouldBe project.id
             responseResource.name shouldBe project.name
+            responseResource.status shouldBe project.status
             responseResource.shortDescription shouldBe project.shortDescription
             responseResource.description shouldBe requestBody.description
             responseResource.groupId shouldBe project.group?.id

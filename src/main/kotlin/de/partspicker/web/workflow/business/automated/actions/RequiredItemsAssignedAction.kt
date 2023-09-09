@@ -22,8 +22,8 @@ class RequiredItemsAssignedAction(
         const val SUCCESSFUL_EDGE = "check_required_items_assigned->implementation"
         const val FAILED_EDGE = "check_required_items_assigned->planning"
 
-        const val MISSING_ITEMS_MESSAGE = "Required items not fully assigned yet"
-        const val NONE_REQUIRED_MESSAGE = "At least one item type must be required"
+        const val MISSING_ITEMS_MESSAGE = "Failed to start implementation - required items not fully assigned yet"
+        const val NONE_REQUIRED_MESSAGE = "Failed to start implementation - at least one item type must be required"
 
         val logger = logger()
     }

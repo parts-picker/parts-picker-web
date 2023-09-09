@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-UI-81:setActiveOfInstanceToFalseWhereNodeIsStopNode" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="workflow_nodes" columnName="node_type"/>
+            <columnExists tableName="workflow_instances" columnName="active"/>
+        </preConditions>
+        <sql>
+            UPDATE workflow_instances
+            SET active = false
+            FROM workflow_nodes
+            WHERE workflow_instances.current_node_id = workflow_nodes.id
+            AND workflow_nodes.node_type = 'stop'
+            AND workflow_instances.active = true;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
