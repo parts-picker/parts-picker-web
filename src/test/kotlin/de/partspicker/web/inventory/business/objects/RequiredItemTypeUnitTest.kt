@@ -21,6 +21,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
             shouldThrow<IllegalArgumentException> {
                 RequiredItemType(
                     projectId = 1L,
+                    projectStatus = "planning",
                     itemType = ItemType(id = 1L),
                     assignedAmount = 0,
                     requiredAmount = 0
@@ -32,6 +33,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
             shouldThrow<IllegalArgumentException> {
                 RequiredItemType(
                     projectId = 1L,
+                    projectStatus = "planning",
                     itemType = ItemType(id = 1L),
                     assignedAmount = -1,
                     requiredAmount = 1
@@ -45,6 +47,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
             // given
             val cut = RequiredItemType(
                 projectId = 1L,
+                projectStatus = "planning",
                 itemType = ItemTypeGenerators.generator.single(),
                 assignedAmount = 2L,
                 requiredAmount = 2L
@@ -61,6 +64,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
             // given
             val cut = RequiredItemType(
                 projectId = 1L,
+                projectStatus = "planning",
                 itemType = ItemTypeGenerators.generator.single(),
                 assignedAmount = 1L,
                 requiredAmount = 2L

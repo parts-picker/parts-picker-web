@@ -7,6 +7,7 @@ import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.positiveLong
+import io.kotest.property.arbitrary.string
 
 class RequiredItemTypeGenerators private constructor() {
     companion object {
@@ -23,11 +24,13 @@ class RequiredItemTypeGenerators private constructor() {
 
         val generator: Arb<RequiredItemType> = Arb.bind(
             Arb.positiveLong(),
+            Arb.string(5..10),
             ItemTypeGenerators.generator,
             amountPairGenerator
-        ) { projectId, itemType, amountPair ->
+        ) { projectId, projectStatus, itemType, amountPair ->
             RequiredItemType(
                 projectId = projectId,
+                projectStatus = projectStatus,
                 itemType = itemType,
                 assignedAmount = amountPair.first,
                 requiredAmount = amountPair.second
@@ -36,11 +39,13 @@ class RequiredItemTypeGenerators private constructor() {
 
         val requiredEqualAssignedGenerator: Arb<RequiredItemType> = Arb.bind(
             Arb.positiveLong(),
+            Arb.string(5..10),
             ItemTypeGenerators.generator,
             Arb.positiveLong()
-        ) { projectId, itemType, amount ->
+        ) { projectId, projectStatus, itemType, amount ->
             RequiredItemType(
                 projectId = projectId,
+                projectStatus = projectStatus,
                 itemType = itemType,
                 assignedAmount = amount,
                 requiredAmount = amount

@@ -187,7 +187,7 @@ class WorkflowInteractionServiceIntTest(
             instanceInfo.displayName shouldBe "Stop"
 
             val instance = instanceRepository.findById(instanceId).get()
-            instance.active shouldBe true
+            instance.active shouldBe false
             instance.currentNode.name shouldBe "stop"
         }
 

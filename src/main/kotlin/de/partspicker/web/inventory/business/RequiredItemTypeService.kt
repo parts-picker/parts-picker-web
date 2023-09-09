@@ -11,6 +11,7 @@ import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.project.business.rules.ProjectActiveRule
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import org.springframework.stereotype.Service
@@ -34,8 +35,9 @@ class RequiredItemTypeService(
         )
         RequiredItemTypeAmountNotSmallerAssignedRule(requiredItemTypeToUpdate.requiredAmount, assignedAmount).valid()
 
-        val projectStatus = Project.from(projectEntity).status
-        NodeNameEqualsRule(projectStatus, "planning").valid()
+        val project = Project.from(projectEntity)
+        NodeNameEqualsRule(project.status, "planning").valid()
+        ProjectActiveRule(project).valid()
 
         if (!this.itemTypeRepository.existsById(requiredItemTypeToUpdate.itemTypeId)) {
             throw ItemTypeNotFoundException(requiredItemTypeToUpdate.itemTypeId)
@@ -57,8 +59,8 @@ class RequiredItemTypeService(
             throw ProjectNotFoundException(projectId = projectId)
         }
 
-        val currentNodeName = this.workflowInteractionService.readProjectStatus(projectId)
-        NodeNameEqualsRule(currentNodeName, "planning").valid()
+        val projectStatus = this.workflowInteractionService.readProjectStatus(projectId)
+        NodeNameEqualsRule(projectStatus, "planning").valid()
 
         if (!this.itemTypeRepository.existsById(itemTypeId)) {
             throw ItemTypeNotFoundException(itemTypeId)

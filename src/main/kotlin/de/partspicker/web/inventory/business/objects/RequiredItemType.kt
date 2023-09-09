@@ -5,6 +5,7 @@ import de.partspicker.web.item.business.objects.ItemType
 
 data class RequiredItemType(
     val projectId: Long,
+    val projectStatus: String,
     val itemType: ItemType,
     val assignedAmount: Long,
     val requiredAmount: Long
@@ -14,6 +15,7 @@ data class RequiredItemType(
     companion object {
         fun from(requiredItemTypeEntity: RequiredItemTypeEntity, assignedAmount: Long) = RequiredItemType(
             projectId = requiredItemTypeEntity.project.id,
+            projectStatus = requiredItemTypeEntity.project.workflowInstance.currentNode.name,
             itemType = ItemType.from(requiredItemTypeEntity.itemType),
             assignedAmount = assignedAmount,
             requiredAmount = requiredItemTypeEntity.requiredAmount

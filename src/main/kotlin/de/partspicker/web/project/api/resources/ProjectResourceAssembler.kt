@@ -1,5 +1,6 @@
 package de.partspicker.web.project.api.resources
 
+import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
@@ -31,6 +32,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
         return ProjectResource(
             id = project.id,
             name = project.name,
+            status = project.status,
             shortDescription = project.shortDescription,
             description = project.description,
             groupId = project.group?.id,
@@ -64,7 +66,9 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             )
             // availableItemType
             .with(
-                generateSearchItemsByNameLink(AVAILABLE, project.id)
+                generateSearchItemsByNameLink(AVAILABLE, project.id),
+                NodeNameEqualsRule(project.status, "planning"),
+                ProjectActiveRule(project)
             )
             // requiredItemType
             .with(

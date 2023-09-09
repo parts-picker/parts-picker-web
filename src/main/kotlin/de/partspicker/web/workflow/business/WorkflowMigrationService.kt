@@ -25,6 +25,7 @@ import de.partspicker.web.workflow.persistence.entities.migration.enums.Instance
 import de.partspicker.web.workflow.persistence.entities.migration.enums.SupportedDataTypeMigrationEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.NodeEntity
 import de.partspicker.web.workflow.persistence.entities.nodes.StopNodeEntity
+import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -202,7 +203,7 @@ class WorkflowMigrationService(
 
         instanceEntity.currentNode = targetNodeEntity
 
-        if (instanceEntity.active && targetNodeEntity is StopNodeEntity) {
+        if (instanceEntity.active && Hibernate.unproxy(targetNodeEntity) is StopNodeEntity) {
             instanceEntity.active = false
         }
 
