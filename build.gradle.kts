@@ -2,7 +2,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.0.2"
+    id("org.springframework.boot") version "3.1.3"
     id("io.spring.dependency-management") version "1.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.1"
     kotlin("jvm") version "1.9.0"
@@ -43,8 +43,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("org.postgresql:postgresql:42.6.0")
     implementation("org.liquibase:liquibase-core:4.20.0")
-    implementation("org.hibernate.search:hibernate-search-mapper-orm-orm6:6.1.8.Final")
-    implementation("org.hibernate.search:hibernate-search-backend-lucene:6.1.8.Final")
+    implementation("org.hibernate.search:hibernate-search-mapper-orm-orm6:6.2.1.Final")
+    implementation("org.hibernate.search:hibernate-search-backend-lucene:6.2.1.Final")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0")
