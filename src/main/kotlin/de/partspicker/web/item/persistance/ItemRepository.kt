@@ -4,6 +4,7 @@ import de.partspicker.web.item.persistance.entities.ItemEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 
 interface ItemRepository : JpaRepository<ItemEntity, Long> {
@@ -21,4 +22,8 @@ interface ItemRepository : JpaRepository<ItemEntity, Long> {
     fun findAllByAssignedProjectIdAndTypeId(projectId: Long, itemTypeId: Long, pageable: Pageable): Page<ItemEntity>
 
     fun countByAssignedProjectIdAndTypeId(projectId: Long, itemTypeId: Long): Long
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE ItemEntity set status = USED WHERE assignedProject.id = ?1")
+    fun updateSetStatusUsedByAssignedProjectId(assignedProjectId: Long)
 }

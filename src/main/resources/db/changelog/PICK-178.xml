@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-178:setAssignedItemsToStatusUsedIfProjectIsCompleted" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="items" columnName="status"/>
+            <columnExists tableName="items" columnName="assigned_project_id"/>
+            <columnExists tableName="projects" columnName="instance_id"/>
+            <columnExists tableName="workflow_instances" columnName="current_node_id"/>
+            <columnExists tableName="workflow_nodes" columnName="node_type"/>
+        </preConditions>
+        <sql>
+            UPDATE items
+            SET status = 'USED'
+            WHERE assigned_project_id IN (
+            SELECT p.id
+            FROM projects p
+            JOIN workflow_instances wi ON p.instance_id = wi.id
+            JOIN workflow_nodes wn ON wi.current_node_id = wn.id
+            WHERE wn.node_type = 'stop' AND status != 'USED'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

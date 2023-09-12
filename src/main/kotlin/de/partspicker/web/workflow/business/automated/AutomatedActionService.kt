@@ -41,8 +41,8 @@ class AutomatedActionService(
                 )
 
             val automatedAction = this.applicationContext.getBean(
-                AutomatedAction::class.java,
-                currentNode.automatedActionName
+                currentNode.automatedActionName,
+                AutomatedAction::class.java
             )
 
             val instanceValues = this.instanceValueReadService.readAllForInstance(instance.id)

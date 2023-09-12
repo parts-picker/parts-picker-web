@@ -1,6 +1,6 @@
 {
   "name": "project_workflow",
-  "version": 1,
+  "version": 2,
   "nodes": [
     {
       "name": "new_project_start",
@@ -23,6 +23,12 @@
       "name": "implementation",
       "type": "user_action",
       "displayName": "Implementation"
+    },
+    {
+      "name": "project_completion_inventory_update",
+      "type": "automated_action",
+      "displayName": "Updating inventory for project completion",
+      "automatedActionName": "project_completion_inventory_update"
     },
     {
       "name": "successful_completion",
@@ -56,9 +62,15 @@
       "targetNode": "planning"
     },
     {
-      "name": "implementation->successful_completion",
-      "displayName": "Successful Completion",
+      "name": "implementation->project_completion_inventory_update",
+      "displayName": "Complete project",
       "sourceNode": "implementation",
+      "targetNode": "project_completion_inventory_update"
+    },
+    {
+      "name": "project_completion_inventory_update->successful_completion",
+      "displayName": "Successfully completed",
+      "sourceNode": "project_completion_inventory_update",
       "targetNode": "successful_completion"
     }
   ]

@@ -38,14 +38,16 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
     context("executeBatch") {
         should("return the amount of executed instances when given a list of valid instances to execute") {
             // given
+            val node = NodeGenerators.automatedActionNodeGenerator.single()
             val instances = listOf(
                 Instance(
                     id = 1L,
-                    currentNode = NodeGenerators.automatedActionNodeGenerator.single(),
+                    currentNode = node,
                     active = true,
                     workflowId = 1L
                 )
             )
+
             every { instanceServiceMock.readInstancesWaitingForAutomatedRunner(MAX_AUTOMATED_INSTANCE_HITS) } returns
                 instances
 
@@ -53,7 +55,7 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
             val automatedActionMock = mockk<AutomatedAction>()
             every { automatedActionMock.execute(instances[0], any()) } returns AutomatedActionResult(edgeName)
             every {
-                applicationContextMock.getBean(AutomatedAction::class.java, any())
+                applicationContextMock.getBean(node.automatedActionName, AutomatedAction::class.java)
             } returns automatedActionMock
 
             every { instanceValueReadServiceMock.readAllForInstance(instances[0].id) } returns emptyList()
@@ -159,10 +161,11 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
 
         should("throw AutomatedActionException when automated action returns non-existent edge name") {
             // given
+            val node = NodeGenerators.automatedActionNodeGenerator.single()
             val instances = listOf(
                 Instance(
                     id = 1L,
-                    currentNode = NodeGenerators.automatedActionNodeGenerator.single(),
+                    currentNode = node,
                     active = true,
                     workflowId = 1L
                 )
@@ -174,7 +177,7 @@ class AutomatedActionServiceUnitTest : ShouldSpec({
             val automatedActionMock = mockk<AutomatedAction>()
             every { automatedActionMock.execute(instances[0], any()) } returns AutomatedActionResult(edgeName)
             every {
-                applicationContextMock.getBean(AutomatedAction::class.java, any())
+                applicationContextMock.getBean(node.automatedActionName, AutomatedAction::class.java)
             } returns automatedActionMock
 
             every { instanceValueReadServiceMock.readAllForInstance(instances[0].id) } returns emptyList()

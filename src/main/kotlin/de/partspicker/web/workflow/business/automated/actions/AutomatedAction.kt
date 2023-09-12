@@ -5,8 +5,12 @@ import de.partspicker.web.workflow.business.objects.InstanceValue
 import de.partspicker.web.workflow.business.objects.enums.DisplayType
 import org.springframework.stereotype.Component
 
-@Component
+@Component("automated_test_action")
 fun interface AutomatedAction {
+    companion object {
+        const val NAME = "automated_test_action"
+    }
+
     /**
      * Executes an automated action & returns the name of the edge that should be used to advance the state.
      */
