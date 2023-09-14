@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-179:createItemAndItemTypeTestData" author="RobinGuth" context="testdata">
+        <preConditions>
+            <sequenceExists sequenceName="item_seq" />
+            <sequenceExists sequenceName="item_type_seq" />
+            <tableExists tableName="items"/>
+            <tableExists tableName="item_types"/>
+        </preConditions>
+
+        <sqlFile path="db/changelog/testdata/items_capacitors.sql"/>
+        <sqlFile path="db/changelog/testdata/items_diodes.sql"/>
+        <sqlFile path="db/changelog/testdata/items_leds.sql"/>
+        <sqlFile path="db/changelog/testdata/items_microcontrollers.sql"/>
+        <sqlFile path="db/changelog/testdata/items_misc.sql"/>
+        <sqlFile path="db/changelog/testdata/items_motors.sql"/>
+        <sqlFile path="db/changelog/testdata/items_resistors.sql"/>
+        <sqlFile path="db/changelog/testdata/items_sensors.sql"/>
+        <sqlFile path="db/changelog/testdata/items_transistors.sql"/>
+    </changeSet>
+
+    <changeSet id="PICK-179:createProjectTestData" author="RobinGuth" context="testdata">
+        <preConditions>
+            <sequenceExists sequenceName="project_seq" />
+            <tableExists tableName="projects"/>
+            <sequenceExists sequenceName="instance_id_seq"/>
+            <tableExists tableName="workflow_instances"/>
+        </preConditions>
+
+        <sqlFile path="db/changelog/testdata/projects.sql"/>
+    </changeSet>
+
+</databaseChangeLog>
