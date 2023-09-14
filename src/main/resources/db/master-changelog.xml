@@ -5,12 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
     <include file="db/changelog/PICK-5.xml"/>
-    <include file="db/changelog/PICK-5-TESTDATA.xml"/>
     <include file="db/changelog/PICK-41.xml"/>
     <include file="db/changelog/PICK-59.xml"/>
     <include file="db/changelog/PICK-60.xml"/>
     <include file="db/changelog/PICK-73.xml"/>
-    <include file="db/changelog/PICK-73-TESTDATA.xml"/>
     <include file="db/changelog/PICK-80.xml"/>
     <include file="db/changelog/PICK-82.xml"/>
     <include file="db/changelog/PICK-100.xml"/>
@@ -27,4 +25,5 @@
     <include file="db/changelog/PICK-172.xml"/>
     <include file="db/changelog/PICK-UI-81.xml"/>
     <include file="db/changelog/PICK-178.xml"/>
+    <include file="db/changelog/PICK-179-TESTDATA.xml"/>
 </databaseChangeLog>
