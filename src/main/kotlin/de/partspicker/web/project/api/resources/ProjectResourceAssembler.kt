@@ -1,6 +1,7 @@
 package de.partspicker.web.project.api.resources
 
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
+import de.partspicker.web.common.business.rules.or
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
 import de.partspicker.web.common.hal.DefaultName.READ
@@ -62,7 +63,10 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             .with(
                 linkTo<ProjectController> { handleDeleteProject(project.id) }
                     .withSelfRel()
-                    .withName(DELETE)
+                    .withName(DELETE),
+                NodeNameEqualsRule(project.status, "planning") or
+                    NodeNameEqualsRule(project.status, "implementation")
+
             )
             // availableItemType
             .with(

@@ -1,5 +1,8 @@
 package de.partspicker.web.project.business
 
+import de.partspicker.web.common.business.exceptions.OrRuleException
+import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
+import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.CreateProject
@@ -10,12 +13,15 @@ import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
+import de.partspicker.web.test.generators.workflow.WorkflowEntityGenerators
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
 import de.partspicker.web.workflow.business.objects.Instance
 import de.partspicker.web.workflow.persistence.InstanceRepository
+import de.partspicker.web.workflow.persistence.entities.nodes.UserActionNodeEntity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
@@ -24,7 +30,9 @@ import io.kotest.property.arbitrary.single
 import io.kotest.property.arbitrary.string
 import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -35,11 +43,15 @@ class ProjectServiceUnitTest : ShouldSpec({
     val projectRepositoryMock = mockk<ProjectRepository>()
     val groupRepositoryMock = mockk<GroupRepository>()
     val workflowInteractionServiceMock = mockk<WorkflowInteractionService>()
+    val itemRepositoryMock = mockk<ItemRepository>()
+    val requiredItemTypeRepositoryMock = mockk<RequiredItemTypeRepository>()
     val instanceRepositoryMock = mockk<InstanceRepository>()
     val cut = ProjectService(
         projectRepository = projectRepositoryMock,
         groupRepository = groupRepositoryMock,
         workflowInteractionService = workflowInteractionServiceMock,
+        itemRepository = itemRepositoryMock,
+        requiredItemTypeRepository = requiredItemTypeRepositoryMock,
         instanceRepository = instanceRepositoryMock
     )
 
@@ -393,19 +405,87 @@ class ProjectServiceUnitTest : ShouldSpec({
     }
 
     context("delete") {
-        should("delete the project with the given id") {
+        should("delete the correct project & refresh inventory when given project status is planning") {
             // given
-            val projectId = Arb.long(min = 1).next()
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = WorkflowEntityGenerators.generator.single(),
+                name = "planning",
+                displayName = "Planning"
+            )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            )
 
-            every { projectRepositoryMock.existsById(projectId) } returns true
-            every { projectRepositoryMock.deleteById(projectId) } returns Unit
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
+            every { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id) } just runs
+            every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
 
             // when
-            cut.delete(projectId)
+            cut.delete(projectEntity.id)
 
             // then
-            verify(exactly = 1) {
-                projectRepositoryMock.deleteById(projectId)
+            verify {
+                projectRepositoryMock.deleteById(projectEntity.id)
+                itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
+                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
+            }
+        }
+
+        should("delete the correct project & refresh inventory when given project status is implementation") {
+            // given
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = WorkflowEntityGenerators.generator.single(),
+                name = "implementation",
+                displayName = "Implementation"
+            )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            )
+
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
+            every { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id) } just runs
+            every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
+
+            // when
+            cut.delete(projectEntity.id)
+
+            // then
+            verify {
+                projectRepositoryMock.deleteById(projectEntity.id)
+                itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
+                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
+            }
+        }
+
+        should("throw OrRuleException when given project status not equal to planning or implementation") {
+            // given
+            val nodeEntity = UserActionNodeEntity(
+                id = 1L,
+                workflow = WorkflowEntityGenerators.generator.single(),
+                name = "non-desired-name",
+                displayName = "Something"
+            )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
+            )
+
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+
+            // when
+            val exception = shouldThrow<OrRuleException> { cut.delete(projectEntity.id) }
+
+            // then
+            exception.message shouldBe OrRuleException.MESSAGE
+            exception.exceptions shouldHaveSize 2
+
+            verify(exactly = 0) {
+                projectRepositoryMock.deleteById(projectEntity.id)
+                itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
+                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
             }
         }
 
@@ -413,7 +493,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // given
             val projectId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns false
+            every { projectRepositoryMock.findById(projectId) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {

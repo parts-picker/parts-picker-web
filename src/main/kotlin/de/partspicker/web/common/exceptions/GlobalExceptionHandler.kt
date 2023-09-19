@@ -1,5 +1,6 @@
 package de.partspicker.web.common.exceptions
 
+import de.partspicker.web.common.business.exceptions.OrRuleException
 import de.partspicker.web.common.business.exceptions.RuleException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
@@ -29,7 +30,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             status = HttpStatus.NOT_FOUND,
             message = exc.localizedMessage,
             errorCode = ErrorCode.EntityNotFound,
-            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
             path = webRequest.request.requestURI,
             timestamp = ZonedDateTime.now(),
         )
@@ -57,7 +58,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             message = exc.localizedMessage,
             errorCode = null,
-            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
             path = webRequest.request.requestURI,
             timestamp = ZonedDateTime.now(),
         )
@@ -80,7 +81,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         val info = ErrorInfo(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             message = "Validation for object ${exc.objectName} failed with ${exc.errorCount} error(s)",
-            errors = exc.bindingResult.fieldErrors.associateBy({ it.field }, { it.defaultMessage ?: "" }),
+            errors = exc.bindingResult.fieldErrors.map { ErrorDetail(it.field, (it.defaultMessage ?: "")) },
             path = (request as ServletWebRequest).request.requestURI,
             timestamp = ZonedDateTime.now(),
         )
@@ -91,6 +92,33 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpHeaders(),
             info.status,
             request,
+        )
+    }
+
+    @ExceptionHandler(
+        value = [
+            OrRuleException::class,
+        ],
+    )
+    fun handleOrRuleException(
+        exc: OrRuleException,
+        webRequest: ServletWebRequest,
+    ): ResponseEntity<Any>? {
+        val info = ErrorInfo(
+            status = HttpStatus.UNPROCESSABLE_ENTITY,
+            message = exc.localizedMessage,
+            errorCode = null,
+            errors = exc.exceptions.map { ErrorDetail(it.javaClass.simpleName, it.localizedMessage) },
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest,
         )
     }
 
@@ -107,7 +135,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             message = exc.localizedMessage,
             errorCode = null,
-            errors = mapOf(Pair(exc.javaClass.simpleName, exc.localizedMessage)),
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
             path = webRequest.request.requestURI,
             timestamp = ZonedDateTime.now(),
         )

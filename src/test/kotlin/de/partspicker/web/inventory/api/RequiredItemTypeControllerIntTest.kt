@@ -2,6 +2,7 @@ package de.partspicker.web.inventory.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.common.exceptions.ErrorDetail
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.collectionRelationName
@@ -12,7 +13,6 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.comparables.shouldBeLessThan
-import org.hamcrest.Matchers.aMapWithSize
 import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
@@ -159,8 +159,9 @@ class RequiredItemTypeControllerIntTest(
                             "$.message",
                             `is`("Validation for object requiredItemTypePostRequest failed with 1 error(s)")
                         )
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
-                        jsonPath("$.errors.requiredAmount", `is`("must be greater than or equal to 1"))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
+                        jsonPath("$.errors[0].key", `is`("requiredAmount"))
+                        jsonPath("$.errors[0].message", `is`("must be greater than or equal to 1"))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
@@ -200,11 +201,12 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath("$.message", `is`(expectedMessage))
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
                         jsonPath(
-                            "$.errors.RequiredItemTypeAmountSmallerThanAssignedException",
-                            `is`(expectedMessage)
+                            "$.errors[0].key",
+                            `is`("RequiredItemTypeAmountSmallerThanAssignedException")
                         )
+                        jsonPath("$.errors[0].message", `is`(expectedMessage))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
@@ -237,8 +239,12 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath("$.message", `is`(expectedMessage))
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
-                        jsonPath("$.errors.WrongNodeNameRuleException", `is`(expectedMessage))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
+                        jsonPath(
+                            "$.errors[0].key",
+                            `is`("WrongNodeNameRuleException")
+                        )
+                        jsonPath("$.errors[0].message", `is`(expectedMessage))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
@@ -411,8 +417,12 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath("$.message", `is`(expectedMessage))
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
-                        jsonPath("$.errors.requiredAmount", `is`("must be greater than or equal to 1"))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
+                        jsonPath(
+                            "$.errors[0].key",
+                            `is`("requiredAmount")
+                        )
+                        jsonPath("$.errors[0].message", `is`("must be greater than or equal to 1"))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
@@ -452,11 +462,12 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath("$.message", `is`(expectedMessage))
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
                         jsonPath(
-                            "$.errors.RequiredItemTypeAmountSmallerThanAssignedException",
-                            `is`(expectedMessage)
+                            "$.errors[0].key",
+                            `is`("RequiredItemTypeAmountSmallerThanAssignedException")
                         )
+                        jsonPath("$.errors[0].message", `is`(expectedMessage))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
@@ -489,8 +500,12 @@ class RequiredItemTypeControllerIntTest(
                         jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
                         jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
                         jsonPath("$.message", `is`(expectedMessage))
-                        jsonPath<Map<out String, String>>("$.errors", aMapWithSize(1))
-                        jsonPath("$.errors.WrongNodeNameRuleException", `is`(expectedMessage))
+                        jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
+                        jsonPath(
+                            "$.errors[0].key",
+                            `is`("WrongNodeNameRuleException")
+                        )
+                        jsonPath("$.errors[0].message", `is`(expectedMessage))
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
                     }
