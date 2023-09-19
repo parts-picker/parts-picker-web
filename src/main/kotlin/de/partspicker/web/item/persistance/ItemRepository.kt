@@ -26,4 +26,8 @@ interface ItemRepository : JpaRepository<ItemEntity, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE ItemEntity set status = USED WHERE assignedProject.id = ?1")
     fun updateSetStatusUsedByAssignedProjectId(assignedProjectId: Long)
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE ItemEntity set assignedProject = null, status = IN_STOCK WHERE assignedProject.id = ?1")
+    fun updateUnassignAllByAssignedProjectId(assignedProjectId: Long)
 }

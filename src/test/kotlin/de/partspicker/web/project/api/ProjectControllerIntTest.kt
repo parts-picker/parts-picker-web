@@ -3,6 +3,7 @@ package de.partspicker.web.project.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.common.exceptions.ErrorDetail
 import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
@@ -15,7 +16,6 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.single
 import io.kotest.property.arbitrary.string
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -261,9 +261,10 @@ class ProjectControllerIntTest(
                         "$.message",
                         `is`("Validation for object projectPatchRequest failed with 1 error(s)")
                     )
-                    jsonPath<Map<out String, String>>("$.errors", Matchers.aMapWithSize(1))
+                    jsonPath<Collection<ErrorDetail>>("$.errors", hasSize(1))
+                    jsonPath("$.errors[0].key", `is`("description"))
                     jsonPath(
-                        "$.errors.description",
+                        "$.errors[0].message",
                         `is`(ProjectDescriptionPatchRequest.MAX_DESCRIPTION_SIZE_MESSAGE)
                     )
                     jsonPath("$.path", `is`(path))
@@ -299,7 +300,11 @@ class ProjectControllerIntTest(
 
     context("DELETE project") {
         should("return status 204 when called & successfully deleted") {
-            mockMvc.delete("/projects/4")
+            // data setup
+            val project = testSetupHelper.setupProject()
+
+            // request
+            mockMvc.delete("/projects/${project.id}")
                 .andExpect {
                     status { isNoContent() }
                 }

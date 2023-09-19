@@ -1,5 +1,9 @@
 package de.partspicker.web.project.business
 
+import de.partspicker.web.common.business.rules.NodeNameEqualsRule
+import de.partspicker.web.common.business.rules.or
+import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
+import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.CreateProject
@@ -11,15 +15,17 @@ import de.partspicker.web.project.persistance.entities.GroupEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import de.partspicker.web.workflow.persistence.InstanceRepository
-import jakarta.transaction.Transactional
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val groupRepository: GroupRepository,
     private val workflowInteractionService: WorkflowInteractionService,
+    private val itemRepository: ItemRepository,
+    private val requiredItemTypeRepository: RequiredItemTypeRepository,
     private val instanceRepository: InstanceRepository
 ) {
 
@@ -95,10 +101,18 @@ class ProjectService(
         return Project.from(updatedProject)
     }
 
+    @Transactional
     fun delete(id: Long) {
-        if (!this.exists(id)) {
-            throw ProjectNotFoundException(id)
-        }
+        val project = this.read(id)
+
+        val projectStatusRule =
+            NodeNameEqualsRule(project.status, "planning") or
+                NodeNameEqualsRule(project.status, "implementation")
+        projectStatusRule.valid()
+
+        // remove all assigned items/item types
+        this.itemRepository.updateUnassignAllByAssignedProjectId(id)
+        this.requiredItemTypeRepository.deleteAllByProjectId(id)
 
         this.projectRepository.deleteById(id)
     }

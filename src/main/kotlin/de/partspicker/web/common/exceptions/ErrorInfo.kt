@@ -10,7 +10,7 @@ data class ErrorInfo(
     val message: String = "",
     @Deprecated("Value errorCode will be removed in the future")
     val errorCode: ErrorCode? = null,
-    val errors: Map<String, String>,
+    val errors: List<ErrorDetail>,
     val path: String,
     val timestamp: ZonedDateTime
 ) {

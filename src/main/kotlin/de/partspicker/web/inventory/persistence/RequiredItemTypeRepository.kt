@@ -10,4 +10,6 @@ import java.util.Optional
 interface RequiredItemTypeRepository : JpaRepository<RequiredItemTypeEntity, RequiredItemTypeId> {
     fun findAllByProjectId(projectId: Long, pageable: Pageable): Page<RequiredItemTypeEntity>
     fun findByProjectIdAndItemTypeId(projectId: Long, itemTypeId: Long): Optional<RequiredItemTypeEntity>
+
+    fun deleteAllByProjectId(projectId: Long)
 }
