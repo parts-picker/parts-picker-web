@@ -10,10 +10,12 @@ import de.partspicker.web.project.business.objects.Project
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 
@@ -83,7 +85,7 @@ class RequiredItemTypeReadServiceIntTest(
     }
 
     context("readAllByProjectId") {
-        should("return all required item types") {
+        should("return all required item types sorted by itemType.name when given unsorted pageable") {
             // given
             val project = setupProject()
 
@@ -95,11 +97,17 @@ class RequiredItemTypeReadServiceIntTest(
                 setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id, requiredAmount)
             }
 
+            val pageable = PageRequest.of(0, 10, Sort.unsorted())
+
             // when
-            val requiredItemTypes = cut.readAllByProjectId(project.id, Pageable.unpaged())
+            val requiredItemTypes = cut.readAllByProjectId(project.id, pageable)
 
             // then
             requiredItemTypes shouldHaveSize itemTypeAmount
+            requiredItemTypes.sort.isSorted shouldBe true
+            requiredItemTypes.sort.first().direction.isAscending shouldBe true
+            requiredItemTypes.sort.first().property shouldBe RequiredItemTypeReadService.DEFAULT_SORT
+            requiredItemTypes.sort shouldHaveSize 1
         }
     }
 }) {
