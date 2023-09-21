@@ -18,8 +18,9 @@ class ProjectGenerators private constructor() {
             GroupGenerators.generator,
             Arb.long(1),
             Arb.string(range = IntRange(3, 16)),
+            Arb.string(range = IntRange(3, 16)),
             Arb.boolean()
-        ) { id, name, shortDescription, description, group, instanceId, status, active ->
+        ) { id, name, shortDescription, description, group, instanceId, status, displayStatus, active ->
             Project(
                 id = id,
                 name = name,
@@ -28,6 +29,7 @@ class ProjectGenerators private constructor() {
                 group = group,
                 workflowInstanceId = instanceId,
                 status = status,
+                displayStatus = displayStatus,
                 active = active
             )
         }

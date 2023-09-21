@@ -10,6 +10,7 @@ class ProjectResource(
     val id: Long,
     val name: String,
     val status: String,
+    val displayStatus: String,
     val shortDescription: String?,
     val description: String?,
     var groupId: Long?,
