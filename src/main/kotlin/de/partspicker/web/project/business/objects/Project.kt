@@ -11,6 +11,7 @@ data class Project(
     var group: Group?,
     var workflowInstanceId: Long,
     val status: String,
+    val displayStatus: String,
     val active: Boolean
 ) {
     companion object {
@@ -22,6 +23,7 @@ data class Project(
             group = projectEntity.group?.let { groupEntity -> Group.from(groupEntity) },
             workflowInstanceId = projectEntity.workflowInstance.id,
             status = projectEntity.workflowInstance.currentNode.name,
+            displayStatus = projectEntity.workflowInstance.currentNode.displayName,
             active = projectEntity.workflowInstance.active
         )
     }

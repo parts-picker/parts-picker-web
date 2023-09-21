@@ -10,7 +10,6 @@ import de.partspicker.web.project.business.objects.Project
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import jakarta.persistence.EntityManager
 import org.springframework.boot.test.context.SpringBootTest

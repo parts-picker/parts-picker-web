@@ -34,6 +34,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             id = project.id,
             name = project.name,
             status = project.status,
+            displayStatus = project.displayStatus,
             shortDescription = project.shortDescription,
             description = project.description,
             groupId = project.group?.id,
