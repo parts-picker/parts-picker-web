@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.util.stream.Stream
 
 @Service
 class RequiredItemTypeReadService(
@@ -34,6 +36,18 @@ class RequiredItemTypeReadService(
         val modifiedPageable = pageable.withDefaultSort(Sort.by(DEFAULT_SORT))
 
         return this.requiredItemTypeRepository.findAllByProjectId(projectId, modifiedPageable).map {
+            val assignedAmount = this.inventoryItemReadService.countAssignedForItemTypeAndProject(
+                projectId = it.id.projectId,
+                itemTypeId = it.id.itemTypeId
+            )
+
+            RequiredItemType.from(it, assignedAmount)
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun streamAllByProjectId(projectId: Long): Stream<RequiredItemType> {
+        return this.requiredItemTypeRepository.streamAllByProjectId(projectId).map {
             val assignedAmount = this.inventoryItemReadService.countAssignedForItemTypeAndProject(
                 projectId = it.id.projectId,
                 itemTypeId = it.id.itemTypeId

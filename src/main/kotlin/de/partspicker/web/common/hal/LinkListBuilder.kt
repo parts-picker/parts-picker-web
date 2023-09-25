@@ -34,6 +34,22 @@ class LinkListBuilder {
     }
 
     /**
+     * Adds a new [Link] object to the list if the specified [condition] is true and all validation [rules] are valid.
+     * If the condition is false or any validation rule fails, the link is not added to the list.
+     *
+     * @param link The [Link] to add to the list.
+     * @param condition A Boolean condition that determines whether to add the link based on its value.
+     * @param rules One or more [Rule] objects to validate the link against if the condition is true.
+     *
+     * @return This [LinkListBuilder] instance, with the link added if the condition and validation rules are met.
+     */
+    fun withCondition(link: Link, condition: Boolean, vararg rules: Rule) = if (condition) {
+        this.with(link, *rules)
+    } else {
+        this
+    }
+
+    /**
      * Builds the list of [Link] objects that passed all validation rules.
      *
      * @return A list of valid [Link] objects.

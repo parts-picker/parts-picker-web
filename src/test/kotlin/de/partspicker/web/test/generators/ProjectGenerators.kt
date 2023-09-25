@@ -30,7 +30,8 @@ class ProjectGenerators private constructor() {
                 workflowInstanceId = instanceId,
                 status = status,
                 displayStatus = displayStatus,
-                active = active
+                active = active,
+                sourceProjectId = null
             )
         }
     }

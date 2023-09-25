@@ -24,7 +24,8 @@ class ProjectEntityGenerators private constructor() {
                 shortDescription = shortDescription,
                 description = description,
                 group = group,
-                workflowInstance = instanceId
+                workflowInstance = instanceId,
+                sourceProject = null
             )
         }
     }

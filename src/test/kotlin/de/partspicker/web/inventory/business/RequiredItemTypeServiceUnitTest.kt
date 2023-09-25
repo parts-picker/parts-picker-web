@@ -9,7 +9,9 @@ import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.test.generators.ProjectEntityGenerators
+import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
+import de.partspicker.web.test.generators.inventory.RequiredItemTypeGenerators
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
@@ -22,14 +24,20 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.single
+import io.mockk.called
 import io.mockk.clearMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.spyk
 import io.mockk.verify
+import java.util.stream.Stream
 
 class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
     val requiredItemTypeRepositoryMock = mockk<RequiredItemTypeRepository>()
+    val requiredItemTypeReadServiceMock = mockk<RequiredItemTypeReadService>()
     val projectRepositoryMock = mockk<ProjectRepository>()
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
     val workflowInteractionsServiceMock = mockk<WorkflowInteractionService>()
@@ -37,6 +45,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
     val inventoryItemServiceMock = mockk<InventoryItemService>()
     val cut = RequiredItemTypeService(
         requiredItemTypeRepository = requiredItemTypeRepositoryMock,
+        requiredItemTypeReadService = requiredItemTypeReadServiceMock,
         projectRepository = projectRepositoryMock,
         itemTypeRepository = itemTypeRepositoryMock,
         workflowInteractionService = workflowInteractionsServiceMock,
@@ -348,6 +357,110 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
             verify(exactly = 0) {
                 requiredItemTypeRepositoryMock.deleteById(any())
+            }
+        }
+    }
+
+    context("deleteAllByProjectId") {
+        should("delete all required item types with the given project id") {
+            // given
+            val projectId = Arb.id().single()
+
+            every { projectRepositoryMock.existsById(projectId) } returns true
+
+            every { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectId) } just runs
+
+            // when
+            cut.deleteAllByProjectId(projectId)
+
+            // then
+            verify { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectId) }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val projectId = Arb.id().single()
+
+            every { projectRepositoryMock.existsById(projectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.deleteAllByProjectId(projectId)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $projectId could not be found"
+
+            verify {
+                requiredItemTypeRepositoryMock wasNot called
+            }
+        }
+    }
+
+    context("copyAllToTargetProjectByProjectId") {
+        should("create copies of all required item types of the source project for target project") {
+            // given
+            val sourceProjectId = Arb.id().single()
+            every { projectRepositoryMock.existsById(sourceProjectId) } returns true
+
+            val targetProjectId = Arb.id().single()
+            every { projectRepositoryMock.existsById(targetProjectId) } returns true
+
+            val requiredItemTypes = arrayOf(
+                RequiredItemTypeGenerators.generator.single(),
+                RequiredItemTypeGenerators.generator.single()
+            )
+            every {
+                requiredItemTypeReadServiceMock.streamAllByProjectId(sourceProjectId)
+            } returns Stream.of(*requiredItemTypes)
+
+            val cutSpy = spyk(cut)
+            every { cutSpy.createOrUpdate(any()) } returns RequiredItemTypeGenerators.generator.single()
+
+            // when
+            cutSpy.copyAllToTargetProjectByProjectId(sourceProjectId, targetProjectId)
+
+            // then
+            verify(exactly = requiredItemTypes.size) { cutSpy.createOrUpdate(any()) }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent source project id") {
+            // given
+            val sourceProjectId = Arb.id().single()
+
+            every { projectRepositoryMock.existsById(sourceProjectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.copyAllToTargetProjectByProjectId(sourceProjectId, 1L)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $sourceProjectId could not be found"
+
+            verify {
+                requiredItemTypeRepositoryMock wasNot called
+            }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent target project id") {
+            // given
+            val sourceProjectId = Arb.id().single()
+            every { projectRepositoryMock.existsById(sourceProjectId) } returns true
+
+            val targetProjectId = Arb.id().single()
+            every { projectRepositoryMock.existsById(targetProjectId) } returns false
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.copyAllToTargetProjectByProjectId(sourceProjectId, targetProjectId)
+            }
+
+            // then
+            exception.message shouldBe "Project with id $targetProjectId could not be found"
+
+            verify {
+                requiredItemTypeRepositoryMock wasNot called
             }
         }
     }

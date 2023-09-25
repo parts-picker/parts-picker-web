@@ -1,7 +1,7 @@
 package de.partspicker.web.project.business
 
 import de.partspicker.web.common.business.exceptions.OrRuleException
-import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
+import de.partspicker.web.inventory.business.RequiredItemTypeService
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
@@ -11,6 +11,7 @@ import de.partspicker.web.project.persistance.GroupRepository
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.project.persistance.entities.ProjectEntity
 import de.partspicker.web.test.generators.ProjectEntityGenerators
+import de.partspicker.web.test.generators.ProjectGenerators
 import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.test.generators.workflow.WorkflowEntityGenerators
@@ -33,6 +34,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.spyk
 import io.mockk.verify
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -44,14 +46,14 @@ class ProjectServiceUnitTest : ShouldSpec({
     val groupRepositoryMock = mockk<GroupRepository>()
     val workflowInteractionServiceMock = mockk<WorkflowInteractionService>()
     val itemRepositoryMock = mockk<ItemRepository>()
-    val requiredItemTypeRepositoryMock = mockk<RequiredItemTypeRepository>()
+    val requiredItemTypeServiceMock = mockk<RequiredItemTypeService>()
     val instanceRepositoryMock = mockk<InstanceRepository>()
     val cut = ProjectService(
         projectRepository = projectRepositoryMock,
         groupRepository = groupRepositoryMock,
         workflowInteractionService = workflowInteractionServiceMock,
         itemRepository = itemRepositoryMock,
-        requiredItemTypeRepository = requiredItemTypeRepositoryMock,
+        requiredItemTypeService = requiredItemTypeServiceMock,
         instanceRepository = instanceRepositoryMock
     )
 
@@ -104,6 +106,41 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe "Group with id ${projectEntity.group?.id!!} could not be found"
+        }
+    }
+
+    context("copy") {
+        should("create a new project based on the source project with the given id") {
+            // given
+            val sourceProject = ProjectGenerators.generator.single()
+            val cutSpy = spyk(cut)
+            every { cutSpy.read(sourceProject.id) } returns sourceProject
+
+            val targetProject = ProjectGenerators.generator.single()
+            every { cutSpy.create(any()) } returns targetProject
+
+            every {
+                requiredItemTypeServiceMock.copyAllToTargetProjectByProjectId(sourceProject.id, targetProject.id)
+            } just runs
+
+            val copiedProjectName = "copied project"
+
+            // when
+            cutSpy.copy(sourceProject.id, copiedProjectName)
+
+            // then
+            verify {
+                cutSpy.create(
+                    withArg {
+                        it.name shouldBe copiedProjectName
+                        it.shortDescription shouldBe sourceProject.shortDescription
+                        it.description shouldBe sourceProject.description
+                        it.groupId shouldBe sourceProject.group?.id
+                        it.sourceProjectId shouldBe sourceProject.id
+                    }
+                )
+                requiredItemTypeServiceMock.copyAllToTargetProjectByProjectId(sourceProject.id, targetProject.id)
+            }
         }
     }
 
@@ -419,7 +456,7 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
-            every { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id) } just runs
+            every { requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id) } just runs
             every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
 
             // when
@@ -429,7 +466,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             verify {
                 projectRepositoryMock.deleteById(projectEntity.id)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
-                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
+                requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
         }
 
@@ -447,7 +484,7 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
             every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
-            every { requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id) } just runs
+            every { requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id) } just runs
             every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
 
             // when
@@ -457,7 +494,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             verify {
                 projectRepositoryMock.deleteById(projectEntity.id)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
-                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
+                requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
         }
 
@@ -485,7 +522,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             verify(exactly = 0) {
                 projectRepositoryMock.deleteById(projectEntity.id)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
-                requiredItemTypeRepositoryMock.deleteAllByProjectId(projectEntity.id)
+                requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
         }
 

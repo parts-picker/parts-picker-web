@@ -12,6 +12,8 @@ enum class RelationName(val displayName: String) {
     AVAILABLE("available"),
     STATUS("status"), // RFC8631
     SUBSET_OF("subsetOf"),
+    COPIES("copies"),
+    COPIED_FROM("copiedFrom")
 }
 
 fun WebMvcLinkBuilder.withRel(rel: RelationName) = this.withRel(rel.displayName)

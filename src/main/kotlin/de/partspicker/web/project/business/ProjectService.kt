@@ -2,7 +2,7 @@ package de.partspicker.web.project.business
 
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.business.rules.or
-import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
+import de.partspicker.web.inventory.business.RequiredItemTypeService
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
@@ -25,7 +25,7 @@ class ProjectService(
     private val groupRepository: GroupRepository,
     private val workflowInteractionService: WorkflowInteractionService,
     private val itemRepository: ItemRepository,
-    private val requiredItemTypeRepository: RequiredItemTypeRepository,
+    private val requiredItemTypeService: RequiredItemTypeService,
     private val instanceRepository: InstanceRepository
 ) {
 
@@ -37,12 +37,42 @@ class ProjectService(
             }
         }
 
+        val sourceProjectEntity = project.sourceProjectId?.let { id ->
+            projectRepository.getNullableReferenceById(id)
+                ?: throw ProjectNotFoundException(projectId = project.sourceProjectId)
+        }
+
         val instance = this.workflowInteractionService.startProjectWorkflow()
 
         val instanceEntity = this.instanceRepository.getReferenceById(instance.id)
-        val savedProjectEntity = this.projectRepository.save(ProjectEntity.from(project, instanceEntity))
+        val savedProjectEntity = this.projectRepository.save(
+            ProjectEntity.from(project, instanceEntity, sourceProjectEntity)
+        )
 
         return Project.from(savedProjectEntity)
+    }
+
+    /**
+     * Creates a new project with the given name based on the description & short description
+     * of the project with the given id.
+     */
+    @Transactional
+    fun copy(sourceProjectId: Long, name: String): Project {
+        val sourceProject = this.read(sourceProjectId)
+
+        val createProject = CreateProject(
+            name = name,
+            shortDescription = sourceProject.shortDescription,
+            description = sourceProject.description,
+            groupId = sourceProject.group?.id,
+            sourceProjectId = sourceProject.id
+        )
+        val createdProject = this.create(createProject)
+
+        // copy requiredItemTypes for copied project
+        this.requiredItemTypeService.copyAllToTargetProjectByProjectId(sourceProject.id, createdProject.id)
+
+        return createdProject
     }
 
     fun exists(id: Long) = this.projectRepository.existsById(id)
@@ -112,7 +142,7 @@ class ProjectService(
 
         // remove all assigned items/item types
         this.itemRepository.updateUnassignAllByAssignedProjectId(id)
-        this.requiredItemTypeRepository.deleteAllByProjectId(id)
+        this.requiredItemTypeService.deleteAllByProjectId(id)
 
         this.projectRepository.deleteById(id)
     }
