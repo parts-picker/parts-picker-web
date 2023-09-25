@@ -2,6 +2,7 @@ package de.partspicker.web.project.api
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
+import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPatchRequest
@@ -42,6 +43,18 @@ class ProjectController(
         val createdProject = this.projectService.create(CreateProject.from(body))
 
         return ResponseEntity(projectResourceAssembler.toModel(createdProject), HttpStatus.OK)
+    }
+
+    @PostMapping("/projects/{id}/copies")
+    fun handleCopyProject(
+        @PathVariable id: Long,
+        @Valid @RequestBody projectCopyRequest: ProjectCopyRequest
+    ): ResponseEntity<ProjectResource> {
+        logger.info("=> POST request for creating a copy with name '${projectCopyRequest.name}' of project with id $id")
+
+        val copiedProject = this.projectService.copy(name = projectCopyRequest.name, sourceProjectId = id)
+
+        return ResponseEntity(projectResourceAssembler.toModel(copiedProject), HttpStatus.OK)
     }
 
     @GetMapping("/projects")

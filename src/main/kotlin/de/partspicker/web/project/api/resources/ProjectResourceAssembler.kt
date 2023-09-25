@@ -10,12 +10,14 @@ import de.partspicker.web.common.hal.LinkListBuilder
 import de.partspicker.web.common.hal.RelationName
 import de.partspicker.web.common.hal.RelationName.ASSIGNED
 import de.partspicker.web.common.hal.RelationName.AVAILABLE
+import de.partspicker.web.common.hal.RelationName.COPIED_FROM
 import de.partspicker.web.common.hal.generateGetAllProjectsLink
 import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.generateSearchItemsByNameLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
 import de.partspicker.web.project.api.ProjectController
+import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.business.objects.Project
@@ -68,6 +70,19 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
                 NodeNameEqualsRule(project.status, "planning") or
                     NodeNameEqualsRule(project.status, "implementation")
 
+            )
+            // source project
+            .withCondition(
+                linkTo<ProjectController> { handleGetProjectById(project.sourceProjectId ?: 0L) }
+                    .withRel(COPIED_FROM)
+                    .withName(READ),
+                project.sourceProjectId != null
+            )
+            // copies
+            .with(
+                linkTo<ProjectController> { handleCopyProject(project.id, ProjectCopyRequest.DUMMY) }
+                    .withRel(RelationName.COPIES)
+                    .withName(CREATE)
             )
             // availableItemType
             .with(

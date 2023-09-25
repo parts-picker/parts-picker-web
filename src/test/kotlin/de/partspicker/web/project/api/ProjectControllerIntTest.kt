@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.common.exceptions.ErrorDetail
+import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
@@ -16,6 +17,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.single
 import io.kotest.property.arbitrary.string
+import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -70,6 +72,99 @@ class ProjectControllerIntTest(
                     jsonPath("$._links", notNullValue())
                 }
             }
+        }
+    }
+
+    context("POST project copy") {
+        should("return status 200 & the copied project") {
+            // data setup
+            val sourceProject = testSetupHelper.setupProject()
+
+            // request
+            val projectCopyRequest = ProjectCopyRequest(
+                name = "name"
+            )
+
+            val path = "/projects/${sourceProject.id}/copies"
+
+            mockMvc.post(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(projectCopyRequest)
+            }
+                .andExpect {
+                    status { isOk() }
+                    content {
+                        contentType("application/hal+json")
+                        jsonPath("$.*", hasSize<Any>(8))
+                        jsonPath("$.id", notNullValue())
+                        jsonPath("$.name", `is`(projectCopyRequest.name))
+                        jsonPath("$.status", `is`("planning"))
+                        jsonPath("$.displayStatus", `is`("Planning"))
+                        jsonPath("$.shortDescription", `is`(sourceProject.shortDescription))
+                        jsonPath("$.description", `is`(sourceProject.description))
+                        jsonPath("$.groupId", `is`(sourceProject.group?.id))
+                        jsonPath("$._links", notNullValue())
+                        jsonPath("$._links.copiedFrom", notNullValue())
+                        jsonPath("$._links.copiedFrom.href", endsWith("projects/${sourceProject.id}"))
+                    }
+                }
+        }
+
+        should("return status 422 when given blank project name") {
+            // data setup
+            val project = testSetupHelper.setupProject()
+
+            // request
+            val projectCopyRequest = ProjectCopyRequest(
+                name = "  "
+            )
+
+            val path = "/projects/${project.id}/copies"
+
+            mockMvc.post(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(projectCopyRequest)
+            }
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                        jsonPath(
+                            "$.message",
+                            `is`("Validation for object projectCopyRequest failed with 1 error(s)")
+                        )
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+
+        should("return status 404 when no project with the requested id exists") {
+            val nonExistentId = 666
+            val path = "/projects/$nonExistentId/copies"
+
+            val projectCopyRequest = ProjectCopyRequest(
+                name = "name"
+            )
+
+            mockMvc.post(path) {
+                contentType = MediaType.APPLICATION_JSON
+                content = mapper.writeValueAsString(projectCopyRequest)
+            }
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath("$.message", `is`("Project with id $nonExistentId could not be found"))
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
         }
     }
 

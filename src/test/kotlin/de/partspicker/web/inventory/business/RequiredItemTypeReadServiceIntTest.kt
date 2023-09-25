@@ -109,6 +109,27 @@ class RequiredItemTypeReadServiceIntTest(
             requiredItemTypes.sort shouldHaveSize 1
         }
     }
+
+    context("streamAllByProjectId") {
+        should("return a stream with all required item types with the given project id") {
+            // given
+            val project = setupProject()
+
+            val itemTypeAmount = 7
+            val requiredAmount = 2L
+
+            repeat(itemTypeAmount) {
+                val itemType = setupItemType()
+                setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id, requiredAmount)
+            }
+
+            // when
+            val requiredItemTypes = cut.streamAllByProjectId(project.id).toList()
+
+            // then
+            requiredItemTypes shouldHaveSize itemTypeAmount
+        }
+    }
 }) {
     override fun extensions() = listOf(SpringExtension)
 }

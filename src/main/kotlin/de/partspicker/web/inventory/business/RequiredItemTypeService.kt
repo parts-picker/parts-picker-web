@@ -16,9 +16,11 @@ import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class RequiredItemTypeService(
     private val requiredItemTypeRepository: RequiredItemTypeRepository,
+    private val requiredItemTypeReadService: RequiredItemTypeReadService,
     private val projectRepository: ProjectRepository,
     private val itemTypeRepository: ItemTypeRepository,
     private val workflowInteractionService: WorkflowInteractionService,
@@ -68,5 +70,35 @@ class RequiredItemTypeService(
 
         this.inventoryItemService.removeAllWithTypeFromProject(itemTypeId = itemTypeId, projectId = projectId)
         this.requiredItemTypeRepository.deleteById(RequiredItemTypeId(projectId, itemTypeId))
+    }
+
+    fun deleteAllByProjectId(projectId: Long) {
+        if (!this.projectRepository.existsById(projectId)) {
+            throw ProjectNotFoundException(projectId = projectId)
+        }
+
+        this.requiredItemTypeRepository.deleteAllByProjectId(projectId)
+    }
+
+    fun copyAllToTargetProjectByProjectId(sourceProjectId: Long, targetProjectId: Long) {
+        if (!this.projectRepository.existsById(sourceProjectId)) {
+            throw ProjectNotFoundException(projectId = sourceProjectId)
+        }
+
+        if (!this.projectRepository.existsById(targetProjectId)) {
+            throw ProjectNotFoundException(projectId = targetProjectId)
+        }
+
+        this.requiredItemTypeReadService.streamAllByProjectId(sourceProjectId)
+            .map {
+                CreateOrUpdateRequiredItemType(
+                    projectId = targetProjectId,
+                    itemTypeId = it.itemType.id,
+                    requiredAmount = it.requiredAmount
+                )
+            }
+            .forEach {
+                this.createOrUpdate(it)
+            }
     }
 }

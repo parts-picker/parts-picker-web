@@ -39,16 +39,21 @@ data class ProjectEntity(
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instance_id", foreignKey = ForeignKey(name = "fk_instance"))
-    val workflowInstance: InstanceEntity
+    val workflowInstance: InstanceEntity,
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_project_id", foreignKey = ForeignKey(name = "fk_source_project"))
+    val sourceProject: ProjectEntity?
 ) {
     companion object {
-        fun from(project: CreateProject, instanceEntity: InstanceEntity) = ProjectEntity(
+        fun from(project: CreateProject, instanceEntity: InstanceEntity, sourceProject: ProjectEntity?) = ProjectEntity(
             id = 0L,
             name = project.name,
             shortDescription = project.shortDescription,
-            description = null,
+            description = project.description,
             group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
-            workflowInstance = instanceEntity
+            workflowInstance = instanceEntity,
+            sourceProject = sourceProject
         )
     }
 }
