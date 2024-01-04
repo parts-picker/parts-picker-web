@@ -48,7 +48,7 @@ class WorkflowStartupReader(
         resources.forEach { resource ->
             logStartProcessing(resource.filename)
 
-            val newWorkflow = objectMapper.readValue(resource.file, WorkflowJson::class.java)
+            val newWorkflow = objectMapper.readValue(resource.inputStream, WorkflowJson::class.java)
             val latestWorkflow = this.workflowService.readLatest(newWorkflow.name)
 
             try {

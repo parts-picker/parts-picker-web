@@ -1,10 +1,17 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run as localdb: WebApplicationKt" type="JetRunConfigurationType">
     <option name="ALTERNATIVE_JRE_PATH" value="temurin-17" />
+    <envs>
+      <env name="DB_DOMAIN" value="localhost" />
+      <env name="DB_NAME" value="pick_db" />
+      <env name="DB_PORT" value="5433" />
+      <env name="DB_USERNAME" value="postgres" />
+      <env name="DB_PASSWORD" value="local" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="de.partspicker.web.WebApplicationKt" />
     <module name="web.main" />
     <shortenClasspath name="NONE" />
-    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=localdb" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=testdata,local" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
