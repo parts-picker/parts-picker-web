@@ -2,7 +2,6 @@ package de.partspicker.web.workflow.business.automated
 
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -23,7 +22,8 @@ class AutomatedActionRunner(
         val logger = logger()
     }
 
-    var applicationReady = false
+    private var applicationReady = false
+    private var counter = 0
 
     @EventListener
     @Suppress("UnusedPrivateMember")
@@ -31,20 +31,18 @@ class AutomatedActionRunner(
         applicationReady = true
     }
 
-    @Scheduled(fixedDelay = 1000L)
+    @Scheduled(fixedDelay = DEFAULT_WAIT_TIME)
     fun executeAutomatedActions() {
         if (applicationReady) {
-            logger.info("Starting automated action runner")
+            logger.trace("Starting automated action runner #$counter")
             try {
                 runBlocking {
-                    while (true) {
-                        launch { automatedActionService.executeBatch() }
-                        delay(DEFAULT_WAIT_TIME)
-                    }
+                    launch { automatedActionService.executeBatch() }
                 }
             } catch (_: InterruptedException) {
-                logger.info("Canceling automated action runner")
+                logger.info("Canceling automated action runner #$counter")
             }
+            counter += 1
         }
     }
 }

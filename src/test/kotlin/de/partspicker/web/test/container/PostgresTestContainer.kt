@@ -2,9 +2,9 @@ package de.partspicker.web.test.container
 
 import org.testcontainers.containers.PostgreSQLContainer
 
-class PostgresTestContainer private constructor() : PostgreSQLContainer<PostgresTestContainer>(postgresImageName) {
+class PostgresTestContainer private constructor() : PostgreSQLContainer<PostgresTestContainer>(POSTGRES_IMAGE_NAME) {
     companion object {
-        private const val postgresImageName = "postgres:13.11-alpine"
+        private const val POSTGRES_IMAGE_NAME = "postgres:13.11-alpine"
 
         private lateinit var instance: PostgresTestContainer
 

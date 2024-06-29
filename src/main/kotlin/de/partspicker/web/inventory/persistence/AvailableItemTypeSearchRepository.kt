@@ -27,26 +27,30 @@ class AvailableItemTypeSearchRepository(
 
         return searchSession.search(ItemTypeEntity::class.java)
             .select { projectionFactory ->
-                projectionFactory.composite(
-                    ::AvailableItemTypeResult,
-                    projectionFactory.id(Long::class.javaObjectType),
-                    projectionFactory.field(ITEM_TYPE_NAME_FIELD_NAME, String::class.java)
-                )
+                projectionFactory
+                    .composite()
+                    .from(
+                        projectionFactory.id(Long::class.javaObjectType),
+                        projectionFactory.field(ITEM_TYPE_NAME_FIELD_NAME, String::class.java)
+                    )
+                    .`as`(::AvailableItemTypeResult)
             }
             .where { predicateFactory ->
-                predicateFactory.bool {
-                    if (requiredItemTypeIdsForProject.isNotEmpty()) {
-                        it.mustNot(predicateFactory.id().matchingAny(requiredItemTypeIdsForProject))
+                predicateFactory
+                    .bool()
+                    .with {
+                        if (requiredItemTypeIdsForProject.isNotEmpty()) {
+                            it.mustNot(predicateFactory.id().matchingAny(requiredItemTypeIdsForProject))
+                        }
+
+                        it.should(
+                            predicateFactory.match().field(ITEM_TYPE_NAME_FIELD_NAME).matching(name).fuzzy(1)
+                        )
+                        it.should(
+                            predicateFactory.wildcard().field(ITEM_TYPE_NAME_FIELD_NAME).matching("*$name*")
+
+                        )
                     }
-
-                    it.should(
-                        predicateFactory.match().field(ITEM_TYPE_NAME_FIELD_NAME).matching(name).fuzzy(1)
-                    )
-                    it.should(
-                        predicateFactory.wildcard().field(ITEM_TYPE_NAME_FIELD_NAME).matching("*$name*")
-
-                    )
-                }
             }
             .fetchHits(MAX_HITS) as List<AvailableItemTypeResult>
     }
