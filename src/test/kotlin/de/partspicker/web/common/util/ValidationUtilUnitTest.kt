@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
-class ValidationUtilKtTest : ShouldSpec({
+class ValidationUtilUnitTest : ShouldSpec({
 
     context("Boolean.orThrow") {
         should("just run when called while true") {
