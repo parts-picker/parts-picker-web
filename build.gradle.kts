@@ -1,15 +1,16 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.springframework.boot") version "3.3.1"
     id("io.spring.dependency-management") version "1.1.5"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
-    kotlin("jvm") version "1.9.23"
-    kotlin("plugin.spring") version "1.9.23"
-    kotlin("plugin.noarg") version "1.9.23"
-    kotlin("plugin.allopen") version "1.9.23"
-    kotlin("plugin.jpa") version "1.9.23"
+    kotlin("jvm") version "2.0.0"
+    kotlin("plugin.spring") version "2.0.0"
+    kotlin("plugin.noarg") version "2.0.0"
+    kotlin("plugin.allopen") version "2.0.0"
+    kotlin("plugin.jpa") version "2.0.0"
 }
 
 allOpen {
@@ -25,56 +26,75 @@ detekt {
     autoCorrect = true
 }
 
+// detekt must use a compatible version of kotlin
+// this version is (mostly) independent of the kotlin version of the project
+configurations.matching { it.name == "detekt" }.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin") {
+            useVersion(io.gitlab.arturbosch.detekt.getSupportedKotlinVersion())
+        }
+    }
+}
+
 group = "de.parts_picker"
 version = "docker-ready"
-java.sourceCompatibility = JavaVersion.VERSION_17
-extra["kotlin-coroutines.version"] = "1.8.1"
+java.sourceCompatibility = JavaVersion.VERSION_21
+val kotlinCoroutinesVersion by extra { "1.8.1" }
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    val hibernateSearchVersion = "7.1.1.Final"
+    val kotestVersion = "5.8.1"
+    val kotestSpringExtensionVersion = "1.3.0"
+    val testcontainersPostgresVersion = "1.19.8"
+    val postgresDriverVersion = "42.7.3"
+    val liquibaseVersion = "4.28.0"
+    val mockkVersion = "1.13.11"
+    val detektVersion = "1.23.6"
+
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("org.postgresql:postgresql:42.7.3")
-    implementation("org.liquibase:liquibase-core:4.28.0")
-    implementation("org.hibernate.search:hibernate-search-mapper-orm:7.1.1.Final")
-    implementation("org.hibernate.search:hibernate-search-backend-lucene:7.1.1.Final")
+    runtimeOnly("org.postgresql:postgresql:$postgresDriverVersion")
+    implementation("org.liquibase:liquibase-core:$liquibaseVersion")
+    implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
+    implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     implementation("org.springframework.boot:spring-boot-starter-hateoas")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.8.1")
-    testImplementation("io.kotest:kotest-assertions-core:5.8.1")
-    testImplementation("io.kotest:kotest-property:5.8.1")
-    testImplementation("io.kotest:kotest-framework-datatest:5.8.1")
-    testImplementation("io.kotest.extensions:kotest-extensions-spring:1.3.0")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-property:$kotestVersion")
+    testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestSpringExtensionVersion")
 
     testImplementation("org.springframework:spring-test")
     testImplementation("org.springframework.boot:spring-boot-test")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
-    testImplementation("org.skyscreamer:jsonassert:1.5.2")
+    testImplementation("org.skyscreamer:jsonassert")
 
-    testImplementation("org.testcontainers:postgresql:1.19.8")
+    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresVersion")
 
-    testImplementation("io.mockk:mockk:1.13.11")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detektVersion")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
+    compilerOptions {
+        freeCompilerArgs.add("-Xjsr305=strict")
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
