@@ -14,29 +14,27 @@ class NodeEntityGenerators private constructor() {
         val userActionNodeEntityGenerator: Arb<UserActionNodeEntity> = Arb.bind(
             Arb.long(1),
             WorkflowEntityGenerators.generator,
-            Arb.string(range = IntRange(3, 16)),
-            Arb.string(range = IntRange(3, 16))
-        ) { id, workflow, name, displayName ->
+            Arb.realisticNodeName()
+        ) { id, workflow, name ->
             UserActionNodeEntity(
                 id = id,
                 workflow = workflow,
                 name = name,
-                displayName = displayName
+                displayName = name
             )
         }
 
         val automatedActionNodeEntityGenerator: Arb<AutomatedActionNodeEntity> = Arb.bind(
             Arb.long(1),
             WorkflowEntityGenerators.generator,
-            Arb.string(range = IntRange(3, 16)),
-            Arb.string(range = IntRange(3, 16)),
+            Arb.realisticNodeName(),
             Arb.string(range = IntRange(3, 16))
-        ) { id, workflow, name, displayName, automatedActionName ->
+        ) { id, workflow, name, automatedActionName ->
             AutomatedActionNodeEntity(
                 id = id,
                 workflow = workflow,
                 name = name,
-                displayName = displayName,
+                displayName = name,
                 automatedActionName = automatedActionName
             )
         }

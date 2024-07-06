@@ -9,47 +9,37 @@ import de.partspicker.web.workflow.business.objects.create.nodes.StopNodeCreate
 import de.partspicker.web.workflow.business.objects.create.nodes.UserActionNodeCreate
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
-import io.kotest.property.arbitrary.choice
 import io.kotest.property.arbitrary.choose
 import io.kotest.property.arbitrary.enum
-import io.kotest.property.arbitrary.string
+import io.kotest.property.arbitrary.map
 
 class NodeCreateGenerators private constructor() {
     companion object {
-        private const val MIN_NAME_LENGTH = 10
 
-        val userActionNodeCreateGenerator: Arb<UserActionNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
-            Arb.string(range = IntRange(3, 16))
-        ) { name, displayName ->
-            UserActionNodeCreate(name, displayName)
-        }
+        val userActionNodeCreateGenerator: Arb<UserActionNodeCreate> =
+            Arb.realisticNodeName().map { UserActionNodeCreate(it, it) }
 
-        val automatedActionNodeCreateGenerator: Arb<AutomatedActionNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
-            Arb.string(range = IntRange(3, 16)),
-        ) { name, displayName ->
-            AutomatedActionNodeCreate(name, displayName, AutomatedTestAction.NAME)
+        val automatedActionNodeCreateGenerator: Arb<AutomatedActionNodeCreate> = Arb.realisticNodeName().map {
+            AutomatedActionNodeCreate(it, it, AutomatedTestAction.NAME)
         }
 
         val randomStartTypeGen = Arb.enum<StartTypeCreate>()
 
         val startNodeCreateGenerator: Arb<StartNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
-            Arb.string(range = IntRange(3, 16)),
+            Arb.realisticNodeName(),
             randomStartTypeGen
-        ) { name, displayName, startType ->
-            StartNodeCreate(name, displayName, startType)
+        ) { name, startType ->
+            StartNodeCreate(name, name, startType)
         }
 
-        val stopNodeCreateGenerator: Arb<StopNodeCreate> = Arb.bind(
-            Arb.string(range = IntRange(MIN_NAME_LENGTH, 16)),
-            Arb.string(range = IntRange(3, 16))
-        ) { name, displayName ->
-            StopNodeCreate(name, displayName)
+        val stopNodeCreateGenerator: Arb<StopNodeCreate> = Arb.realisticNodeName().map {
+            StopNodeCreate(it, it)
         }
 
-        val actionNodeGenerator = Arb.choice(userActionNodeCreateGenerator, automatedActionNodeCreateGenerator)
+        val actionNodeGenerator = Arb.choose(
+            7 to userActionNodeCreateGenerator,
+            4 to automatedActionNodeCreateGenerator
+        )
 
         val generator: Arb<NodeCreate> = Arb.choose(
             6 to userActionNodeCreateGenerator,

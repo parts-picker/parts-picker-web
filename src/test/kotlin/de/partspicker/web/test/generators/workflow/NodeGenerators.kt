@@ -8,7 +8,6 @@ import de.partspicker.web.workflow.business.objects.nodes.StopNode
 import de.partspicker.web.workflow.business.objects.nodes.UserActionNode
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
-import io.kotest.property.arbitrary.choice
 import io.kotest.property.arbitrary.choose
 import io.kotest.property.arbitrary.enum
 import io.kotest.property.arbitrary.positiveLong
@@ -16,34 +15,30 @@ import io.kotest.property.arbitrary.string
 
 class NodeGenerators private constructor() {
     companion object {
-        private const val MIN_NAME_LENGTH = 10
-
         val userActionNodeGenerator: Arb<UserActionNode> = Arb.bind(
             Arb.positiveLong(),
             Arb.positiveLong(),
-            Arb.string(range = MIN_NAME_LENGTH..16),
-            Arb.string(range = 3..16),
-        ) { id, workflowId, name, displayName ->
+            Arb.realisticNodeName()
+        ) { id, workflowId, name ->
             UserActionNode(
                 id = id,
                 workflowId = workflowId,
                 name = name,
-                displayName = displayName
+                displayName = name
             )
         }
 
         val automatedActionNodeGenerator: Arb<AutomatedActionNode> = Arb.bind(
             Arb.positiveLong(),
             Arb.positiveLong(),
-            Arb.string(range = MIN_NAME_LENGTH..16),
-            Arb.string(range = 3..16),
+            Arb.realisticNodeName(),
             Arb.string(range = 3..16)
-        ) { id, workflowId, name, displayName, automatedActionName ->
+        ) { id, workflowId, name, automatedActionName ->
             AutomatedActionNode(
                 id = id,
                 workflowId = workflowId,
                 name = name,
-                displayName = displayName,
+                displayName = name,
                 automatedActionName = automatedActionName
             )
         }
@@ -53,15 +48,14 @@ class NodeGenerators private constructor() {
         val startNodeGenerator: Arb<StartNode> = Arb.bind(
             Arb.positiveLong(),
             Arb.positiveLong(),
-            Arb.string(range = MIN_NAME_LENGTH..16),
-            Arb.string(range = 3..16),
+            Arb.realisticNodeName(),
             randomStartTypeGen
-        ) { id, workflowId, name, displayName, startType ->
+        ) { id, workflowId, name, startType ->
             StartNode(
                 id = id,
                 workflowId = workflowId,
                 name = name,
-                displayName = displayName,
+                displayName = name,
                 startType = startType
             )
         }
@@ -69,21 +63,24 @@ class NodeGenerators private constructor() {
         val stopNodeGenerator: Arb<StopNode> = Arb.bind(
             Arb.positiveLong(),
             Arb.positiveLong(),
-            Arb.string(range = MIN_NAME_LENGTH..16),
-            Arb.string(range = 3..16),
-        ) { id, workflowId, name, displayName ->
+            Arb.realisticNodeName(),
+        ) { id, workflowId, name ->
             StopNode(
                 id = id,
                 workflowId = workflowId,
                 name = name,
-                displayName = displayName
+                displayName = name
             )
         }
 
-        val actionNodeGenerator = Arb.choice(userActionNodeGenerator, automatedActionNodeGenerator)
+        val actionNodeGenerator = Arb.choose(
+            7 to userActionNodeGenerator,
+            4 to automatedActionNodeGenerator
+        )
 
         val generator: Arb<Node> = Arb.choose(
-            8 to userActionNodeGenerator,
+            6 to userActionNodeGenerator,
+            4 to automatedActionNodeGenerator,
             1 to startNodeGenerator,
             1 to stopNodeGenerator
         )
