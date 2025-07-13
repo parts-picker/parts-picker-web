@@ -244,7 +244,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
-                name = projectEntity.name,
                 shortDescription = projectEntity.shortDescription,
                 groupId = null
             )
@@ -269,7 +268,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val updatedProject = cut.update(
                 projectId = projectEntity.id,
-                name = projectEntity.name,
                 shortDescription = projectEntity.shortDescription,
                 groupId = projectEntity.group!!.id
             )
@@ -295,7 +293,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             val exception = shouldThrow<ProjectNotFoundException> {
                 cut.update(
                     projectId = nonExistentId,
-                    name = "name",
                     shortDescription = "description",
                     groupId = null
                 )
@@ -321,7 +318,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             val exception = shouldThrow<InstanceInactiveException> {
                 cut.update(
                     projectId = projectEntity.id,
-                    name = "name",
                     shortDescription = "description",
                     groupId = null
                 )
@@ -348,7 +344,6 @@ class ProjectServiceUnitTest : ShouldSpec({
             val exception = shouldThrow<GroupNotFoundException> {
                 cut.update(
                     projectId = projectEntity.id,
-                    name = "name",
                     shortDescription = "description",
                     groupId = nonExistentId
                 )

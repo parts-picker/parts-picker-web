@@ -95,14 +95,13 @@ class ProjectService(
         return Project.from(projectEntity)
     }
 
-    fun update(projectId: Long, name: String, shortDescription: String?, groupId: Long?): Project {
+    fun update(projectId: Long, shortDescription: String?, groupId: Long?): Project {
         val projectEntity = this.projectRepository.findById(projectId).orElseThrow {
             throw ProjectNotFoundException(projectId)
         }
 
         ProjectActiveRule(Project.from(projectEntity)).valid()
 
-        projectEntity.name = name
         projectEntity.shortDescription = shortDescription
 
         groupId?.let { id ->
@@ -125,6 +124,19 @@ class ProjectService(
         ProjectActiveRule(Project.from(projectEntity)).valid()
 
         projectEntity.description = description
+
+        val updatedProject = this.projectRepository.save(projectEntity)
+
+        return Project.from(updatedProject)
+    }
+
+    fun updateName(projectId: Long, name: String): Project {
+        val projectEntity = this.projectRepository.getNullableReferenceById(projectId)
+            ?: throw ProjectNotFoundException(projectId)
+
+        ProjectActiveRule(Project.from(projectEntity)).valid()
+
+        projectEntity.name = name
 
         val updatedProject = this.projectRepository.save(projectEntity)
 

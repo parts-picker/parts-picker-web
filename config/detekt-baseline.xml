@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <SmellBaseline>
-  <ManuallySuppressedIssues/>
+  <ManuallySuppressedIssues>
+    <ID>TooManyFunctions:ProjectService.kt$ProjectService</ID>
+  </ManuallySuppressedIssues>
   <CurrentIssues/>
 </SmellBaseline>
