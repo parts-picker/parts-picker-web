@@ -5,6 +5,7 @@ import de.partspicker.web.common.util.logger
 import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectDescriptionPatchRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
+import de.partspicker.web.project.api.requests.ProjectNamePatchRequest
 import de.partspicker.web.project.api.requests.ProjectPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.api.resources.ProjectResource
@@ -91,9 +92,13 @@ class ProjectController(
 
             is ProjectMetaInfoPatchRequest -> this.projectService.update(
                 projectId = id,
-                name = body.name,
                 shortDescription = body.shortDescription,
                 groupId = body.groupId
+            )
+
+            is ProjectNamePatchRequest -> this.projectService.updateName(
+                projectId = id,
+                name = body.name
             )
         }
 

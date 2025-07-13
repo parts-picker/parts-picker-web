@@ -248,7 +248,6 @@ class ProjectControllerIntTest(
     context("UPDATE project meta info") {
         should("return status 200 & the updated project when called") {
             val requestBody = ProjectMetaInfoPatchRequest(
-                name = "Updated name",
                 shortDescription = "Updated description",
                 groupId = 2
             )
@@ -264,7 +263,7 @@ class ProjectControllerIntTest(
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(8))
                     jsonPath("$.id", `is`(id))
-                    jsonPath("$.name", `is`(requestBody.name))
+                    jsonPath("$.name", `is`("PROJECT 3"))
                     jsonPath("$.status", `is`("start"))
                     jsonPath("$.displayStatus", `is`("Start"))
                     jsonPath("$.shortDescription", `is`(requestBody.shortDescription))
@@ -276,7 +275,6 @@ class ProjectControllerIntTest(
 
         should("return status 404 when no project with the requested id exists") {
             val requestBody = ProjectMetaInfoPatchRequest(
-                name = "Updated name",
                 shortDescription = "Updated description",
                 groupId = null
             )
