@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
 @Sql("classpath:/init-sql/itemTypeControllerIntTest.sql")

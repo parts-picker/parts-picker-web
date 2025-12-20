@@ -41,6 +41,10 @@ version = "docker-ready"
 java.sourceCompatibility = JavaVersion.VERSION_21
 val kotlinCoroutinesVersion by extra { "1.8.1" }
 
+// spring boot's bom manages the testcontainers version; the managed one bundles a
+// docker-java that docker engine 29 rejects (negotiated api version too old)
+extra["testcontainers.version"] = "1.21.4"
+
 repositories {
     mavenCentral()
 }
@@ -49,7 +53,7 @@ dependencies {
     val hibernateSearchVersion = "7.1.1.Final"
     val kotestVersion = "5.8.1"
     val kotestSpringExtensionVersion = "1.3.0"
-    val testcontainersPostgresVersion = "1.19.8"
+    val testcontainersPostgresVersion = "1.21.4"
     val postgresDriverVersion = "42.7.3"
     val liquibaseVersion = "4.28.0"
     val mockkVersion = "1.13.11"
@@ -73,6 +77,10 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-hateoas")
 
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")

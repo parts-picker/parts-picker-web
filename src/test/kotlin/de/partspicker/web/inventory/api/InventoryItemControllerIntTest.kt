@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.patch
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
 class InventoryItemControllerIntTest(
