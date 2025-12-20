@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run as localdb: WebApplicationKt" type="JetRunConfigurationType">
-    <option name="ALTERNATIVE_JRE_PATH" value="temurin-17" />
+    <option name="ALTERNATIVE_JRE_PATH" value="temurin-26" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
       <env name="DB_DOMAIN" value="localhost" />
       <env name="DB_NAME" value="pick_db" />
@@ -12,6 +13,7 @@
     <module name="web.main" />
     <shortenClasspath name="NONE" />
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=testdata,local" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

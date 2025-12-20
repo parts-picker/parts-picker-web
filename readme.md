@@ -21,8 +21,30 @@ docker stop local_db
 ```
 To restart it for later use, run:
 ```
-docker start -i local_db
+docker start local_db
 ```
+&nbsp;
+
+For user management, keycloak is used.  
+To create a fitting container and start it, run:
+```
+docker run -d \
+  --name keycloak-dev \
+  -p 8082:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=local \
+  -e KC_DB=postgres \
+  -e KC_DB_URL=jdbc:postgresql://host.docker.internal:5433/keycloak \
+  -e KC_DB_USERNAME=postgres \
+  -e KC_DB_PASSWORD=local \
+  quay.io/keycloak/keycloak:26.4.5 \
+  start-dev
+```
+To restart it for later use, run:
+```
+docker start keycloak-dev
+```
+
 ## Versioning
 This project makes use of semantic versioning for version numbers.
 Commits will be automatically tagged with a new version number.  

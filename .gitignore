@@ -68,3 +68,5 @@ local.properties
 buildSrcTmp/
 distTmp/
 outTmp/
+.claude/worktrees/
+.claude/settings.local.json
