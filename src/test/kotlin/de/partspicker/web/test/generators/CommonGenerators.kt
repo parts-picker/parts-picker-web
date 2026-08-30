@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.long
+import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.string
 
@@ -26,5 +27,7 @@ class CommonGenerators private constructor() {
 }
 
 fun Arb.Companion.descriptionLikeString(): Arb<String> = CommonGenerators.descriptionLikeStringGenerator
+
+fun Arb.Companion.issuer(): Arb<String> = Arb.string(range = IntRange(4, 12)).map { "https://$it/realms/$it" }
 
 fun Arb.Companion.id(): Arb<Long> = Arb.long(1)
