@@ -1,0 +1,26 @@
+info:
+  name: POST itemType
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{base_url}}/item-types"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "An item type",
+      	"description": "The description of an item type"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

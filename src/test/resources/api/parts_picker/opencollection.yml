@@ -1,0 +1,44 @@
+opencollection: 1.0.0
+
+info:
+  name: parts_picker
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: oauth2
+    flow: authorization_code
+    authorizationUrl: "{{keycloak_url}}/realms/{{keycloak_realm}}/protocol/openid-connect/auth"
+    accessTokenUrl: "{{keycloak_url}}/realms/{{keycloak_realm}}/protocol/openid-connect/token"
+    refreshTokenUrl: "{{keycloak_url}}/realms/{{keycloak_realm}}/protocol/openid-connect/token"
+    callbackUrl: "{{oidc_callback_url}}"
+    credentials:
+      clientId: "{{oidc_client_id}}"
+      clientSecret: "{{oidc_client_secret}}"
+      placement: body
+    scope: openid profile email
+    state: parts-picker-bruno
+    pkce: {}
+    tokenConfig:
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

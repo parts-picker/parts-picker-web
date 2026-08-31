@@ -1,0 +1,27 @@
+info:
+  name: POST project
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{base_url}}/projects"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Project",
+      	"shortDescription": null,
+      	"groupId": 1
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
