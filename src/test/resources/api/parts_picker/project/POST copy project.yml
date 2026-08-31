@@ -1,0 +1,27 @@
+info:
+  name: POST copy project
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{base_url}}/projects/1/copies"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: User-Agent
+      value: insomnia/2023.5.8
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "Copied project"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

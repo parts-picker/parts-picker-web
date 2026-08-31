@@ -1,0 +1,28 @@
+info:
+  name: POST item
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{base_url}}/item-types/1/items"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"assignedProjectId": 1,
+      	"status": "IN_STOCK",
+      	"condition": "NEW",
+      	"note": "An item, which was created by a post request with insomnia"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

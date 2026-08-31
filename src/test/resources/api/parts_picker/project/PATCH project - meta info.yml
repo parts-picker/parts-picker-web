@@ -1,0 +1,26 @@
+info:
+  name: PATCH project - meta info
+  type: http
+  seq: 13
+
+http:
+  method: PATCH
+  url: "{{base_url}}/projects/1"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"shortDescription": "Explore distant galaxies, solve cosmic mysteries, and journey through the cosmos in this immersive space exploration game. Uncover hidden secrets, trade with alien species, and become a renowned spacefarer in this epic adventure.",
+      	"groupId": 1
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

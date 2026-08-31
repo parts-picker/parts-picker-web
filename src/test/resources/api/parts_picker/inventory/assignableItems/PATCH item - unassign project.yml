@@ -1,0 +1,16 @@
+info:
+  name: PATCH item - unassign project
+  type: http
+  seq: 8
+
+http:
+  method: PATCH
+  url: "{{base_url}}/items/22/assignable"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

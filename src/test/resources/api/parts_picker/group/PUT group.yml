@@ -1,0 +1,26 @@
+info:
+  name: PUT group
+  type: http
+  seq: 9
+
+http:
+  method: PUT
+  url: "{{base_url}}/group/1"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "PUT GROUP",
+      	"description": "PUT REQUEST SUCCESSFUL"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

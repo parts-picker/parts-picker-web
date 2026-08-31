@@ -1,0 +1,16 @@
+info:
+  name: OPTIONS items
+  type: http
+  seq: 14
+
+http:
+  method: OPTIONS
+  url: "{{base_url}}/items"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

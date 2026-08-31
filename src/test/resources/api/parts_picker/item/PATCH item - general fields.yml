@@ -1,0 +1,26 @@
+info:
+  name: PATCH item - general fields
+  type: http
+  seq: 12
+
+http:
+  method: PATCH
+  url: "{{base_url}}/items/1"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"condition": "NEW",
+      	"note": "This note was updated through an insomnia request"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

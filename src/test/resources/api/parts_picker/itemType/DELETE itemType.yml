@@ -1,0 +1,16 @@
+info:
+  name: DELETE itemType
+  type: http
+  seq: 10
+
+http:
+  method: DELETE
+  url: "{{base_url}}/item-types/41"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

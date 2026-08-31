@@ -1,0 +1,26 @@
+info:
+  name: POST group
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{base_url}}/group"
+  auth: inherit
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+      	"name": "POSTED GROUP",
+      	"description": "POST WORKED"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

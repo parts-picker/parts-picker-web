@@ -1,0 +1,14 @@
+name: Local
+variables:
+  - name: base_url
+    value: http://localhost:8080/api/v1
+  - name: keycloak_url
+    value: http://localhost:8082
+  - name: keycloak_realm
+    value: dev
+  - name: oidc_client_id
+    value: pp-frontend-dev
+  - name: oidc_client_secret
+    value: o50hzYv0sKvAd2ROwgUs9c47A82omEbi
+  - name: oidc_callback_url
+    value: http://localhost:3000/__BASE_PATH_PLACEHOLDER__/api/auth/callback
