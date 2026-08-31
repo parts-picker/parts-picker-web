@@ -21,7 +21,7 @@ class UserGenerators private constructor() {
         }
 
         /**
-         * A user carrying exactly the claims of the given identity.
+         * A user having the same values as the given identity.
          */
         fun generatorFor(
             userIdentity: UserIdentity,

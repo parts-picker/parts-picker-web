@@ -4,7 +4,7 @@ import de.partspicker.web.user.business.objects.enums.UserType
 import de.partspicker.web.user.persistence.entities.UserEntity
 
 data class User(
-    val id: Long = 0,
+    val id: Long,
     val issuer: String,
     val subject: String,
     val username: String,

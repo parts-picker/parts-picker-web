@@ -17,8 +17,7 @@ class JwtGenerators private constructor() {
         val generator: Arb<Jwt> = UserIdentityGenerators.generator.flatMap { generatorFor(it) }
 
         /**
-         * The claims keycloak issues for the given identity. Add to or subtract from it to build a token that
-         * carries more or less than the usual.
+         * The claims keycloak issues for the given identity.
          */
         fun claimsOf(userIdentity: UserIdentity): Map<String, Any> = buildMap {
             put(JwtClaims.ISSUER, userIdentity.issuer)
