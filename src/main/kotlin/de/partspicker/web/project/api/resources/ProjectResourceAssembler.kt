@@ -16,6 +16,7 @@ import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.generateSearchItemsByNameLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
+import de.partspicker.web.project.api.GroupController
 import de.partspicker.web.project.api.ProjectController
 import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
@@ -39,19 +40,19 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             displayStatus = project.displayStatus,
             shortDescription = project.shortDescription,
             description = project.description,
-            groupId = project.group?.id,
             links = generateDefaultLinks(project)
         )
     }
 
+    @Suppress("LongMethod")
     private fun generateDefaultLinks(project: Project): List<Link> {
         return LinkListBuilder()
             .with(
-                linkTo<ProjectController> { handlePostProject(ProjectPostRequest.DUMMY) }
+                linkTo<ProjectController> { handlePostProject(project.orgUnitId, ProjectPostRequest.DUMMY) }
                     .withRel(IanaLinkRelations.COLLECTION)
                     .withName(CREATE)
             )
-            .with(generateGetAllProjectsLink(IanaLinkRelations.COLLECTION))
+            .with(generateGetAllProjectsLink(IanaLinkRelations.COLLECTION, project.orgUnitId))
             .with(
                 linkTo<ProjectController> { handleGetProjectById(project.id) }
                     .withSelfRel()
@@ -78,6 +79,13 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
                     .withName(READ),
                 project.sourceProjectId != null
             )
+            // group
+            .withCondition(
+                linkTo<GroupController> { handleGetGroupById(project.group?.id ?: 0L) }
+                    .withRel(RelationName.GROUP)
+                    .withName(READ),
+                project.group != null
+            )
             // copies
             .with(
                 linkTo<ProjectController> { handleCopyProject(project.id, ProjectCopyRequest.DUMMY) }
@@ -97,7 +105,7 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             // workflow
             .with(
                 linkTo<WorkflowInteractionController> {
-                    handleGetInstanceInfo(project.workflowInstanceId)
+                    handleGetInstanceInfo(project.id)
                 }
                     .withRel(RelationName.STATUS)
                     .withName(READ)

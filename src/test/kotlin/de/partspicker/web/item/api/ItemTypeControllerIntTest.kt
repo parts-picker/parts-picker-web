@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/itemTypeControllerIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/itemTypeControllerIntTest.sql")
 class ItemTypeControllerIntTest(
     private val mockMvc: MockMvc,
     private val mapper: ObjectMapper
@@ -41,7 +41,7 @@ class ItemTypeControllerIntTest(
                 description = "test description"
             )
 
-            mockMvc.post("/item-types") {
+            mockMvc.post("/org-units/1000/item-types") {
                 contentType = MediaType.APPLICATION_JSON
                 content = mapper.writeValueAsString(postRequestBody)
             }
@@ -94,13 +94,13 @@ class ItemTypeControllerIntTest(
     context("GET all itemTypes") {
 
         should("return status 200 & all itemTypes when called") {
-            mockMvc.get("/item-types")
+            mockMvc.get("/org-units/1000/item-types")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
                     jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.${ItemTypeResource.collectionRelationName}", hasSize<Any>(3))
+                    jsonPath("$._embedded.${ItemTypeResource.COLLECTION_RELATION_NAME}", hasSize<Any>(3))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(20))
                     jsonPath("$.page.totalPages", `is`(1))
@@ -113,13 +113,13 @@ class ItemTypeControllerIntTest(
             val size = 2
             val page = 1
 
-            mockMvc.get("/item-types?page=$page&size=$size")
+            mockMvc.get("/org-units/1000/item-types?page=$page&size=$size")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
                     jsonPath("$._embedded", notNullValue())
-                    jsonPath("$._embedded.${ItemTypeResource.collectionRelationName}", hasSize<Any>(1))
+                    jsonPath("$._embedded.${ItemTypeResource.COLLECTION_RELATION_NAME}", hasSize<Any>(1))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(size))
                     jsonPath("$.page.totalPages", `is`(2))

@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{base_url}}/item-types"
+  url: "{{base_url}}/org-units/{{org_unit_id}}/item-types"
   auth: inherit
   headers:
     - name: Content-Type

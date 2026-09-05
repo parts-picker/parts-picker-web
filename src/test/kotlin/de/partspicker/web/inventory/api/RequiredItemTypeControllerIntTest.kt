@@ -5,7 +5,7 @@ import de.partspicker.web.common.exceptions.ErrorCode
 import de.partspicker.web.common.exceptions.ErrorDetail
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
-import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.collectionRelationName
+import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.COLLECTION_RELATION_NAME
 import de.partspicker.web.inventory.business.InventoryItemService
 import de.partspicker.web.test.util.TestSetupHelper
 import de.partspicker.web.workflow.business.WorkflowMigrationService
@@ -268,7 +268,7 @@ class RequiredItemTypeControllerIntTest(
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.$collectionRelationName", hasSize<Any>(itemTypeAmount))
+                    jsonPath("$._embedded.$COLLECTION_RELATION_NAME", hasSize<Any>(itemTypeAmount))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(20))
                     jsonPath("$.page.totalPages", `is`(1))
@@ -296,18 +296,11 @@ class RequiredItemTypeControllerIntTest(
                 }
         }
 
-        should("return status 200 & no required item types when called with non-existent project") {
+        should("return status 404 when called with non-existent project") {
             mockMvc.get("/projects/666/required")
                 .andExpect {
-                    status { isOk() }
-                    content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
-                    jsonPath("$._embedded") { doesNotHaveJsonPath() }
-                    jsonPath("$._links", notNullValue())
-                    jsonPath("$.page.size", `is`(20))
-                    jsonPath("$.page.totalPages", `is`(0))
-                    jsonPath("$.page.totalElements", `is`(0))
-                    jsonPath("$.page.number", `is`(0))
+                    status { isNotFound() }
+                    jsonPath("$.message", `is`("Project with id 666 could not be found"))
                 }
         }
     }

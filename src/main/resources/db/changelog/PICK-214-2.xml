@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-214:createOrgUnitSequence" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="org_unit_seq"/>
+            </not>
+        </preConditions>
+
+        <createSequence incrementBy="1" sequenceName="org_unit_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:createOrgUnitEntitlementSequence" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="org_unit_entitlement_seq"/>
+            </not>
+        </preConditions>
+
+        <createSequence incrementBy="1" sequenceName="org_unit_entitlement_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:createOrgUnitsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="org_units"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="org_units">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_org_units"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_org_unit_name_per_owner"/>
+            </column>
+            <column name="short_description" type="VARCHAR(255)"/>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_org_unit_name_per_owner"/>
+            </column>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInOrgUnitsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_org_unit"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="org_units"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_org_unit"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOwnerInOrgUnitsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_owner"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="org_units"
+                baseColumnNames="owner_id"
+                constraintName="fk_org_unit_owner"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:createOrgUnitEntitlementsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="org_unit_entitlements"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="org_unit_entitlements">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_org_unit_entitlements"/>
+            </column>
+            <column name="org_unit_id" type="BIGINT">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_org_unit_entitlement"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_org_unit_entitlement"/>
+            </column>
+            <column name="access_level" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="joined_on" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOrgUnitInOrgUnitEntitlementsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_entitlement_org_unit"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="org_unit_entitlements"
+                baseColumnNames="org_unit_id"
+                constraintName="fk_org_unit_entitlement_org_unit"
+                referencedTableName="org_units"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToUserInOrgUnitEntitlementsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_entitlement_user"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="org_unit_entitlements"
+                baseColumnNames="user_id"
+                constraintName="fk_org_unit_entitlement_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+</databaseChangeLog>

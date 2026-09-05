@@ -1,6 +1,5 @@
 package de.partspicker.web.item.business.objects
 
-import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.item.persistance.entities.ItemEntity
@@ -12,7 +11,8 @@ data class Item(
     val assignedProjectId: Long?,
     val status: ItemStatus,
     val condition: ItemCondition,
-    val note: String?
+    val note: String?,
+    val orgUnitId: Long
 ) {
     companion object {
         fun from(itemEntity: ItemEntity) = Item(
@@ -21,16 +21,8 @@ data class Item(
             assignedProjectId = itemEntity.assignedProject?.id,
             status = ItemStatus.from(itemEntity.status),
             condition = ItemCondition.from(itemEntity.condition),
-            note = itemEntity.note
-        )
-
-        fun from(itemPostRequest: ItemPostRequest, itemTypeId: Long) = Item(
-            id = 0,
-            type = ItemType(id = itemTypeId),
-            assignedProjectId = itemPostRequest.assignedProjectId,
-            status = ItemStatus.from(itemPostRequest.status),
-            condition = ItemCondition.from(itemPostRequest.condition),
-            note = itemPostRequest.note
+            note = itemEntity.note,
+            orgUnitId = itemEntity.orgUnit.id
         )
     }
 

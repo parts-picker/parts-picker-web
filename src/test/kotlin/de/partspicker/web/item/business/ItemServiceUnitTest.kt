@@ -1,16 +1,28 @@
 package de.partspicker.web.item.business
 
+import de.partspicker.web.common.business.exceptions.CrossOrgUnitReferenceException
+import de.partspicker.web.common.business.objects.enums.AccessLevel
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
+import de.partspicker.web.item.business.objects.CreateItem
 import de.partspicker.web.item.business.objects.Item
+import de.partspicker.web.item.business.objects.enums.ItemCondition
+import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.ItemEntity
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.exceptions.CreatorOrOrgUnitAccessDeniedException
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitAccessDeniedException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.CreationInfoGenerators
 import de.partspicker.web.test.generators.ItemEntityGenerators
 import de.partspicker.web.test.generators.ItemGenerators
+import de.partspicker.web.test.generators.ItemTypeEntityGenerators
+import de.partspicker.web.test.generators.OrgUnitEntityGenerators
 import de.partspicker.web.test.generators.ProjectEntityGenerators
+import de.partspicker.web.test.util.TestConstants.CRUD_REPOSITORY_EXTENSIONS
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -22,56 +34,89 @@ import io.mockk.called
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import java.util.Optional
+import org.springframework.data.repository.findByIdOrNull
 
 class ItemServiceUnitTest : ShouldSpec({
 
     val itemRepositoryMock = mockk<ItemRepository>()
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
     val projectRepositoryMock = mockk<ProjectRepository>()
+    val orgUnitAccessServiceMock = mockk<OrgUnitAccessService>()
     val cut = ItemService(
         itemRepository = itemRepositoryMock,
         itemTypeRepository = itemTypeRepositoryMock,
-        projectRepository = projectRepositoryMock
+        projectRepository = projectRepositoryMock,
+        orgUnitAccessService = orgUnitAccessServiceMock
     )
 
+    val orgUnit = OrgUnitEntityGenerators.generator.single()
+    val creation = CreationInfoGenerators.generator.single()
+
+    beforeSpec {
+        mockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
+    afterSpec {
+        unmockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
+    beforeTest {
+        every { orgUnitAccessServiceMock.requireAtLeast(any(), any()) } returns Unit
+        every { orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(any(), any(), any()) } returns Unit
+        every { orgUnitAccessServiceMock.currentUser() } returns creation.createdBy
+    }
+
     afterTest {
-        clearMocks(itemRepositoryMock, itemTypeRepositoryMock, projectRepositoryMock)
+        clearMocks(itemRepositoryMock, itemTypeRepositoryMock, projectRepositoryMock, orgUnitAccessServiceMock)
     }
 
     context("create") {
+        val itemTypeEntity = ItemTypeEntityGenerators.generator.single().copy(orgUnit = orgUnit, creation = creation)
+
+        fun createItem(assignedProjectId: Long? = null) = CreateItem(
+            itemTypeId = itemTypeEntity.id,
+            assignedProjectId = assignedProjectId,
+            status = ItemStatus.IN_STOCK,
+            condition = ItemCondition.NEW,
+            note = "a note"
+        )
+
         should("create new item with project entity & return it when given valid project id") {
             // given
-            val item = ItemGenerators.generator.single().copy(assignedProjectId = 1L)
+            val itemToCreate = createItem(assignedProjectId = 1L)
             every { itemRepositoryMock.save(any()) } returnsArgument 0
-            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
+            every { itemTypeRepositoryMock.findByIdOrNull(itemTypeEntity.id) } returns itemTypeEntity
             every {
-                projectRepositoryMock.getNullableReferenceById(item.assignedProjectId!!)
-            } returns ProjectEntityGenerators.generator.single().copy(id = item.assignedProjectId!!)
+                projectRepositoryMock.getNullableReferenceById(1L)
+            } returns ProjectEntityGenerators.generator.single().copy(id = 1L, orgUnit = orgUnit)
 
             // when
-            val returnedItem = cut.create(item)
+            val returnedItem = cut.create(itemToCreate)
 
             // then
             verify {
                 itemRepositoryMock.save(any())
             }
 
-            returnedItem shouldBe item
+            returnedItem.type.id shouldBe itemTypeEntity.id
+            returnedItem.assignedProjectId shouldBe 1L
+            returnedItem.orgUnitId shouldBe orgUnit.id
         }
 
         should("create new item & return it") {
             // given
-            val item = ItemGenerators.generator.single().copy(assignedProjectId = null)
+            val itemToCreate = createItem()
             every { itemRepositoryMock.save(any()) } returnsArgument 0
-            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
+            every { itemTypeRepositoryMock.findByIdOrNull(itemTypeEntity.id) } returns itemTypeEntity
 
             // when
-            val returnedItem = cut.create(item)
+            val returnedItem = cut.create(itemToCreate)
 
             // then
             verify {
@@ -79,17 +124,18 @@ class ItemServiceUnitTest : ShouldSpec({
                 projectRepositoryMock wasNot called
             }
 
-            returnedItem shouldBe item
+            returnedItem.assignedProjectId shouldBe null
+            returnedItem.orgUnitId shouldBe orgUnit.id
         }
 
         should("throw ItemTypeNotFoundException when given non-existent item type id") {
             // given
-            val item = ItemGenerators.generator.single()
-            every { itemTypeRepositoryMock.existsById(item.type.id) } returns false
+            val itemToCreate = createItem()
+            every { itemTypeRepositoryMock.findByIdOrNull(itemTypeEntity.id) } returns null
 
             // when
             val exception = shouldThrow<ItemTypeNotFoundException> {
-                cut.create(item)
+                cut.create(itemToCreate)
             }
 
             // then
@@ -97,19 +143,18 @@ class ItemServiceUnitTest : ShouldSpec({
                 itemRepositoryMock.save(any())
             }
 
-            exception.message shouldBe "ItemType with id ${item.type.id} could not be found"
+            exception.message shouldBe "ItemType with id ${itemTypeEntity.id} could not be found"
         }
 
         should("throw ProjectNotFoundException when given non-existent project id") {
             // given
-            val item = ItemGenerators.generator.single().copy(assignedProjectId = 666L)
-            every { itemTypeRepositoryMock.existsById(item.type.id) } returns true
-
-            every { projectRepositoryMock.getNullableReferenceById(item.assignedProjectId!!) } returns null
+            val itemToCreate = createItem(assignedProjectId = 666L)
+            every { itemTypeRepositoryMock.findByIdOrNull(itemTypeEntity.id) } returns itemTypeEntity
+            every { projectRepositoryMock.getNullableReferenceById(666L) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
-                cut.create(item)
+                cut.create(itemToCreate)
             }
 
             // then
@@ -117,11 +162,41 @@ class ItemServiceUnitTest : ShouldSpec({
                 itemRepositoryMock.save(any())
             }
 
-            exception.message shouldBe "Project with id ${item.assignedProjectId} could not be found"
+            exception.message shouldBe "Project with id 666 could not be found"
+        }
+
+        should("throw CrossOrgUnitReferenceException when the given project is in another org unit") {
+            // given
+            val itemToCreate = createItem(assignedProjectId = 1L)
+            every { itemTypeRepositoryMock.findByIdOrNull(itemTypeEntity.id) } returns itemTypeEntity
+            every {
+                projectRepositoryMock.getNullableReferenceById(1L)
+            } returns ProjectEntityGenerators.generator.single().copy(id = 1L)
+
+            // when & then
+            shouldThrow<CrossOrgUnitReferenceException> {
+                cut.create(itemToCreate)
+            }
+
+            verify(exactly = 0) {
+                itemRepositoryMock.save(any())
+            }
         }
     }
 
-    context("getItems") {
+    context("findAllForOrgUnit") {
+        should("refuse & not read when the caller holds nothing in the given org unit") {
+            // given
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(1L, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(1L, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.findAllForOrgUnit(1L, Pageable.unpaged()) }
+
+            verify(exactly = 0) { itemRepositoryMock.findAllByOrgUnitId(any(), any()) }
+        }
+
         should("return all items") {
             // given
             val itemsPage: Page<ItemEntity> = PageImpl(
@@ -130,10 +205,10 @@ class ItemServiceUnitTest : ShouldSpec({
                     ItemEntityGenerators.generator.next()
                 )
             )
-            every { itemRepositoryMock.findAll(Pageable.unpaged()) } returns itemsPage
+            every { itemRepositoryMock.findAllByOrgUnitId(1L, Pageable.unpaged()) } returns itemsPage
 
             // when
-            val returnedItems = cut.getItems(Pageable.unpaged())
+            val returnedItems = cut.findAllForOrgUnit(1L, Pageable.unpaged())
 
             // then
             returnedItems shouldBe Item.AsPage.from(itemsPage)
@@ -141,24 +216,24 @@ class ItemServiceUnitTest : ShouldSpec({
 
         should("return empty list when no items available") {
             // given
-            every { itemRepositoryMock.findAll(Pageable.unpaged()) } returns Page.empty()
+            every { itemRepositoryMock.findAllByOrgUnitId(1L, Pageable.unpaged()) } returns Page.empty()
 
             // when
-            val returnedItems = cut.getItems(Pageable.unpaged())
+            val returnedItems = cut.findAllForOrgUnit(1L, Pageable.unpaged())
 
             // then
             returnedItems shouldBe Page.empty()
         }
     }
 
-    context("getItem") {
+    context("getById") {
         should("return correct item when given existent id") {
             // given
             val itemEntity = ItemEntityGenerators.generator.next()
-            every { itemRepositoryMock.findById(itemEntity.id) } returns Optional.of(itemEntity)
+            every { itemRepositoryMock.findByIdOrNull(itemEntity.id) } returns itemEntity
 
             // when
-            val returnedItem = cut.getItemById(itemEntity.id)
+            val returnedItem = cut.getById(itemEntity.id)
 
             // then
             returnedItem shouldBe Item.from(itemEntity)
@@ -167,11 +242,11 @@ class ItemServiceUnitTest : ShouldSpec({
         should("throw ItemNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { itemRepositoryMock.findById(randomId) } returns Optional.empty()
+            every { itemRepositoryMock.findByIdOrNull(randomId) } returns null
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
-                cut.getItemById(randomId)
+                cut.getById(randomId)
             }
 
             // then
@@ -179,7 +254,7 @@ class ItemServiceUnitTest : ShouldSpec({
         }
     }
 
-    context("getItemsForItemType") {
+    context("findAllForItemType") {
 
         should("return all items with given itemType") {
             // given
@@ -192,10 +267,13 @@ class ItemServiceUnitTest : ShouldSpec({
                 )
             )
 
+            every {
+                itemTypeRepositoryMock.findByIdOrNull(itemTypeId)
+            } returns ItemTypeEntityGenerators.generator.next().copy(id = itemTypeId)
             every { itemRepositoryMock.findAllByTypeId(itemTypeId, Pageable.unpaged()) } returns itemsPage
 
             // when
-            val returnedItems = cut.getItemsForItemType(itemTypeId)
+            val returnedItems = cut.findAllForItemType(itemTypeId)
 
             // then
             returnedItems shouldBe Item.AsPage.from(itemsPage)
@@ -207,7 +285,7 @@ class ItemServiceUnitTest : ShouldSpec({
             // given
             val id = 42L
             val entity = ItemEntityGenerators.generator.next().copy(id = id)
-            every { itemRepositoryMock.findById(id) } returns Optional.of(entity)
+            every { itemRepositoryMock.findByIdOrNull(id) } returns entity
             every { itemRepositoryMock.save(entity) } returns entity
 
             val item = Item.from(entity)
@@ -226,7 +304,7 @@ class ItemServiceUnitTest : ShouldSpec({
         should("throw ItemNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { itemRepositoryMock.findById(randomId) } returns Optional.empty()
+            every { itemRepositoryMock.findByIdOrNull(randomId) } returns null
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
@@ -240,25 +318,40 @@ class ItemServiceUnitTest : ShouldSpec({
 
     context("delete") {
 
+        should("refuse & not delete when the caller neither created the item nor maintains its org unit") {
+            // given
+            val itemEntity = ItemEntityGenerators.generator.next()
+            every { itemRepositoryMock.findByIdOrNull(itemEntity.id) } returns itemEntity
+            every {
+                orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(any(), any(), AccessLevel.MAINTAIN)
+            } throws CreatorOrOrgUnitAccessDeniedException(itemEntity.orgUnit.id, AccessLevel.MAINTAIN)
+
+            // when & then
+            shouldThrow<CreatorOrOrgUnitAccessDeniedException> { cut.delete(itemEntity.id) }
+
+            verify(exactly = 0) { itemRepositoryMock.delete(any()) }
+        }
+
         should("delete the item with the given id") {
             // given
             val itemId = Arb.long(min = 1).next()
-            every { itemRepositoryMock.existsById(itemId) } returns true
-            every { itemRepositoryMock.deleteById(itemId) } returns Unit
+            val itemEntity = ItemEntityGenerators.generator.next().copy(id = itemId)
+            every { itemRepositoryMock.findByIdOrNull(itemId) } returns itemEntity
+            every { itemRepositoryMock.delete(itemEntity) } returns Unit
 
             // when
             cut.delete(itemId)
 
             // then
             verify(exactly = 1) {
-                itemRepositoryMock.deleteById(itemId)
+                itemRepositoryMock.delete(itemEntity)
             }
         }
 
         should("throw ItemNotFoundException when given non-existent id") {
             // given
             val itemId = Arb.long(min = 1).next()
-            every { itemRepositoryMock.existsById(itemId) } returns false
+            every { itemRepositoryMock.findByIdOrNull(itemId) } returns null
 
             // when
             val exception = shouldThrow<ItemNotFoundException> {
@@ -267,25 +360,6 @@ class ItemServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe "Item with id $itemId could not be found"
-        }
-    }
-
-    context("deleteItemsForItemType") {
-
-        should("delete all items belonging to the given type & return the number of deleted items") {
-            // given
-            val itemTypeId = Arb.long(min = 1).next()
-            val amountOfItems = Arb.long(min = 1).next()
-            every { itemRepositoryMock.deleteAllByTypeId(itemTypeId) } returns amountOfItems
-
-            // when
-            val amountDeleted = cut.deleteItemsForItemType(itemTypeId)
-
-            // then
-            verify(exactly = 1) {
-                itemRepositoryMock.deleteAllByTypeId(itemTypeId)
-            }
-            amountDeleted shouldBe amountOfItems
         }
     }
 })

@@ -1,20 +1,28 @@
 package de.partspicker.web.test.util
 
+import de.partspicker.web.common.persistence.entities.CreationInfo
 import de.partspicker.web.inventory.business.RequiredItemTypeService
 import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.item.business.ItemService
 import de.partspicker.web.item.business.ItemTypeService
+import de.partspicker.web.item.business.objects.CreateItem
+import de.partspicker.web.item.business.objects.CreateItemType
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import de.partspicker.web.item.business.objects.enums.ItemStatus
+import de.partspicker.web.item.persistance.entities.ItemTypeEntity
+import de.partspicker.web.orgunit.business.OrgUnitReadService
+import de.partspicker.web.orgunit.persistence.entities.OrgUnitEntity
 import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
 import jakarta.persistence.EntityManager
 import org.hibernate.search.mapper.orm.Search
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 /**
  * Util class which bundles utilities to set up the testing environment.
@@ -25,8 +33,14 @@ class TestSetupHelper(
     private val projectService: ProjectService,
     private val requiredItemTypeService: RequiredItemTypeService,
     private val itemTypeService: ItemTypeService,
-    private val itemService: ItemService
+    private val itemService: ItemService,
+    private val orgUnitReadService: OrgUnitReadService
 ) {
+    /**
+     * The org unit of the user the test acts as, which is where everything set up here is created.
+     */
+    fun currentOrgUnitId(): Long = this.orgUnitReadService.findAllOfCurrentUser(Pageable.unpaged()).first().id
+
     /**
      * Useful if flush & clear is needed for changes to be visible for search or cache refresh.
      */
@@ -48,6 +62,7 @@ class TestSetupHelper(
 
     fun setupProject(): Project {
         val project = projectService.create(
+            this.currentOrgUnitId(),
             CreateProject(
                 "Test Project",
                 ""
@@ -73,7 +88,8 @@ class TestSetupHelper(
 
     fun setupItemType(name: String = "itemType"): ItemType {
         return itemTypeService.create(
-            ItemType(id = 0, name = name, description = "")
+            this.currentOrgUnitId(),
+            CreateItemType(name = name, description = "")
         )
     }
 
@@ -117,9 +133,8 @@ class TestSetupHelper(
         condition: ItemCondition = ItemCondition.NEW
     ): Item {
         val item = itemService.create(
-            Item(
-                id = 0,
-                type = itemType,
+            CreateItem(
+                itemTypeId = itemType.id,
                 assignedProjectId = projectId,
                 status = status ?: if (projectId != null) ItemStatus.RESERVED else ItemStatus.IN_STOCK,
                 condition = condition,
@@ -130,5 +145,22 @@ class TestSetupHelper(
         this.flushAndClear()
 
         return item
+    }
+
+    /**
+     * Creates an item type in the given org unit, bypassing the access check. Its owner is used as the creator.
+     */
+    fun setupItemTypeInOrgUnit(orgUnitId: Long, name: String): ItemTypeEntity {
+        val orgUnit = this.entityManager.find(OrgUnitEntity::class.java, orgUnitId)
+
+        val itemType = ItemTypeEntity(
+            name = name,
+            description = "",
+            orgUnit = orgUnit,
+            creation = CreationInfo(createdBy = orgUnit.owner, createdOn = Instant.now())
+        )
+        this.entityManager.persist(itemType)
+
+        return itemType
     }
 }

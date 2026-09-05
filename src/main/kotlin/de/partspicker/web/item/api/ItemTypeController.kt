@@ -7,6 +7,7 @@ import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.api.resources.ItemTypeResource
 import de.partspicker.web.item.api.resources.ItemTypeResourceAssembler
 import de.partspicker.web.item.business.ItemTypeService
+import de.partspicker.web.item.business.objects.CreateItemType
 import de.partspicker.web.item.business.objects.ItemType
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PagedResourcesAssembler
@@ -31,20 +32,26 @@ class ItemTypeController(
         val logger = logger()
     }
 
-    @PostMapping("/item-types")
-    fun handlePostItemType(@RequestBody body: ItemTypePostRequest): ResponseEntity<ItemTypeResource> {
-        logger.info("=> POST request for new item type")
+    @PostMapping("/org-units/{orgUnitId}/item-types")
+    fun handlePostItemType(
+        @PathVariable orgUnitId: Long,
+        @RequestBody body: ItemTypePostRequest
+    ): ResponseEntity<ItemTypeResource> {
+        logger.info("=> POST request for new item type in org unit with id ")
 
-        val createdItemType = this.itemTypeService.create(ItemType.from(body))
+        val createdItemType = this.itemTypeService.create(orgUnitId, CreateItemType.from(body))
 
         return ResponseEntity(itemTypeResourceAssembler.toModel(createdItemType), HttpStatus.OK)
     }
 
-    @GetMapping("/item-types")
-    fun handleGetAllItemTypes(pageable: Pageable): ResponseEntity<PagedModel<ItemTypeResource>> {
-        logger.info("=> GET request for all item types")
+    @GetMapping("/org-units/{orgUnitId}/item-types")
+    fun handleGetAllItemTypes(
+        @PathVariable orgUnitId: Long,
+        pageable: Pageable
+    ): ResponseEntity<PagedModel<ItemTypeResource>> {
+        logger.info("=> GET request for all item types of org unit with id ")
 
-        val itemTypes = this.itemTypeService.getItemTypes(pageable)
+        val itemTypes = this.itemTypeService.findAllForOrgUnit(orgUnitId, pageable)
         val pagedModel = pagedResourcesAssembler.toModel(itemTypes, itemTypeResourceAssembler)
 
         return ResponseEntity(pagedModel, HttpStatus.OK)
@@ -54,7 +61,7 @@ class ItemTypeController(
     fun handleGetItemTypeById(@PathVariable id: Long): ResponseEntity<ItemTypeResource> {
         logger.info("=> GET request for item type with id $id")
 
-        val itemTypeResource = itemTypeResourceAssembler.toModel(this.itemTypeService.getItemTypeById(id))
+        val itemTypeResource = itemTypeResourceAssembler.toModel(this.itemTypeService.getById(id))
 
         return ResponseEntity(itemTypeResource, HttpStatus.OK)
     }
@@ -66,8 +73,8 @@ class ItemTypeController(
     ): ResponseEntity<ItemTypeResource> {
         logger.info("=> PUT request for item type with id $id")
 
-        val itemType = ItemType.from(body, id)
-        val updatedResource = itemTypeResourceAssembler.toModel(this.itemTypeService.update(itemType))
+        val updatedItemType = this.itemTypeService.update(id, body.name, body.description)
+        val updatedResource = itemTypeResourceAssembler.toModel(updatedItemType)
 
         return ResponseEntity(updatedResource, HttpStatus.OK)
     }
@@ -76,7 +83,7 @@ class ItemTypeController(
     fun handleDeleteItemTypeById(@PathVariable id: Long): ResponseEntity<Unit> {
         logger.info("=> DELETE request for item type with id $id")
 
-        this.itemTypeService.deleteItemTypeById(id)
+        this.itemTypeService.delete(id)
 
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }

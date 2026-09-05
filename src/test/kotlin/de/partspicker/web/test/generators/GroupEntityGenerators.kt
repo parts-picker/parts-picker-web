@@ -12,12 +12,16 @@ class GroupEntityGenerators private constructor() {
         val generator: Arb<GroupEntity> = Arb.bind(
             Arb.long(0),
             Arb.string(range = IntRange(3, 16)),
-            Arb.descriptionLikeString()
-        ) { id, name, description ->
+            Arb.descriptionLikeString(),
+            OrgUnitEntityGenerators.generator,
+            CreationInfoGenerators.generator
+        ) { id, name, description, orgUnit, creation ->
             GroupEntity(
                 id = id,
                 name = name,
-                description = description
+                description = description,
+                orgUnit = orgUnit,
+                creation = creation
             )
         }
     }

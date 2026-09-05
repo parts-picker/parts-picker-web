@@ -27,7 +27,7 @@ class RequiredItemsAssignedActionUnitTest : ShouldSpec({
             // given
             val instance = InstanceGenerators.generator.single()
             val project = ProjectGenerators.generator.single()
-            every { projectServiceMock.readByInstanceId(instance.id) } returns project
+            every { projectServiceMock.findByInstanceId(instance.id) } returns project
             every {
                 inventoryItemServiceMock.checkRequiredItemsAssignedToProject(project.id)
             } returns CheckRequiredItemsResult.ALL_ASSIGNED
@@ -45,7 +45,7 @@ class RequiredItemsAssignedActionUnitTest : ShouldSpec({
             // given
             val instance = InstanceGenerators.generator.single()
             val project = ProjectGenerators.generator.single()
-            every { projectServiceMock.readByInstanceId(instance.id) } returns project
+            every { projectServiceMock.findByInstanceId(instance.id) } returns project
             every {
                 inventoryItemServiceMock.checkRequiredItemsAssignedToProject(project.id)
             } returns CheckRequiredItemsResult.MISSING
@@ -63,7 +63,7 @@ class RequiredItemsAssignedActionUnitTest : ShouldSpec({
             // given
             val instance = InstanceGenerators.generator.single()
             val project = ProjectGenerators.generator.single()
-            every { projectServiceMock.readByInstanceId(instance.id) } returns project
+            every { projectServiceMock.findByInstanceId(instance.id) } returns project
             every {
                 inventoryItemServiceMock.checkRequiredItemsAssignedToProject(project.id)
             } returns CheckRequiredItemsResult.NO_REQUIRED
@@ -80,7 +80,7 @@ class RequiredItemsAssignedActionUnitTest : ShouldSpec({
         should("throw AutomatedActionException when given instance id that is not associated with a project") {
             // given
             val instance = InstanceGenerators.generator.single()
-            every { projectServiceMock.readByInstanceId(instance.id) } returns null
+            every { projectServiceMock.findByInstanceId(instance.id) } returns null
 
             // when
             val exception = shouldThrow<AutomatedActionException> {

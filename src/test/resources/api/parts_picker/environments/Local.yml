@@ -2,6 +2,8 @@ name: Local
 variables:
   - name: base_url
     value: http://localhost:8080/api/v1
+  - name: org_unit_id
+    value: 1
   - name: keycloak_url
     value: http://localhost:8082
   - name: keycloak_realm

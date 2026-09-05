@@ -30,7 +30,8 @@ class ItemGenerators private constructor() {
                 assignedProjectId = assignedProjectId,
                 status = status,
                 condition = condition,
-                note = note
+                note = note,
+                orgUnitId = type.orgUnitId
             )
         }
     }

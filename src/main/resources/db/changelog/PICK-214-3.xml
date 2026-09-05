@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-214:insertSystemUser" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(1) FROM users WHERE issuer = 'urn:parts-picker:system'
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <insert tableName="users">
+            <column name="id" valueComputed="nextval('user_seq')"/>
+            <column name="issuer" value="urn:parts-picker:system"/>
+            <column name="subject" value="system"/>
+            <column name="username" value="system"/>
+            <column name="display_name" value="System"/>
+            <column name="type" value="SYSTEM"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="PICK-214:insertMigrationBaseOrgUnit" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(1) FROM org_units ou JOIN users u ON u.id = ou.owner_id
+                    WHERE u.issuer = 'urn:parts-picker:system'
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <insert tableName="org_units">
+            <column name="id" valueComputed="nextval('org_unit_seq')"/>
+            <column name="name" value="Migration Base"/>
+            <column name="short_description" value="Holds everything that existed before org units"/>
+            <column name="owner_id"
+                    valueComputed="(SELECT id FROM users WHERE issuer = 'urn:parts-picker:system')"/>
+            <column name="created_by"
+                    valueComputed="(SELECT id FROM users WHERE issuer = 'urn:parts-picker:system')"/>
+            <column name="created_on" valueComputed="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="PICK-214:insertMigrationBaseOrgUnitOwnerEntitlement" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(1) FROM org_unit_entitlements oue JOIN users u ON u.id = oue.user_id
+                    WHERE u.issuer = 'urn:parts-picker:system'
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <insert tableName="org_unit_entitlements">
+            <column name="id" valueComputed="nextval('org_unit_entitlement_seq')"/>
+            <column name="org_unit_id"
+                    valueComputed="(SELECT ou.id FROM org_units ou JOIN users u ON u.id = ou.owner_id WHERE u.issuer = 'urn:parts-picker:system')"/>
+            <column name="user_id"
+                    valueComputed="(SELECT id FROM users WHERE issuer = 'urn:parts-picker:system')"/>
+            <column name="access_level" value="MAINTAIN"/>
+            <column name="joined_on" valueComputed="now()"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="PICK-214:addOrgUnitIdToProjectsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="projects" columnName="org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="projects">
+            <column name="org_unit_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:moveProjectsWithoutOrgUnitIntoMigrationBase" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM projects WHERE org_unit_id IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE projects SET org_unit_id = (
+            SELECT ou.id FROM org_units ou JOIN users u ON u.id = ou.owner_id
+            WHERE u.issuer = 'urn:parts-picker:system'
+            ) WHERE org_unit_id IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToOrgUnitIdColumnInProjectsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="projects" columnName="org_unit_id"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM projects WHERE org_unit_id IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="projects" columnName="org_unit_id"
+                              constraintName="nnc_projects_org_unit_id"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOrgUnitIdInProjectsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_of_project"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="projects"
+                baseColumnNames="org_unit_id"
+                constraintName="fk_org_unit_of_project"
+                referencedTableName="org_units"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:createIndexOnOrgUnitIdInProjectsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_projects_org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="projects" indexName="idx_projects_org_unit_id">
+            <column name="org_unit_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="PICK-214:addOrgUnitIdToGroupsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="groups" columnName="org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="groups">
+            <column name="org_unit_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:moveGroupsWithoutOrgUnitIntoMigrationBase" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM groups WHERE org_unit_id IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE groups SET org_unit_id = (
+            SELECT ou.id FROM org_units ou JOIN users u ON u.id = ou.owner_id
+            WHERE u.issuer = 'urn:parts-picker:system'
+            ) WHERE org_unit_id IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToOrgUnitIdColumnInGroupsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="groups" columnName="org_unit_id"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM groups WHERE org_unit_id IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="groups" columnName="org_unit_id"
+                              constraintName="nnc_groups_org_unit_id"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOrgUnitIdInGroupsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_of_group"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="groups"
+                baseColumnNames="org_unit_id"
+                constraintName="fk_org_unit_of_group"
+                referencedTableName="org_units"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:createIndexOnOrgUnitIdInGroupsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_groups_org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="groups" indexName="idx_groups_org_unit_id">
+            <column name="org_unit_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="PICK-214:addOrgUnitIdToItemTypesTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="item_types" columnName="org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="item_types">
+            <column name="org_unit_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:moveItemTypesWithoutOrgUnitIntoMigrationBase" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM item_types WHERE org_unit_id IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE item_types SET org_unit_id = (
+            SELECT ou.id FROM org_units ou JOIN users u ON u.id = ou.owner_id
+            WHERE u.issuer = 'urn:parts-picker:system'
+            ) WHERE org_unit_id IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToOrgUnitIdColumnInItemTypesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="item_types" columnName="org_unit_id"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM item_types WHERE org_unit_id IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="item_types" columnName="org_unit_id"
+                              constraintName="nnc_item_types_org_unit_id"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOrgUnitIdInItemTypesTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_of_item_type"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="item_types"
+                baseColumnNames="org_unit_id"
+                constraintName="fk_org_unit_of_item_type"
+                referencedTableName="org_units"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:createIndexOnOrgUnitIdInItemTypesTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_item_types_org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="item_types" indexName="idx_item_types_org_unit_id">
+            <column name="org_unit_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="PICK-214:addOrgUnitIdToItemsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="items" columnName="org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="items">
+            <column name="org_unit_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:moveItemsWithoutOrgUnitIntoMigrationBase" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM items WHERE org_unit_id IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE items SET org_unit_id = (
+            SELECT ou.id FROM org_units ou JOIN users u ON u.id = ou.owner_id
+            WHERE u.issuer = 'urn:parts-picker:system'
+            ) WHERE org_unit_id IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToOrgUnitIdColumnInItemsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="items" columnName="org_unit_id"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM items WHERE org_unit_id IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="items" columnName="org_unit_id"
+                              constraintName="nnc_items_org_unit_id"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToOrgUnitIdInItemsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_org_unit_of_item"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="items"
+                baseColumnNames="org_unit_id"
+                constraintName="fk_org_unit_of_item"
+                referencedTableName="org_units"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:createIndexOnOrgUnitIdInItemsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_items_org_unit_id"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="items" indexName="idx_items_org_unit_id">
+            <column name="org_unit_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

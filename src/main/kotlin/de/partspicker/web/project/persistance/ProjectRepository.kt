@@ -1,6 +1,8 @@
 package de.partspicker.web.project.persistance
 
 import de.partspicker.web.project.persistance.entities.ProjectEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
@@ -8,5 +10,6 @@ import org.springframework.stereotype.Repository
 interface ProjectRepository : JpaRepository<ProjectEntity, Long> {
     fun getNullableReferenceById(projectId: Long): ProjectEntity?
     fun findAllByGroupId(groupId: Long): List<ProjectEntity>
+    fun findAllByOrgUnitId(orgUnitId: Long, pageable: Pageable): Page<ProjectEntity>
     fun findByWorkflowInstanceId(instanceId: Long): ProjectEntity?
 }

@@ -4,7 +4,7 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = ProjectResource.collectionRelationName)
+@Relation(collectionRelation = ProjectResource.COLLECTION_RELATION_NAME)
 @Suppress("LongParameterList")
 class ProjectResource(
     val id: Long,
@@ -13,12 +13,11 @@ class ProjectResource(
     val displayStatus: String,
     val shortDescription: String?,
     val description: String?,
-    var groupId: Long?,
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<ProjectResource>(links) {
 
     companion object {
-        const val collectionRelationName = "projects"
+        const val COLLECTION_RELATION_NAME = "projects"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -32,7 +31,6 @@ class ProjectResource(
         if (name != other.name) return false
         if (shortDescription != other.shortDescription) return false
         if (description != other.description) return false
-        if (groupId != other.groupId) return false
 
         return true
     }
@@ -41,14 +39,13 @@ class ProjectResource(
         var result = super.hashCode()
         result = 31 * result + id.hashCode()
         result = 31 * result + name.hashCode()
-        result = 31 * result + (shortDescription?.hashCode() ?: 0)
-        result = 31 * result + (description?.hashCode() ?: 0)
-        result = 31 * result + (groupId?.hashCode() ?: 0)
+        result = 31 * result + shortDescription.hashCode()
+        result = 31 * result + description.hashCode()
         return result
     }
 
     override fun toString(): String {
         return "ProjectResource(id=$id, name='$name', shortDescription=$shortDescription," +
-            " description=$description, groupId=$groupId)"
+            " description=$description)"
     }
 }

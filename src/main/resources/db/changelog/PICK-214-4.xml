@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="PICK-214:addCreationInfoToProjectsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="projects" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="projects">
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_on" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:setCreationInfoOfProjectsWithoutIt" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM projects WHERE created_by IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE projects SET
+            created_by = (SELECT id FROM users WHERE issuer = 'urn:parts-picker:system'),
+            created_on = now()
+            WHERE created_by IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedByColumnInProjectsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="projects" columnName="created_by"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM projects WHERE created_by IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="projects" columnName="created_by"
+                              constraintName="nnc_projects_created_by"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedOnColumnInProjectsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="projects" columnName="created_on"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM projects WHERE created_on IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="projects" columnName="created_on"
+                              constraintName="nnc_projects_created_on"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInProjectsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_project"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="projects"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_project"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:addCreationInfoToGroupsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="groups" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="groups">
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_on" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:setCreationInfoOfGroupsWithoutIt" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM groups WHERE created_by IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE groups SET
+            created_by = (SELECT id FROM users WHERE issuer = 'urn:parts-picker:system'),
+            created_on = now()
+            WHERE created_by IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedByColumnInGroupsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="groups" columnName="created_by"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM groups WHERE created_by IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="groups" columnName="created_by"
+                              constraintName="nnc_groups_created_by"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedOnColumnInGroupsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="groups" columnName="created_on"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM groups WHERE created_on IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="groups" columnName="created_on"
+                              constraintName="nnc_groups_created_on"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInGroupsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_group"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="groups"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_group"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:addCreationInfoToItemTypesTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="item_types" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="item_types">
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_on" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:setCreationInfoOfItemTypesWithoutIt" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM item_types WHERE created_by IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE item_types SET
+            created_by = (SELECT id FROM users WHERE issuer = 'urn:parts-picker:system'),
+            created_on = now()
+            WHERE created_by IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedByColumnInItemTypesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="item_types" columnName="created_by"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM item_types WHERE created_by IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="item_types" columnName="created_by"
+                              constraintName="nnc_item_types_created_by"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedOnColumnInItemTypesTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="item_types" columnName="created_on"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM item_types WHERE created_on IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="item_types" columnName="created_on"
+                              constraintName="nnc_item_types_created_on"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInItemTypesTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_item_type"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="item_types"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_item_type"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+    <changeSet id="PICK-214:addCreationInfoToItemsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="items" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="items">
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_on" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="PICK-214:setCreationInfoOfItemsWithoutIt" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(1) FROM items WHERE created_by IS null
+                </sqlCheck>
+            </not>
+        </preConditions>
+
+        <sql>
+            UPDATE items SET
+            created_by = (SELECT id FROM users WHERE issuer = 'urn:parts-picker:system'),
+            created_on = now()
+            WHERE created_by IS null;
+        </sql>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedByColumnInItemsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="items" columnName="created_by"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM items WHERE created_by IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="items" columnName="created_by"
+                              constraintName="nnc_items_created_by"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addNonNullConstraintToCreatedOnColumnInItemsTable" author="RobinGuth">
+        <preConditions>
+            <columnExists tableName="items" columnName="created_on"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM items WHERE created_on IS null
+            </sqlCheck>
+        </preConditions>
+
+        <addNotNullConstraint tableName="items" columnName="created_on"
+                              constraintName="nnc_items_created_on"/>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInItemsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_item"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="items"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_item"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
+    </changeSet>
+
+</databaseChangeLog>

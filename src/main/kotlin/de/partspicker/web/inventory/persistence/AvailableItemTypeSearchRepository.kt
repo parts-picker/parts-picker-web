@@ -17,7 +17,7 @@ class AvailableItemTypeSearchRepository(
         const val ITEM_TYPE_NAME_FIELD_NAME = "name"
     }
 
-    fun searchByNameFilterRequired(name: String, projectId: Long): List<AvailableItemTypeResult> {
+    fun searchByNameFilterRequired(name: String, projectId: Long, orgUnitId: Long): List<AvailableItemTypeResult> {
         val searchSession = Search.session(entityManager)
 
         val requiredItemTypeIdsForProject = this.requiredItemTypeRepository
@@ -39,6 +39,14 @@ class AvailableItemTypeSearchRepository(
                 predicateFactory
                     .bool()
                     .with {
+                        it.filter(
+                            predicateFactory.match()
+                                .field(ItemTypeEntity.ORG_UNIT_ID_FIELD_NAME)
+                                .matching(orgUnitId)
+                        )
+                        // a filter clause makes should clauses optional unless a minimum is set
+                        it.minimumShouldMatchNumber(1)
+
                         if (requiredItemTypeIdsForProject.isNotEmpty()) {
                             it.mustNot(predicateFactory.id().matchingAny(requiredItemTypeIdsForProject))
                         }
