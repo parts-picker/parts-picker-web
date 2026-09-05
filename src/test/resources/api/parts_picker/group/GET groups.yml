@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{base_url}}/group"
+  url: "{{base_url}}/org-units/{{org_unit_id}}/groups"
   auth: inherit
 
 settings:

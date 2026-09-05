@@ -5,7 +5,7 @@ info:
 
 http:
   method: DELETE
-  url: "{{base_url}}/group/2"
+  url: "{{base_url}}/groups/2"
   auth: inherit
 
 settings:

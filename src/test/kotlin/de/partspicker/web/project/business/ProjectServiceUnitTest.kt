@@ -1,8 +1,14 @@
 package de.partspicker.web.project.business
 
 import de.partspicker.web.common.business.exceptions.OrRuleException
+import de.partspicker.web.common.business.objects.enums.AccessLevel
+import de.partspicker.web.common.persistence.entities.CreationInfoFactory
 import de.partspicker.web.inventory.business.RequiredItemTypeService
 import de.partspicker.web.item.persistance.ItemRepository
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.exceptions.CreatorOrOrgUnitAccessDeniedException
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitAccessDeniedException
+import de.partspicker.web.orgunit.persistence.OrgUnitRepository
 import de.partspicker.web.project.business.exceptions.GroupNotFoundException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.CreateProject
@@ -15,6 +21,7 @@ import de.partspicker.web.test.generators.ProjectGenerators
 import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.test.generators.workflow.WorkflowEntityGenerators
+import de.partspicker.web.test.util.TestConstants.CRUD_REPOSITORY_EXTENSIONS
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import de.partspicker.web.workflow.business.exceptions.InstanceInactiveException
 import de.partspicker.web.workflow.business.objects.Instance
@@ -33,13 +40,15 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.spyk
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import java.util.Optional
+import org.springframework.data.repository.findByIdOrNull
 
 class ProjectServiceUnitTest : ShouldSpec({
     val projectRepositoryMock = mockk<ProjectRepository>()
@@ -48,25 +57,66 @@ class ProjectServiceUnitTest : ShouldSpec({
     val itemRepositoryMock = mockk<ItemRepository>()
     val requiredItemTypeServiceMock = mockk<RequiredItemTypeService>()
     val instanceRepositoryMock = mockk<InstanceRepository>()
+    val orgUnitRepositoryMock = mockk<OrgUnitRepository>()
+    val orgUnitAccessServiceMock = mockk<OrgUnitAccessService>()
+    val creationInfoFactoryMock = mockk<CreationInfoFactory>()
     val cut = ProjectService(
         projectRepository = projectRepositoryMock,
         groupRepository = groupRepositoryMock,
         workflowInteractionService = workflowInteractionServiceMock,
         itemRepository = itemRepositoryMock,
         requiredItemTypeService = requiredItemTypeServiceMock,
-        instanceRepository = instanceRepositoryMock
+        instanceRepository = instanceRepositoryMock,
+        orgUnitRepository = orgUnitRepositoryMock,
+        orgUnitAccessService = orgUnitAccessServiceMock,
+        creationInfoFactory = creationInfoFactoryMock
     )
 
+    beforeSpec {
+        mockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
+    afterSpec {
+        unmockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
     afterTest {
-        clearMocks(projectRepositoryMock)
+        clearMocks(
+            projectRepositoryMock,
+            groupRepositoryMock,
+            workflowInteractionServiceMock,
+            itemRepositoryMock,
+            requiredItemTypeServiceMock,
+            instanceRepositoryMock,
+            orgUnitRepositoryMock,
+            orgUnitAccessServiceMock,
+            creationInfoFactoryMock
+        )
     }
 
     context("create") {
+        should("refuse & not store when the caller may not use the given org unit") {
+            // given
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(1L, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(1L, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> {
+                cut.create(CreateProject(orgUnitId = 1L, name = "a name", shortDescription = null))
+            }
+
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+        }
+
         should("create new project & return it") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns true
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+            every { creationInfoFactoryMock.forCurrentUser() } returns projectEntity.creation
+            every { groupRepositoryMock.findByIdOrNull(projectEntity.group?.id!!) } returns projectEntity.group!!
             every { projectRepositoryMock.save(any()) } returns projectEntity
+            every { orgUnitRepositoryMock.getReferenceById(projectEntity.orgUnit.id) } returns projectEntity.orgUnit
             every { workflowInteractionServiceMock.startProjectWorkflow() } returns
                 Instance.from(projectEntity.workflowInstance)
             every { instanceRepositoryMock.getReferenceById(any()) } returns mockk()
@@ -74,6 +124,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // when
             val returnedProject = cut.create(
                 CreateProject(
+                    orgUnitId = projectEntity.orgUnit.id,
                     name = projectEntity.name,
                     shortDescription = projectEntity.shortDescription,
                     groupId = projectEntity.group?.id
@@ -91,12 +142,14 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("throw GroupNotFoundException when given non-existent group") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { groupRepositoryMock.existsById(projectEntity.group?.id!!) } returns false
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+            every { groupRepositoryMock.findByIdOrNull(projectEntity.group?.id!!) } returns null
 
             // when
             val exception = shouldThrow<GroupNotFoundException> {
                 cut.create(
                     CreateProject(
+                        orgUnitId = projectEntity.orgUnit.id,
                         name = projectEntity.name,
                         shortDescription = projectEntity.shortDescription,
                         groupId = projectEntity.group?.id
@@ -112,10 +165,14 @@ class ProjectServiceUnitTest : ShouldSpec({
     context("copy") {
         should("create a new project based on the source project with the given id") {
             // given
-            val sourceProject = ProjectGenerators.generator.single()
-            val cutSpy = spyk(cut)
-            every { cutSpy.read(sourceProject.id) } returns sourceProject
+            val sourceProjectEntity = ProjectEntityGenerators.generator.single()
+            val sourceProject = Project.from(sourceProjectEntity)
+            every { projectRepositoryMock.findByIdOrNull(sourceProject.id) } returns sourceProjectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(sourceProjectEntity.orgUnit.id, AccessLevel.USE)
+            } just runs
 
+            val cutSpy = spyk(cut)
             val targetProject = ProjectGenerators.generator.single()
             every { cutSpy.create(any()) } returns targetProject
 
@@ -132,6 +189,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             verify {
                 cutSpy.create(
                     withArg {
+                        it.orgUnitId shouldBe sourceProjectEntity.orgUnit.id
                         it.name shouldBe copiedProjectName
                         it.shortDescription shouldBe sourceProject.shortDescription
                         it.description shouldBe sourceProject.description
@@ -142,9 +200,26 @@ class ProjectServiceUnitTest : ShouldSpec({
                 requiredItemTypeServiceMock.copyAllToTargetProjectByProjectId(sourceProject.id, targetProject.id)
             }
         }
+
+        should("refuse & not create when the caller may not use the org unit of the source project") {
+            // given
+            val sourceProjectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findByIdOrNull(sourceProjectEntity.id) } returns sourceProjectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(sourceProjectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(sourceProjectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.copy(sourceProjectEntity.id, "copied project") }
+
+            verify(exactly = 0) {
+                projectRepositoryMock.save(any())
+                requiredItemTypeServiceMock.copyAllToTargetProjectByProjectId(any(), any())
+            }
+        }
     }
 
-    context("readAll") {
+    context("findAllForOrgUnit") {
         should("return all items") {
             // given
             val projectsPage: Page<ProjectEntity> = PageImpl(
@@ -153,10 +228,11 @@ class ProjectServiceUnitTest : ShouldSpec({
                     ProjectEntityGenerators.generator.next()
                 )
             )
-            every { projectRepositoryMock.findAll(Pageable.unpaged()) } returns projectsPage
+            every { orgUnitAccessServiceMock.requireAtLeast(1L, AccessLevel.READ) } just runs
+            every { projectRepositoryMock.findAllByOrgUnitId(1L, Pageable.unpaged()) } returns projectsPage
 
             // when
-            val returnedProjects = cut.readAll(Pageable.unpaged())
+            val returnedProjects = cut.findAllForOrgUnit(1L, Pageable.unpaged())
 
             // then
             returnedProjects shouldBe Project.AsPage.from(projectsPage)
@@ -164,24 +240,50 @@ class ProjectServiceUnitTest : ShouldSpec({
 
         should("return empty list when no projects available") {
             // given
-            every { projectRepositoryMock.findAll(Pageable.unpaged()) } returns Page.empty()
+            every { orgUnitAccessServiceMock.requireAtLeast(1L, AccessLevel.READ) } just runs
+            every { projectRepositoryMock.findAllByOrgUnitId(1L, Pageable.unpaged()) } returns Page.empty()
 
             // when
-            val returnedProjects = cut.readAll(Pageable.unpaged())
+            val returnedProjects = cut.findAllForOrgUnit(1L, Pageable.unpaged())
 
             // then
             returnedProjects shouldBe Page.empty()
         }
+
+        should("refuse & not read when the caller holds nothing in the given org unit") {
+            // given
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(1L, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(1L, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.findAllForOrgUnit(1L, Pageable.unpaged()) }
+
+            verify(exactly = 0) { projectRepositoryMock.findAllByOrgUnitId(any(), any()) }
+        }
     }
 
-    context("read") {
+    context("getById") {
+        should("refuse when the caller holds nothing in the org unit of the project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.getById(projectEntity.id) }
+        }
+
         should("return correct project when given existent id") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ) } just runs
 
             // when
-            val returnedProject = cut.read(projectEntity.id)
+            val returnedProject = cut.getById(projectEntity.id)
 
             // then
             returnedProject shouldBe Project.from(projectEntity)
@@ -190,11 +292,11 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("throw ProjectNotFoundException when given non-existent id") {
             // given
             val randomId = Arb.long(min = 1).next()
-            every { projectRepositoryMock.findById(randomId) } returns Optional.empty()
+            every { projectRepositoryMock.findByIdOrNull(randomId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
-                cut.read(randomId)
+                cut.getById(randomId)
             }
 
             // then
@@ -202,16 +304,17 @@ class ProjectServiceUnitTest : ShouldSpec({
         }
     }
 
-    context("readByInstanceId") {
+    context("findByInstanceId") {
         should("return correct project when given existent id") {
             // given
             val projectEntity = ProjectEntityGenerators.generator.next()
             every {
                 projectRepositoryMock.findByWorkflowInstanceId(projectEntity.workflowInstance.id)
             } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ) } just runs
 
             // when
-            val returnedProject = cut.readByInstanceId(projectEntity.workflowInstance.id)
+            val returnedProject = cut.findByInstanceId(projectEntity.workflowInstance.id)
 
             // then
             returnedProject shouldBe Project.from(projectEntity)
@@ -223,10 +326,24 @@ class ProjectServiceUnitTest : ShouldSpec({
             every { projectRepositoryMock.findByWorkflowInstanceId(randomId) } returns null
 
             // when
-            val returnedProject = cut.readByInstanceId(randomId)
+            val returnedProject = cut.findByInstanceId(randomId)
 
             // then
             returnedProject shouldBe null
+        }
+
+        should("refuse when the caller holds nothing in the org unit of the project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every {
+                projectRepositoryMock.findByWorkflowInstanceId(projectEntity.workflowInstance.id)
+            } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.findByInstanceId(projectEntity.workflowInstance.id) }
         }
     }
 
@@ -238,7 +355,8 @@ class ProjectServiceUnitTest : ShouldSpec({
                 group = null,
                 workflowInstance = activeInstanceEntity
             )
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
             every { projectRepositoryMock.save(projectEntity) } returns projectEntity
 
             // when
@@ -261,9 +379,10 @@ class ProjectServiceUnitTest : ShouldSpec({
             // given
             val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
             val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = activeInstanceEntity)
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
             every { projectRepositoryMock.save(any()) } returns projectEntity
-            every { groupRepositoryMock.existsById(projectEntity.group!!.id) } returns true
+            every { groupRepositoryMock.findByIdOrNull(projectEntity.group!!.id) } returns projectEntity.group!!
 
             // when
             val updatedProject = cut.update(
@@ -275,7 +394,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // then
             verify(exactly = 1) {
                 projectRepositoryMock.save(any())
-                groupRepositoryMock.existsById(projectEntity.group!!.id)
+                groupRepositoryMock.findByIdOrNull(projectEntity.group!!.id)
             }
 
             updatedProject.name shouldBe projectEntity.name
@@ -287,7 +406,7 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("throw ProjectNotFoundException when given non-existent id") {
             // given
             val nonExistentId = 666L
-            every { projectRepositoryMock.findById(nonExistentId) } returns Optional.empty()
+            every { projectRepositoryMock.findByIdOrNull(nonExistentId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -312,7 +431,8 @@ class ProjectServiceUnitTest : ShouldSpec({
             val projectEntity = ProjectEntityGenerators.generator.single().copy(
                 workflowInstance = inactiveInstanceEntity
             )
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
             // when
             val exception = shouldThrow<InstanceInactiveException> {
@@ -337,8 +457,9 @@ class ProjectServiceUnitTest : ShouldSpec({
             val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
             val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = activeInstanceEntity)
             val nonExistentId = 666L
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
-            every { groupRepositoryMock.existsById(nonExistentId) } returns false
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+            every { groupRepositoryMock.findByIdOrNull(nonExistentId) } returns null
 
             // when
             val exception = shouldThrow<GroupNotFoundException> {
@@ -356,16 +477,33 @@ class ProjectServiceUnitTest : ShouldSpec({
 
             exception.message shouldBe "Group with id $nonExistentId could not be found"
         }
+
+        should("refuse & not store when the caller may not use the org unit of the project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> {
+                cut.update(projectId = projectEntity.id, shortDescription = "description", groupId = null)
+            }
+
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+        }
     }
 
     context("updateDescription") {
         should("update the description of the project with the given id & return it") {
             // given
-            val inactiveInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
             val projectEntity = ProjectEntityGenerators.generator.single().copy(
-                workflowInstance = inactiveInstanceEntity
+                workflowInstance = activeInstanceEntity
             )
-            every { projectRepositoryMock.getNullableReferenceById(projectEntity.id) } returns projectEntity
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
             every { projectRepositoryMock.save(any()) } returns projectEntity
 
             val description = Arb.string(200..400).single()
@@ -390,7 +528,7 @@ class ProjectServiceUnitTest : ShouldSpec({
         should("throw ProjectNotFoundException when given non-existent id") {
             // given
             val nonExistentId = 666L
-            every { projectRepositoryMock.getNullableReferenceById(nonExistentId) } returns null
+            every { projectRepositoryMock.findByIdOrNull(nonExistentId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -414,7 +552,8 @@ class ProjectServiceUnitTest : ShouldSpec({
             val projectEntity = ProjectEntityGenerators.generator.single().copy(
                 workflowInstance = inactiveInstanceEntity
             )
-            every { projectRepositoryMock.getNullableReferenceById(projectEntity.id) } returns projectEntity
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
             val description = Arb.string(200..400).single()
 
@@ -434,6 +573,100 @@ class ProjectServiceUnitTest : ShouldSpec({
             exception.message shouldBe
                 "The instance with the given id ${inactiveInstanceEntity.id} is inactive & cannot be modified"
         }
+
+        should("refuse & not store when the caller may not use the org unit of the project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> {
+                cut.updateDescription(projectId = projectEntity.id, description = "description")
+            }
+
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+        }
+    }
+
+    context("updateName") {
+        should("update the name of the project with the given id & return it") {
+            // given
+            val activeInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = true)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = activeInstanceEntity
+            )
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+            every { projectRepositoryMock.save(any()) } returns projectEntity
+
+            // when
+            val updatedProject = cut.updateName(projectId = projectEntity.id, name = "new name")
+
+            // then
+            verify { projectRepositoryMock.save(any()) }
+
+            updatedProject.name shouldBe "new name"
+            updatedProject.shortDescription shouldBe projectEntity.shortDescription
+            updatedProject.description shouldBe projectEntity.description
+            updatedProject.group?.id shouldBe projectEntity.group?.id
+            updatedProject.workflowInstanceId shouldBe projectEntity.workflowInstance.id
+        }
+
+        should("throw ProjectNotFoundException when given non-existent id") {
+            // given
+            val nonExistentId = 666L
+            every { projectRepositoryMock.findByIdOrNull(nonExistentId) } returns null
+
+            // when
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.updateName(projectId = nonExistentId, name = "new name")
+            }
+
+            // then
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+
+            exception.message shouldBe "Project with id $nonExistentId could not be found"
+        }
+
+        should("throw InstanceInactiveException when given inactive instance") {
+            // given
+            val inactiveInstanceEntity = InstanceEntityGenerators.generator.single().copy(active = false)
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = inactiveInstanceEntity
+            )
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+
+            // when
+            val exception = shouldThrow<InstanceInactiveException> {
+                cut.updateName(projectId = projectEntity.id, name = "new name")
+            }
+
+            // then
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+
+            exception.message shouldBe
+                "The instance with the given id ${inactiveInstanceEntity.id} is inactive & cannot be modified"
+        }
+
+        should("refuse & not store when the caller may not use the org unit of the project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> {
+                cut.updateName(projectId = projectEntity.id, name = "new name")
+            }
+
+            verify(exactly = 0) { projectRepositoryMock.save(any()) }
+        }
     }
 
     context("delete") {
@@ -449,17 +682,24 @@ class ProjectServiceUnitTest : ShouldSpec({
                 workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
             )
 
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(
+                    projectEntity.orgUnit.id,
+                    projectEntity.creation.createdBy.id,
+                    AccessLevel.MAINTAIN
+                )
+            } just runs
             every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
             every { requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id) } just runs
-            every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
+            every { projectRepositoryMock.delete(projectEntity) } just runs
 
             // when
             cut.delete(projectEntity.id)
 
             // then
             verify {
-                projectRepositoryMock.deleteById(projectEntity.id)
+                projectRepositoryMock.delete(projectEntity)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
                 requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
@@ -477,17 +717,24 @@ class ProjectServiceUnitTest : ShouldSpec({
                 workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
             )
 
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(
+                    projectEntity.orgUnit.id,
+                    projectEntity.creation.createdBy.id,
+                    AccessLevel.MAINTAIN
+                )
+            } just runs
             every { itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id) } just runs
             every { requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id) } just runs
-            every { projectRepositoryMock.deleteById(projectEntity.id) } just runs
+            every { projectRepositoryMock.delete(projectEntity) } just runs
 
             // when
             cut.delete(projectEntity.id)
 
             // then
             verify {
-                projectRepositoryMock.deleteById(projectEntity.id)
+                projectRepositoryMock.delete(projectEntity)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
                 requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
@@ -505,7 +752,14 @@ class ProjectServiceUnitTest : ShouldSpec({
                 workflowInstance = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
             )
 
-            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(
+                    projectEntity.orgUnit.id,
+                    projectEntity.creation.createdBy.id,
+                    AccessLevel.MAINTAIN
+                )
+            } just runs
 
             // when
             val exception = shouldThrow<OrRuleException> { cut.delete(projectEntity.id) }
@@ -515,7 +769,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             exception.exceptions shouldHaveSize 2
 
             verify(exactly = 0) {
-                projectRepositoryMock.deleteById(projectEntity.id)
+                projectRepositoryMock.delete(projectEntity)
                 itemRepositoryMock.updateUnassignAllByAssignedProjectId(projectEntity.id)
                 requiredItemTypeServiceMock.deleteAllByProjectId(projectEntity.id)
             }
@@ -525,7 +779,7 @@ class ProjectServiceUnitTest : ShouldSpec({
             // given
             val projectId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.findById(projectId) } returns Optional.empty()
+            every { projectRepositoryMock.findByIdOrNull(projectId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -536,7 +790,29 @@ class ProjectServiceUnitTest : ShouldSpec({
             exception.message shouldBe "Project with id $projectId could not be found"
 
             verify(exactly = 0) {
-                projectRepositoryMock.deleteById(projectId)
+                projectRepositoryMock.delete(any())
+            }
+        }
+
+        should("refuse & not delete when the caller neither created the project nor maintains its org unit") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.next()
+            every { projectRepositoryMock.findByIdOrNull(projectEntity.id) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireMemberCreatorOrAtLeast(
+                    projectEntity.orgUnit.id,
+                    projectEntity.creation.createdBy.id,
+                    AccessLevel.MAINTAIN
+                )
+            } throws CreatorOrOrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.MAINTAIN)
+
+            // when & then
+            shouldThrow<CreatorOrOrgUnitAccessDeniedException> { cut.delete(projectEntity.id) }
+
+            verify(exactly = 0) {
+                projectRepositoryMock.delete(any())
+                itemRepositoryMock.updateUnassignAllByAssignedProjectId(any())
+                requiredItemTypeServiceMock.deleteAllByProjectId(any())
             }
         }
     }

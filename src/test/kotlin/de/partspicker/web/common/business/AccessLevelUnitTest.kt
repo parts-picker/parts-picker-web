@@ -21,19 +21,28 @@ class AccessLevelUnitTest : ShouldSpec({
         withData(
             IsAtLeastData(AccessLevel.NONE, AccessLevel.NONE, true),
             IsAtLeastData(AccessLevel.NONE, AccessLevel.READ, false),
-            IsAtLeastData(AccessLevel.NONE, AccessLevel.EDIT, false),
+            IsAtLeastData(AccessLevel.NONE, AccessLevel.USE, false),
+            IsAtLeastData(AccessLevel.NONE, AccessLevel.CONFIGURE, false),
             IsAtLeastData(AccessLevel.NONE, AccessLevel.MAINTAIN, false),
             IsAtLeastData(AccessLevel.READ, AccessLevel.NONE, true),
             IsAtLeastData(AccessLevel.READ, AccessLevel.READ, true),
-            IsAtLeastData(AccessLevel.READ, AccessLevel.EDIT, false),
+            IsAtLeastData(AccessLevel.READ, AccessLevel.USE, false),
+            IsAtLeastData(AccessLevel.READ, AccessLevel.CONFIGURE, false),
             IsAtLeastData(AccessLevel.READ, AccessLevel.MAINTAIN, false),
-            IsAtLeastData(AccessLevel.EDIT, AccessLevel.NONE, true),
-            IsAtLeastData(AccessLevel.EDIT, AccessLevel.READ, true),
-            IsAtLeastData(AccessLevel.EDIT, AccessLevel.EDIT, true),
-            IsAtLeastData(AccessLevel.EDIT, AccessLevel.MAINTAIN, false),
+            IsAtLeastData(AccessLevel.USE, AccessLevel.NONE, true),
+            IsAtLeastData(AccessLevel.USE, AccessLevel.READ, true),
+            IsAtLeastData(AccessLevel.USE, AccessLevel.USE, true),
+            IsAtLeastData(AccessLevel.USE, AccessLevel.CONFIGURE, false),
+            IsAtLeastData(AccessLevel.USE, AccessLevel.MAINTAIN, false),
+            IsAtLeastData(AccessLevel.CONFIGURE, AccessLevel.NONE, true),
+            IsAtLeastData(AccessLevel.CONFIGURE, AccessLevel.READ, true),
+            IsAtLeastData(AccessLevel.CONFIGURE, AccessLevel.USE, true),
+            IsAtLeastData(AccessLevel.CONFIGURE, AccessLevel.CONFIGURE, true),
+            IsAtLeastData(AccessLevel.CONFIGURE, AccessLevel.MAINTAIN, false),
             IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.NONE, true),
             IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.READ, true),
-            IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.EDIT, true),
+            IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.USE, true),
+            IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.CONFIGURE, true),
             IsAtLeastData(AccessLevel.MAINTAIN, AccessLevel.MAINTAIN, true)
         ) { (accessLevel, demandedAccessLevel, expectedResult) ->
             accessLevel isAtLeast demandedAccessLevel shouldBe expectedResult
@@ -50,7 +59,8 @@ class AccessLevelUnitTest : ShouldSpec({
 
         withData(
             FromData(AccessLevelEntity.READ, AccessLevel.READ),
-            FromData(AccessLevelEntity.EDIT, AccessLevel.EDIT),
+            FromData(AccessLevelEntity.USE, AccessLevel.USE),
+            FromData(AccessLevelEntity.CONFIGURE, AccessLevel.CONFIGURE),
             FromData(AccessLevelEntity.MAINTAIN, AccessLevel.MAINTAIN),
             FromData(null, AccessLevel.NONE)
         ) { (accessLevelEntity, expectedAccessLevel) ->
@@ -63,7 +73,8 @@ class AccessLevelUnitTest : ShouldSpec({
             AccessLevel.entries shouldBe listOf(
                 AccessLevel.NONE,
                 AccessLevel.READ,
-                AccessLevel.EDIT,
+                AccessLevel.USE,
+                AccessLevel.CONFIGURE,
                 AccessLevel.MAINTAIN
             )
         }

@@ -18,7 +18,7 @@ INSERT INTO workflow_instances VALUES(2, 500, false, null, 'DEFAULT');
 INSERT INTO workflow_instances VALUES(3, 400, true, null, 'DEFAULT');
 ALTER SEQUENCE instance_id_seq RESTART WITH 10;
 
-INSERT INTO projects VALUES(1, 'PROJECT 1', 'Description for project 1', null, 1);
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on) VALUES(1, 'PROJECT 1', 'Description for project 1', null, 1, 1000, 1000, now());
 ALTER SEQUENCE project_seq RESTART WITH 10;
 
 -- Workflow to test readEdgesBySourceNodeId

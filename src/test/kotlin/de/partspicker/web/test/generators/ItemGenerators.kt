@@ -22,15 +22,18 @@ class ItemGenerators private constructor() {
             Arb.long(1),
             randomStatusGen,
             randomConditionGen,
-            Arb.string()
-        ) { id, type, assignedProjectId, status, condition, note ->
+            Arb.string(),
+            Arb.long(1)
+        ) { id, type, assignedProjectId, status, condition, note, createdById ->
             Item(
                 id = id,
                 type = type,
                 assignedProjectId = assignedProjectId,
                 status = status,
                 condition = condition,
-                note = note
+                note = note,
+                orgUnitId = type.orgUnitId,
+                createdById = createdById
             )
         }
     }

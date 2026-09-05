@@ -2,8 +2,12 @@ package de.partspicker.web.common.exceptions
 
 import de.partspicker.web.common.business.exceptions.OrRuleException
 import de.partspicker.web.common.business.exceptions.RuleException
+import de.partspicker.web.orgunit.business.exceptions.CreatorOrOrgUnitAccessDeniedException
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitAccessDeniedException
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitNameAlreadyUsedException
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeSourceNotMatchingException
 import de.partspicker.web.workflow.business.exceptions.WorkflowStartedWithNonStartNodeException
+import org.springframework.data.mapping.PropertyReferenceException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -109,6 +113,86 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             message = exc.localizedMessage,
             errorCode = null,
             errors = exc.exceptions.map { ErrorDetail(it.javaClass.simpleName, it.localizedMessage) },
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest,
+        )
+    }
+
+    @ExceptionHandler(
+        value = [PropertyReferenceException::class],
+    )
+    fun handlePropertyReferenceException(
+        exc: PropertyReferenceException,
+        webRequest: ServletWebRequest,
+    ): ResponseEntity<Any>? {
+        val info = ErrorInfo(
+            status = HttpStatus.BAD_REQUEST,
+            message = "Unknown property '${exc.propertyName}'",
+            errorCode = null,
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest,
+        )
+    }
+
+    @ExceptionHandler(
+        value = [
+            OrgUnitNameAlreadyUsedException::class,
+        ],
+    )
+    fun handleOrgUnitNameAlreadyUsedException(
+        exc: Exception,
+        webRequest: ServletWebRequest,
+    ): ResponseEntity<Any>? {
+        val info = ErrorInfo(
+            status = HttpStatus.CONFLICT,
+            message = exc.localizedMessage,
+            errorCode = null,
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
+            path = webRequest.request.requestURI,
+            timestamp = ZonedDateTime.now(),
+        )
+
+        return handleExceptionInternal(
+            exc,
+            info,
+            HttpHeaders(),
+            info.status,
+            webRequest,
+        )
+    }
+
+    @ExceptionHandler(
+        value = [
+            CreatorOrOrgUnitAccessDeniedException::class,
+            OrgUnitAccessDeniedException::class,
+        ],
+    )
+    fun handleOrgUnitAccessDeniedException(
+        exc: Exception,
+        webRequest: ServletWebRequest,
+    ): ResponseEntity<Any>? {
+        val info = ErrorInfo(
+            status = HttpStatus.FORBIDDEN,
+            message = exc.localizedMessage,
+            errorCode = null,
+            errors = listOf(ErrorDetail(exc.javaClass.simpleName, exc.localizedMessage)),
             path = webRequest.request.requestURI,
             timestamp = ZonedDateTime.now(),
         )

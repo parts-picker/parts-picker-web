@@ -1,5 +1,6 @@
 package de.partspicker.web.inventory.api.resources
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel.USE
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.READ
@@ -13,6 +14,7 @@ import de.partspicker.web.inventory.api.RequiredItemTypeController
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.business.objects.AvailableItemType
 import de.partspicker.web.item.api.ItemTypeController
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
 import org.springframework.hateoas.IanaLinkRelations.COLLECTION
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.server.RepresentationModelAssembler
@@ -20,8 +22,9 @@ import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.stereotype.Component
 
 @Component
-class AvailableItemTypeResourceAssembler :
-    RepresentationModelAssembler<AvailableItemType, AvailableItemTypeResource> {
+class AvailableItemTypeResourceAssembler(
+    private val orgUnitAccessService: OrgUnitAccessService
+) : RepresentationModelAssembler<AvailableItemType, AvailableItemTypeResource> {
     override fun toModel(availableItemType: AvailableItemType): AvailableItemTypeResource {
         return AvailableItemTypeResource(
             name = availableItemType.name,
@@ -45,7 +48,8 @@ class AvailableItemTypeResourceAssembler :
                 }
                     .withRel(ASSIGNED)
                     .withName(CREATE),
-                NodeNameEqualsRule(availableItemType.projectStatus, "planning")
+                NodeNameEqualsRule(availableItemType.projectStatus, "planning"),
+                this.orgUnitAccessService.atLeast(availableItemType.orgUnitId, USE)
             ).with(
                 generateSearchItemsByNameLink(COLLECTION, availableItemType.projectId)
             )

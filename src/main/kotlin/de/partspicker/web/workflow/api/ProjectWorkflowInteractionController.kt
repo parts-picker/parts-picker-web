@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class WorkflowInteractionController(
+class ProjectWorkflowInteractionController(
     private val workflowInteractionService: WorkflowInteractionService,
     private val instanceInfoResourceAssembler: InstanceInfoResourceAssembler
 ) {
@@ -24,19 +24,19 @@ class WorkflowInteractionController(
         val logger = logger()
     }
 
-    @PostMapping("/instance/{instanceId}/edges/{edgeId}")
+    @PostMapping("/projects/{projectId}/instance/edges/{edgeId}")
     fun handleAdvanceInstanceState(
-        @PathVariable instanceId: Long,
+        @PathVariable projectId: Long,
         @PathVariable edgeId: Long,
         @RequestBody requestBody: AdvanceInstanceStateRequest?
     ): ResponseEntity<InstanceInfoResource> {
         logger.info(
             "=> POST request to advance the current node " +
-                "for instance with id $instanceId through edge with id $edgeId"
+                "for the project with id $projectId through edge with id $edgeId"
         )
 
-        val updatedInstanceInfo = this.workflowInteractionService.advanceInstanceNodeByUser(
-            instanceId,
+        val updatedInstanceInfo = this.workflowInteractionService.advanceProjectStateByUser(
+            projectId,
             edgeId,
             requestBody?.let { InstanceValue.AsList.fromWithAutoTypeDetection(it.values) }
         )
@@ -44,11 +44,11 @@ class WorkflowInteractionController(
         return ResponseEntity(instanceInfoResourceAssembler.toModel(updatedInstanceInfo), HttpStatus.OK)
     }
 
-    @GetMapping("/instance/{instanceId}/node")
-    fun handleGetInstanceInfo(@PathVariable instanceId: Long): ResponseEntity<InstanceInfoResource> {
-        logger.info("=> GET request for the current node of the instance with id $instanceId")
+    @GetMapping("/projects/{projectId}/instance/node")
+    fun handleGetInstanceInfo(@PathVariable projectId: Long): ResponseEntity<InstanceInfoResource> {
+        logger.info("=> GET request for the current node of the project with id $projectId")
 
-        val instanceInfo = this.workflowInteractionService.readInstanceInfo(instanceId)
+        val instanceInfo = this.workflowInteractionService.readProjectInstanceInfo(projectId)
 
         return ResponseEntity(instanceInfoResourceAssembler.toModel(instanceInfo), HttpStatus.OK)
     }

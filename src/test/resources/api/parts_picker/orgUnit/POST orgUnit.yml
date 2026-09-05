@@ -1,0 +1,31 @@
+info:
+  name: POST orgUnit
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/org-units"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "POSTED ORG UNIT",
+        "shortDescription": "POST WORKED"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("org_unit_id", res.body._links.self.href.split("/").pop());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

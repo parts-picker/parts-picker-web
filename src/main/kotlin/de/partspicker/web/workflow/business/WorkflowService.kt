@@ -33,7 +33,7 @@ class WorkflowService(
         return this.convertToWorkflow(latestWorkflowEntity)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun create(workflowCreate: WorkflowCreate): Workflow {
         if (this.exists(workflowCreate.name, workflowCreate.version)) {
             throw WorkflowAlreadyExistsException(workflowCreate.name, workflowCreate.version)

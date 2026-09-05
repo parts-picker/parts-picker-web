@@ -19,8 +19,9 @@ class ProjectGenerators private constructor() {
             Arb.long(1),
             Arb.string(range = IntRange(3, 16)),
             Arb.string(range = IntRange(3, 16)),
-            Arb.boolean()
-        ) { id, name, shortDescription, description, group, instanceId, status, displayStatus, active ->
+            Arb.boolean(),
+            Arb.long(1)
+        ) { id, name, shortDescription, description, group, instanceId, status, displayStatus, active, createdById ->
             Project(
                 id = id,
                 name = name,
@@ -31,7 +32,9 @@ class ProjectGenerators private constructor() {
                 status = status,
                 displayStatus = displayStatus,
                 active = active,
-                sourceProjectId = null
+                sourceProjectId = null,
+                orgUnitId = group.orgUnitId,
+                createdById = createdById
             )
         }
     }

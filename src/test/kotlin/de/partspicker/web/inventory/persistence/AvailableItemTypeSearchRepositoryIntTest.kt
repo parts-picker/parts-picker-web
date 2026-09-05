@@ -3,6 +3,7 @@ package de.partspicker.web.inventory.persistence
 import de.partspicker.web.inventory.persistence.AvailableItemTypeSearchRepository.Companion.MAX_HITS
 import de.partspicker.web.inventory.persistence.results.AvailableItemTypeResult
 import de.partspicker.web.test.util.TestSetupHelper
+import de.partspicker.web.test.util.UnrelatedOrgUnit
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import jakarta.transaction.Transactional
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.jdbc.Sql
 
 /**
  * Updating the indexes must be done manually for this test.
@@ -21,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest
 @ActiveProfiles("integration")
 @Transactional
+@Sql("classpath:/init-sql/unrelatedOrgUnit.sql")
 class AvailableItemTypeSearchRepositoryIntTest(
     private val cut: AvailableItemTypeSearchRepository,
     // support classes
@@ -45,7 +48,11 @@ class AvailableItemTypeSearchRepositoryIntTest(
             testSetupHelper.manualSearchIndexing()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired(itemTypeName, project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                itemTypeName,
+                project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             amountOfTypes shouldBeGreaterThan MAX_HITS
@@ -58,7 +65,11 @@ class AvailableItemTypeSearchRepositoryIntTest(
             val project = testSetupHelper.setupProject()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired("", project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                "",
+                project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             returnedTypes.shouldBeEmpty()
@@ -76,7 +87,11 @@ class AvailableItemTypeSearchRepositoryIntTest(
             testSetupHelper.manualSearchIndexing()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired(itemTypeName, projectId = project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                itemTypeName,
+                projectId = project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             returnedTypes shouldHaveSize 1
@@ -95,7 +110,11 @@ class AvailableItemTypeSearchRepositoryIntTest(
             testSetupHelper.manualSearchIndexing()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired(searchString, projectId = project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                searchString,
+                projectId = project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             returnedTypes shouldHaveSize 1
@@ -113,7 +132,11 @@ class AvailableItemTypeSearchRepositoryIntTest(
             testSetupHelper.manualSearchIndexing()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired(searchString, projectId = project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                searchString,
+                projectId = project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             returnedTypes shouldHaveSize 1
@@ -133,12 +156,38 @@ class AvailableItemTypeSearchRepositoryIntTest(
             testSetupHelper.manualSearchIndexing()
 
             // when
-            val returnedTypes = cut.searchByNameFilterRequired(searchString, projectId = project.id)
+            val returnedTypes = cut.searchByNameFilterRequired(
+                searchString,
+                projectId = project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
 
             // then
             returnedTypes shouldHaveSize 2
             returnedTypes shouldContain AvailableItemTypeResult(type1.id, type1.name!!)
             returnedTypes shouldContain AvailableItemTypeResult(type2.id, type2.name!!)
+        }
+
+        should("return only itemTypes of the given org unit") {
+            // given
+            val project = testSetupHelper.setupProject()
+
+            val itemTypeName = "shared name"
+            val ownType = testSetupHelper.setupItemType(itemTypeName)
+            testSetupHelper.setupItemTypeInOrgUnit(UnrelatedOrgUnit.ID, itemTypeName)
+
+            testSetupHelper.manualSearchIndexing()
+
+            // when
+            val returnedTypes = cut.searchByNameFilterRequired(
+                itemTypeName,
+                project.id,
+                testSetupHelper.currentOrgUnitId()
+            )
+
+            // then
+            returnedTypes shouldHaveSize 1
+            returnedTypes shouldContain AvailableItemTypeResult(ownType.id, ownType.name!!)
         }
     }
 }) {

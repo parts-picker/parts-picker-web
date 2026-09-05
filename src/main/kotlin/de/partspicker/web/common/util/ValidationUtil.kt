@@ -1,4 +1,4 @@
-package de.partspicker.web.common.util // ktlint-disable filename
+package de.partspicker.web.common.util
 
 infix fun Boolean.elseThrow(throwable: Throwable) {
     if (!this) {

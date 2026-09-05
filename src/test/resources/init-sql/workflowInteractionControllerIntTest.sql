@@ -19,3 +19,15 @@ INSERT INTO workflow_instances VALUES(500, 400, true, null, 'DEFAULT');
 
 INSERT INTO workflow_instance_values VALUES(100, 100, 'userID', 'Leonard', 'STRING', 'WORKFLOW');
 INSERT INTO workflow_instance_values VALUES(200, 100, 'amount', '7', 'LONG', 'WORKFLOW');
+
+-- one project per instance, since the workflow routes are addressed through their owning project
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on)
+VALUES(100, 'PROJECT 100', null, null, 100, 1000, 1000, now());
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on)
+VALUES(200, 'PROJECT 200', null, null, 200, 1000, 1000, now());
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on)
+VALUES(300, 'PROJECT 300', null, null, 300, 1000, 1000, now());
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on)
+VALUES(400, 'PROJECT 400', null, null, 400, 1000, 1000, now());
+INSERT INTO projects (id, name, short_description, group_id, instance_id, org_unit_id, created_by, created_on)
+VALUES(500, 'PROJECT 500', null, null, 500, 1000, 1000, now());

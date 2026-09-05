@@ -8,6 +8,8 @@ import de.partspicker.web.item.persistance.entities.ItemEntity
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.test.generators.CreationInfoGenerators
+import de.partspicker.web.test.generators.OrgUnitEntityGenerators
 import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.inventory.AssignableItemGenerators
 import io.kotest.assertions.throwables.shouldThrow
@@ -17,6 +19,9 @@ import io.kotest.property.arbitrary.single
 import io.kotest.property.checkAll
 
 class AssignableItemUnitTest : ShouldSpec({
+    val orgUnit = OrgUnitEntityGenerators.generator.single()
+    val creation = CreationInfoGenerators.generator.single()
+
     context("validation") {
         should("run when everything valid") {
             AssignableItem(
@@ -26,7 +31,8 @@ class AssignableItemUnitTest : ShouldSpec({
                 assignedAmount = 5L,
                 assignableToProjectId = 1L,
                 assignableToProjectStatus = "planning",
-                condition = InventoryItemCondition.WRAPPED
+                condition = InventoryItemCondition.WRAPPED,
+                orgUnitId = 1L
             )
         }
 
@@ -39,7 +45,8 @@ class AssignableItemUnitTest : ShouldSpec({
                     assignedAmount = -1L,
                     assignableToProjectId = 1L,
                     assignableToProjectStatus = "planning",
-                    condition = InventoryItemCondition.WRAPPED
+                    condition = InventoryItemCondition.WRAPPED,
+                    orgUnitId = 1L
                 )
             }
         }
@@ -53,7 +60,8 @@ class AssignableItemUnitTest : ShouldSpec({
                     assignedAmount = 0L,
                     assignableToProjectId = 1L,
                     assignableToProjectStatus = "planning",
-                    condition = InventoryItemCondition.WRAPPED
+                    condition = InventoryItemCondition.WRAPPED,
+                    orgUnitId = 1L
                 )
             }
         }
@@ -67,7 +75,8 @@ class AssignableItemUnitTest : ShouldSpec({
                     assignedAmount = 4L,
                     assignableToProjectId = 1L,
                     assignableToProjectStatus = "planning",
-                    condition = InventoryItemCondition.WRAPPED
+                    condition = InventoryItemCondition.WRAPPED,
+                    orgUnitId = 1L
                 )
             }
         }
@@ -89,11 +98,13 @@ class AssignableItemUnitTest : ShouldSpec({
                 AssignableItem.from(
                     ItemEntity(
                         id = itemId,
-                        type = ItemTypeEntity(id = 1L),
+                        type = ItemTypeEntity(id = 1L, orgUnit = orgUnit, creation = creation),
                         assignedProject = ProjectEntityGenerators.generator.single(),
                         status = ItemStatusEntity.IN_STOCK,
                         condition = ItemConditionEntity.WRAPPED,
-                        note = null
+                        note = null,
+                        orgUnit = orgUnit,
+                        creation = creation
                     ),
                     1,
                     1,
@@ -115,11 +126,13 @@ class AssignableItemUnitTest : ShouldSpec({
                 AssignableItem.from(
                     ItemEntity(
                         id = itemId,
-                        type = ItemTypeEntity(id = 1L),
+                        type = ItemTypeEntity(id = 1L, orgUnit = orgUnit, creation = creation),
                         assignedProject = null,
                         status = itemStatus,
                         condition = ItemConditionEntity.WRAPPED,
-                        note = null
+                        note = null,
+                        orgUnit = orgUnit,
+                        creation = creation
                     ),
                     1,
                     1,
@@ -141,11 +154,13 @@ class AssignableItemUnitTest : ShouldSpec({
                 AssignableItem.from(
                     ItemEntity(
                         id = itemId,
-                        type = ItemTypeEntity(id = 1L),
+                        type = ItemTypeEntity(id = 1L, orgUnit = orgUnit, creation = creation),
                         assignedProject = null,
                         status = ItemStatusEntity.IN_STOCK,
                         condition = itemCondition,
-                        note = null
+                        note = null,
+                        orgUnit = orgUnit,
+                        creation = creation
                     ),
                     1,
                     1,

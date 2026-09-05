@@ -1,5 +1,6 @@
 package de.partspicker.web.inventory.business
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.util.elseThrow
 import de.partspicker.web.inventory.business.objects.AssignableItem
@@ -7,22 +8,30 @@ import de.partspicker.web.inventory.business.objects.AssignedItem
 import de.partspicker.web.inventory.business.objects.enums.CheckRequiredItemsResult
 import de.partspicker.web.inventory.business.rules.RequiredGreaterAssignedAmountRule
 import de.partspicker.web.item.business.exceptions.ItemNotFoundException
+import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.persistance.ItemRepository
+import de.partspicker.web.item.persistance.ItemTypeRepository
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.rules.SameOrgUnitRule
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.WorkflowInteractionService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class InventoryItemService(
     private val itemRepository: ItemRepository,
     private val projectRepository: ProjectRepository,
     private val requiredItemTypeReadService: RequiredItemTypeReadService,
     private val workflowInteractionService: WorkflowInteractionService,
+    private val itemTypeRepository: ItemTypeRepository,
+    private val orgUnitAccessService: OrgUnitAccessService,
 ) {
     companion object {
         const val PLANNING_STATUS = "planning"
@@ -33,6 +42,8 @@ class InventoryItemService(
         projectId: Long,
         pageable: Pageable,
     ): Page<AssignableItem> {
+        this.requireAccessToBoth(projectId, itemTypeId, AccessLevel.READ)
+
         val itemEntities = this.itemRepository.findAllAssignableByTypeId(itemTypeId, pageable)
 
         // additional info
@@ -57,6 +68,8 @@ class InventoryItemService(
         projectId: Long,
         pageable: Pageable,
     ): Page<AssignedItem> {
+        this.requireAccessToBoth(projectId, itemTypeId, AccessLevel.READ)
+
         return AssignedItem.AsPage.from(
             this.itemRepository.findAllByAssignedProjectIdAndTypeId(
                 projectId,
@@ -66,11 +79,11 @@ class InventoryItemService(
         )
     }
 
+    /**
+     * Checks if a project has been assigned all required items.
+     */
     fun checkRequiredItemsAssignedToProject(projectId: Long): CheckRequiredItemsResult {
-        val requiredItemTypes = this.requiredItemTypeReadService.readAllByProjectId(
-            projectId,
-            pageable = Pageable.unpaged()
-        )
+        val requiredItemTypes = this.requiredItemTypeReadService.readAllByProjectId(projectId, Pageable.unpaged())
 
         val allAssigned = requiredItemTypes.all { it.isRequiredAmountAssigned() }
         return when {
@@ -81,11 +94,19 @@ class InventoryItemService(
     }
 
     fun assignToProject(itemId: Long, newProjectId: Long): AssignedItem {
+        val itemToUpdate = this.itemRepository.findById(itemId).orElseThrow { ItemNotFoundException(itemId) }
+
+        this.orgUnitAccessService.requireAtLeast(itemToUpdate.orgUnit.id, AccessLevel.USE)
+
+        val newProjectEntity = this.projectRepository.getNullableReferenceById(newProjectId)
+            ?: throw ProjectNotFoundException(projectId = newProjectId)
+
+        SameOrgUnitRule(itemToUpdate.orgUnit.id, newProjectEntity.orgUnit.id).valid()
+
         // check if node name is planning
         val currentNodeName = this.workflowInteractionService.readProjectStatus(newProjectId)
         NodeNameEqualsRule(currentNodeName, PLANNING_STATUS).valid()
 
-        val itemToUpdate = this.itemRepository.findById(itemId).orElseThrow { ItemNotFoundException(itemId) }
         val requiredItemTypeEntity = this.requiredItemTypeReadService.readByProjectIdAndItemTypeId(
             newProjectId,
             itemToUpdate.type.id
@@ -119,6 +140,7 @@ class InventoryItemService(
 
     fun removeFromProject(itemId: Long): Item {
         val itemToUpdate = this.itemRepository.findById(itemId).orElseThrow { ItemNotFoundException(itemId) }
+        this.orgUnitAccessService.requireAtLeast(itemToUpdate.orgUnit.id, AccessLevel.USE)
 
         // check if item has project assigned & condition is usable
         val assignedItem = AssignedItem.from(itemToUpdate)
@@ -134,26 +156,14 @@ class InventoryItemService(
         return Item.from(itemEntity)
     }
 
-    fun removeAllWithTypeFromProject(
-        itemTypeId: Long,
-        projectId: Long,
-    ) {
-        val itemsToUpdate =
-            this.itemRepository.findAllByAssignedProjectIdAndTypeId(
-                projectId = projectId,
-                itemTypeId = itemTypeId,
-                Pageable.unpaged()
-            )
+    private fun requireAccessToBoth(projectId: Long, itemTypeId: Long, requiredLevel: AccessLevel) {
+        val projectEntity = this.projectRepository.getNullableReferenceById(projectId)
+            ?: throw ProjectNotFoundException(projectId = projectId)
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, requiredLevel)
 
-        val currentNodeName = this.workflowInteractionService.readProjectStatus(projectId)
-        NodeNameEqualsRule(currentNodeName, PLANNING_STATUS).valid()
+        val itemTypeEntity = this.itemTypeRepository.findByIdOrNull(itemTypeId)
+            ?: throw ItemTypeNotFoundException(itemTypeId)
 
-        val updatedItems = itemsToUpdate.map {
-            it.assignedProject = null
-            it.status = ItemStatusEntity.IN_STOCK
-            it
-        }
-
-        this.itemRepository.saveAll(updatedItems)
+        SameOrgUnitRule(projectEntity.orgUnit.id, itemTypeEntity.orgUnit.id).valid()
     }
 }

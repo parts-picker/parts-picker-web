@@ -1,9 +1,11 @@
 package de.partspicker.web.item.persistance.entities
 
-import de.partspicker.web.item.business.objects.Item
+import de.partspicker.web.common.persistence.entities.CreationInfo
 import de.partspicker.web.item.persistance.entities.enums.ItemConditionEntity
 import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.orgunit.persistence.entities.OrgUnitEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -39,16 +41,12 @@ data class ItemEntity(
     @Enumerated(EnumType.STRING)
     var condition: ItemConditionEntity,
 
-    var note: String?
-) {
-    companion object {
-        fun from(item: Item, projectEntity: ProjectEntity?) = ItemEntity(
-            id = item.id,
-            assignedProject = projectEntity,
-            type = ItemTypeEntity.from(item.type),
-            status = ItemStatusEntity.from(item.status),
-            condition = ItemConditionEntity.from(item.condition),
-            note = item.note
-        )
-    }
-}
+    var note: String?,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_unit_id", foreignKey = ForeignKey(name = "fk_org_unit_of_item"))
+    var orgUnit: OrgUnitEntity,
+
+    @Embedded
+    var creation: CreationInfo
+)

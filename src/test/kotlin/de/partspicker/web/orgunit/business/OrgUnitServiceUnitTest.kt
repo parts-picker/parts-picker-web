@@ -1,13 +1,14 @@
 package de.partspicker.web.orgunit.business
 
 import de.partspicker.web.common.persistence.entities.enums.AccessLevelEntity
-import de.partspicker.web.orgunit.business.exceptions.OrgUnitNotFoundException
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitNameAlreadyUsedException
 import de.partspicker.web.orgunit.business.objects.CreateOrgUnit
 import de.partspicker.web.orgunit.persistence.OrgUnitEntitlementRepository
 import de.partspicker.web.orgunit.persistence.OrgUnitRepository
 import de.partspicker.web.orgunit.persistence.entities.OrgUnitEntitlementEntity
 import de.partspicker.web.test.generators.OrgUnitEntityGenerators
 import de.partspicker.web.test.generators.UserEntityGenerators
+import de.partspicker.web.test.util.ConstraintViolations
 import de.partspicker.web.test.util.TestConstants.CRUD_REPOSITORY_EXTENSIONS
 import de.partspicker.web.user.business.exceptions.UserNotFoundException
 import de.partspicker.web.user.persistence.UserRepository
@@ -21,6 +22,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import java.time.Instant
 
@@ -52,7 +54,7 @@ class OrgUnitServiceUnitTest : ShouldSpec({
             val ownerEntity = UserEntityGenerators.humanGenerator.next()
             val orgUnitEntity = OrgUnitEntityGenerators.generatorFor(ownerEntity).next()
             every { userRepositoryMock.findByIdOrNull(ownerEntity.id) } returns ownerEntity
-            every { orgUnitRepositoryMock.save(any()) } returns orgUnitEntity
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } returns orgUnitEntity
             val entitlementSlot = slot<OrgUnitEntitlementEntity>()
             every { orgUnitEntitlementRepositoryMock.save(capture(entitlementSlot)) } returns
                 OrgUnitEntitlementEntity(
@@ -88,30 +90,30 @@ class OrgUnitServiceUnitTest : ShouldSpec({
                 cut.create(CreateOrgUnit(name = "some org unit", ownerId = 404L))
             }
         }
-    }
 
-    context("findById") {
-        should("return the org unit with the given id") {
+        should("throw OrgUnitNameAlreadyUsedException when the owner already uses the given name") {
             // given
-            val ownerEntity = UserEntityGenerators.humanGenerator.next()
-            val orgUnitEntity = OrgUnitEntityGenerators.generatorFor(ownerEntity).next()
-            every { orgUnitRepositoryMock.findWithOwnerById(orgUnitEntity.id) } returns orgUnitEntity
-
-            // when
-            val returnedOrgUnit = cut.findById(orgUnitEntity.id)
-
-            // then
-            returnedOrgUnit.id shouldBe orgUnitEntity.id
-            returnedOrgUnit.shortDescription shouldBe orgUnitEntity.shortDescription
-        }
-
-        should("throw OrgUnitNotFoundException when no org unit with the given id exists") {
-            // given
-            every { orgUnitRepositoryMock.findWithOwnerById(any()) } returns null
+            val owner = UserEntityGenerators.humanGenerator.next()
+            every { userRepositoryMock.findByIdOrNull(owner.id) } returns owner
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } throws
+                ConstraintViolations.of(OrgUnitRepository.OWNER_NAME_CONSTRAINT)
 
             // when & then
-            shouldThrow<OrgUnitNotFoundException> {
-                cut.findById(404L)
+            shouldThrow<OrgUnitNameAlreadyUsedException> {
+                cut.create(CreateOrgUnit(name = "some org unit", ownerId = owner.id))
+            }
+        }
+
+        should("rethrow when another constraint is violated") {
+            // given
+            val owner = UserEntityGenerators.humanGenerator.next()
+            every { userRepositoryMock.findByIdOrNull(owner.id) } returns owner
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } throws
+                ConstraintViolations.of("fk_created_by_of_org_unit")
+
+            // when & then
+            shouldThrow<DataIntegrityViolationException> {
+                cut.create(CreateOrgUnit(name = "some org unit", ownerId = owner.id))
             }
         }
     }

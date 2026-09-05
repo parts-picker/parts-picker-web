@@ -1,5 +1,7 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.exceptions.WorkflowEdgeNotFoundException
@@ -12,6 +14,7 @@ import de.partspicker.web.workflow.business.objects.Edge
 import de.partspicker.web.workflow.business.objects.Instance
 import de.partspicker.web.workflow.business.objects.InstanceInfo
 import de.partspicker.web.workflow.business.objects.InstanceValue
+import de.partspicker.web.workflow.business.objects.ProjectInstanceInfo
 import de.partspicker.web.workflow.business.objects.enums.DisplayType
 import de.partspicker.web.workflow.business.objects.nodes.Node
 import de.partspicker.web.workflow.business.rules.InstanceActiveRule
@@ -28,6 +31,7 @@ import org.hibernate.Hibernate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Service
 class WorkflowInteractionService(
     private val workflowRepository: WorkflowRepository,
@@ -36,27 +40,46 @@ class WorkflowInteractionService(
     private val edgeRepository: EdgeRepository,
     private val instanceValueService: InstanceValueService,
     private val projectRepository: ProjectRepository,
+    private val orgUnitAccessService: OrgUnitAccessService,
 ) {
     companion object {
         const val PROJECT_WORKFLOW_NAME = "project_workflow"
         const val PROJECT_WORKFLOW_START_NODE = "new_project_start"
     }
 
-    fun readInstanceInfo(instanceId: Long): InstanceInfo {
-        val instanceEntity = this.instanceRepository.findById(
-            instanceId,
-        ).orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+    @Transactional
+    fun advanceProjectStateByUser(
+        projectId: Long,
+        edgeId: Long,
+        values: List<InstanceValue>? = null
+    ): ProjectInstanceInfo {
+        val projectEntity = this.projectRepository.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId) }
 
-        val currentNodeEntity = instanceEntity.currentNode
-        val options = this.findOptionsBySourceNodeId(currentNodeEntity.id)
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
 
-        return InstanceInfo.from(currentNodeEntity, instanceEntity, options)
+        return ProjectInstanceInfo.from(
+            projectEntity,
+            this.advanceInstanceNodeByUser(projectEntity.workflowInstance.id, edgeId, values)
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun readProjectInstanceInfo(projectId: Long): ProjectInstanceInfo {
+        val projectEntity = this.projectRepository.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId) }
+
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+
+        return ProjectInstanceInfo.from(projectEntity, this.readInstanceInfo(projectEntity.workflowInstance.id))
     }
 
     @Transactional(readOnly = true)
     fun readProjectStatus(projectId: Long): String {
         val projectEntity = this.projectRepository.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId) }
+
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
 
         return projectEntity.workflowInstance.currentNode.name
     }
@@ -74,7 +97,7 @@ class WorkflowInteractionService(
         )
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun startWorkflowInstance(
         workflowName: String,
         startNodeName: String,
@@ -114,25 +137,7 @@ class WorkflowInteractionService(
         return Instance.from(savedInstance)
     }
 
-    @Transactional(rollbackFor = [Exception::class])
-    fun advanceInstanceNodeByUser(
-        instanceId: Long,
-        edgeId: Long,
-        values: List<InstanceValue>? = null,
-    ): InstanceInfo {
-        val instanceEntity = this.instanceRepository.findById(instanceId)
-            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
-
-        UserMayAdvanceNodeRule(Node.from(instanceEntity.currentNode)).valid()
-
-        return this.advanceInstanceNodeBySystem(
-            instanceEntity = instanceEntity,
-            edgeId = edgeId,
-            values = values
-        )
-    }
-
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun advanceInstanceNodeBySystem(
         instanceId: Long,
         edgeId: Long,
@@ -152,7 +157,7 @@ class WorkflowInteractionService(
         )
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun advanceInstanceNodeBySystem(
         instanceEntity: InstanceEntity,
         edgeId: Long,
@@ -193,4 +198,32 @@ class WorkflowInteractionService(
     }
 
     private fun findOptionsBySourceNodeId(sourceNodeId: Long) = this.edgeRepository.findAllBySourceId(sourceNodeId)
+
+    private fun readInstanceInfo(instanceId: Long): InstanceInfo {
+        val instanceEntity = this.instanceRepository.findById(
+            instanceId,
+        ).orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+
+        val currentNodeEntity = instanceEntity.currentNode
+        val options = this.findOptionsBySourceNodeId(currentNodeEntity.id)
+
+        return InstanceInfo.from(currentNodeEntity, instanceEntity, options)
+    }
+
+    private fun advanceInstanceNodeByUser(
+        instanceId: Long,
+        edgeId: Long,
+        values: List<InstanceValue>? = null,
+    ): InstanceInfo {
+        val instanceEntity = this.instanceRepository.findById(instanceId)
+            .orElseThrow { WorkflowInstanceNotFoundException(instanceId) }
+
+        UserMayAdvanceNodeRule(Node.from(instanceEntity.currentNode)).valid()
+
+        return this.advanceInstanceNodeBySystem(
+            instanceEntity = instanceEntity,
+            edgeId = edgeId,
+            values = values
+        )
+    }
 }
