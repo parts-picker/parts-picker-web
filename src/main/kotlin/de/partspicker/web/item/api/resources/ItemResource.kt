@@ -6,7 +6,7 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = ItemResource.collectionRelationName)
+@Relation(collectionRelation = ItemResource.COLLECTION_RELATION_NAME)
 class ItemResource(
     val id: Long,
     val status: ItemStatusResponse,
@@ -16,7 +16,7 @@ class ItemResource(
 ) : RepresentationModel<ItemResource>(links) {
 
     companion object {
-        const val collectionRelationName = "items"
+        const val COLLECTION_RELATION_NAME = "items"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -39,7 +39,7 @@ class ItemResource(
         result = 31 * result + id.hashCode()
         result = 31 * result + status.hashCode()
         result = 31 * result + condition.hashCode()
-        result = 31 * result + (note?.hashCode() ?: 0)
+        result = 31 * result + note.hashCode()
         return result
     }
 

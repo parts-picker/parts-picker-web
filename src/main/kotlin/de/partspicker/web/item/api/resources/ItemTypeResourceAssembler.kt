@@ -6,10 +6,9 @@ import de.partspicker.web.common.hal.DefaultName.READ
 import de.partspicker.web.common.hal.DefaultName.UPDATE
 import de.partspicker.web.common.hal.generateGetAllItemTypesLink
 import de.partspicker.web.common.hal.generateGetAllItemsByItemTypeIdLink
+import de.partspicker.web.common.hal.generatePostItemLink
 import de.partspicker.web.common.hal.withName
-import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
-import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.requests.ItemTypePostRequest
 import de.partspicker.web.item.api.requests.ItemTypePutRequest
 import de.partspicker.web.item.business.objects.ItemType
@@ -25,19 +24,19 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
         return ItemTypeResource(
             name = itemType.name!!,
             description = itemType.description!!,
-            links = generateDefaultLinks(itemTypeId = itemType.id)
+            links = generateDefaultLinks(itemTypeId = itemType.id, orgUnitId = itemType.orgUnitId)
         )
     }
 
-    private fun generateDefaultLinks(itemTypeId: Long): List<Link> {
+    private fun generateDefaultLinks(itemTypeId: Long, orgUnitId: Long): List<Link> {
         return listOf(
-            linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
+            linkTo<ItemTypeController> { handlePostItemType(orgUnitId, ItemTypePostRequest.DUMMY) }
                 .withRel(IanaLinkRelations.COLLECTION)
                 .withName(CREATE),
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withSelfRel()
                 .withName(READ),
-            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION),
+            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION, orgUnitId),
             linkTo<ItemTypeController> { handlePutItemTypeById(itemTypeId, ItemTypePutRequest.DUMMY) }
                 .withSelfRel()
                 .withName(UPDATE),
@@ -45,9 +44,7 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
                 .withSelfRel()
                 .withName(DELETE),
             generateGetAllItemsByItemTypeIdLink(IanaLinkRelations.DESCRIBES, itemTypeId),
-            linkTo<ItemController> { handlePostItem(itemTypeId, ItemPostRequest.DUMMY) }
-                .withRel(IanaLinkRelations.DESCRIBES)
-                .withName(CREATE)
+            generatePostItemLink(IanaLinkRelations.DESCRIBES, itemTypeId)
         )
     }
 }

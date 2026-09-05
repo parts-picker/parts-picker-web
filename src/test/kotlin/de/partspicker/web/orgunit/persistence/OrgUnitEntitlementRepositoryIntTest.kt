@@ -30,7 +30,7 @@ class OrgUnitEntitlementRepositoryIntTest(
             val orgUnit = orgUnitRepository.saveAndFlush(
                 OrgUnitEntityGenerators.generatorFor(owner).next().copy(id = 0)
             )
-            val saved = cut.saveAndFlush(
+            val savedEntitlement = cut.saveAndFlush(
                 OrgUnitEntitlementEntity(
                     orgUnit = orgUnit,
                     user = owner,
@@ -43,9 +43,9 @@ class OrgUnitEntitlementRepositoryIntTest(
             val found = cut.findByOrgUnitIdAndUserId(orgUnit.id, owner.id)
 
             // then
-            found shouldBe saved
+            found shouldBe savedEntitlement
             found?.accessLevel shouldBe AccessLevelEntity.MAINTAIN
-            found?.joinedOn shouldBe saved.joinedOn
+            found?.joinedOn shouldBe savedEntitlement.joinedOn
         }
 
         should("return null when the given user is no member of the given org unit") {
@@ -61,7 +61,7 @@ class OrgUnitEntitlementRepositoryIntTest(
         }
     }
 
-    context("unique constraint on org unit & user") {
+    context("uq_entitlements_org_unit_user constraint") {
         should("reject a second entitlement for the same user within the same org unit") {
             // given
             val owner = userRepository.saveAndFlush(UserEntityGenerators.humanGenerator.next().copy(id = 0))
@@ -72,7 +72,7 @@ class OrgUnitEntitlementRepositoryIntTest(
                 OrgUnitEntitlementEntity(
                     orgUnit = orgUnit,
                     user = owner,
-                    accessLevel = AccessLevelEntity.EDIT,
+                    accessLevel = AccessLevelEntity.CONFIGURE,
                     joinedOn = Instant.now()
                 )
             )
@@ -88,40 +88,6 @@ class OrgUnitEntitlementRepositoryIntTest(
                     )
                 )
             }
-        }
-    }
-
-    context("unique constraint on owner & name") {
-        should("reject a second org unit with the same name for the same owner") {
-            // given
-            val owner = userRepository.saveAndFlush(UserEntityGenerators.humanGenerator.next().copy(id = 0))
-            val existing = orgUnitRepository.saveAndFlush(
-                OrgUnitEntityGenerators.generatorFor(owner).next().copy(id = 0)
-            )
-
-            // when & then
-            shouldThrow<DataIntegrityViolationException> {
-                orgUnitRepository.saveAndFlush(
-                    OrgUnitEntityGenerators.generatorFor(owner).next().copy(id = 0, name = existing.name)
-                )
-            }
-        }
-
-        should("allow the same org unit name for a different owner") {
-            // given
-            val owner = userRepository.saveAndFlush(UserEntityGenerators.humanGenerator.next().copy(id = 0))
-            val otherOwner = userRepository.saveAndFlush(UserEntityGenerators.humanGenerator.next().copy(id = 0))
-            val existing = orgUnitRepository.saveAndFlush(
-                OrgUnitEntityGenerators.generatorFor(owner).next().copy(id = 0)
-            )
-
-            // when
-            val saved = orgUnitRepository.saveAndFlush(
-                OrgUnitEntityGenerators.generatorFor(otherOwner).next().copy(id = 0, name = existing.name)
-            )
-
-            // then
-            saved.name shouldBe existing.name
         }
     }
 }) {

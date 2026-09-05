@@ -29,4 +29,6 @@
     <include file="db/changelog/PICK-189.xml"/>
     <include file="db/changelog/PICK-214.xml"/>
     <include file="db/changelog/PICK-214-2.xml"/>
+    <include file="db/changelog/PICK-214-3.xml"/>
+    <include file="db/changelog/PICK-214-4.xml"/>
 </databaseChangeLog>

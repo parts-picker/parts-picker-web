@@ -1,11 +1,11 @@
 package de.partspicker.web.inventory.api.resources
 
-import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.collectionRelationName
+import de.partspicker.web.inventory.api.resources.RequiredItemTypeResource.Companion.COLLECTION_RELATION_NAME
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = collectionRelationName)
+@Relation(collectionRelation = COLLECTION_RELATION_NAME)
 class RequiredItemTypeResource(
     val itemTypeName: String,
     val assignedAmount: Long,
@@ -13,7 +13,7 @@ class RequiredItemTypeResource(
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<RequiredItemTypeResource>(links) {
     companion object {
-        const val collectionRelationName = "requiredItemTypes"
+        const val COLLECTION_RELATION_NAME = "requiredItemTypes"
     }
 
     override fun equals(other: Any?): Boolean {

@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/workflowInteractionServiceIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/workflowInteractionServiceIntTest.sql")
 class WorkflowInteractionServiceIntTest(
     private val cut: WorkflowInteractionService,
     // support classes
@@ -40,10 +40,11 @@ class WorkflowInteractionServiceIntTest(
     context("read instance info") {
         should("return instance info when given existing instance id") {
             // given
+            val projectId = 1L
             val instanceId = 1L
 
             // when
-            val instanceInfo = cut.readInstanceInfo(instanceId)
+            val instanceInfo = cut.readProjectInstanceInfo(projectId)
 
             // then
             instanceInfo shouldNotBe null
@@ -62,16 +63,16 @@ class WorkflowInteractionServiceIntTest(
             )
         }
 
-        should("throw WorkflowInstanceNotFoundException when given non-existing instance id") {
+        should("throw ProjectNotFoundException when given non-existing project id") {
             // given
             val nonExistentId = 666L
 
             // when & then
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.readInstanceInfo(nonExistentId)
+            val exception = shouldThrow<ProjectNotFoundException> {
+                cut.readProjectInstanceInfo(nonExistentId)
             }
 
-            exception.message shouldBe "Workflow instance with id $nonExistentId could not be found"
+            exception.message shouldBe "Project with id $nonExistentId could not be found"
         }
     }
 

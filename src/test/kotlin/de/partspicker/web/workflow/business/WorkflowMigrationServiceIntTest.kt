@@ -1,5 +1,9 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.common.security.CurrentUserProvider
+import de.partspicker.web.common.security.SystemContext
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.OrgUnitEntitlementReadService
 import de.partspicker.web.test.annotations.ReducedSpringTestContext
 import de.partspicker.web.test.builders.SimpleWorkflowJsonBuilder
 import de.partspicker.web.test.builders.WorkflowCreateBuilder
@@ -34,6 +38,10 @@ import org.springframework.context.annotation.Import
     WorkflowMigrationService::class,
     InstanceValueService::class,
     WorkflowInteractionService::class,
+    OrgUnitAccessService::class,
+    OrgUnitEntitlementReadService::class,
+    CurrentUserProvider::class,
+    SystemContext::class,
     WorkflowMigrationService::class,
     InstanceValueMigrationService::class,
     SpELConfig::class,

@@ -1,4 +1,4 @@
-package de.partspicker.web.common.util // ktlint-disable filename
+package de.partspicker.web.common.util
 
 infix fun <T : Any> Iterable<T>.intersects(other: Iterable<T>) = any(other::contains)
 

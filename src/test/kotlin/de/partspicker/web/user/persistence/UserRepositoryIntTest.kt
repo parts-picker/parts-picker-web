@@ -15,27 +15,26 @@ class UserRepositoryIntTest(
     private val cut: UserRepository
 ) : ShouldSpec({
 
-    // id 0 leaves the id to the sequence
     val newUser = UserEntityGenerators.humanGenerator.next().copy(id = 0)
 
     context("findByIssuerAndSubject") {
         should("return the user with the given issuer & subject when it exists") {
             // given
-            val saved = cut.saveAndFlush(newUser.copy())
+            val savedUser = cut.saveAndFlush(newUser.copy())
 
             // when
-            val found = cut.findByIssuerAndSubject(saved.issuer, saved.subject)
+            val found = cut.findByIssuerAndSubject(savedUser.issuer, savedUser.subject)
 
             // then
-            found shouldBe saved
+            found shouldBe savedUser
         }
 
         should("return null when no user with the given issuer & subject exists") {
             // given
-            val saved = cut.saveAndFlush(newUser.copy())
+            val savedUser = cut.saveAndFlush(newUser.copy())
 
             // when
-            val found = cut.findByIssuerAndSubject(saved.issuer, "unknown-subject")
+            val found = cut.findByIssuerAndSubject(savedUser.issuer, "unknown-subject")
 
             // then
             found.shouldBeNull()
@@ -53,7 +52,7 @@ class UserRepositoryIntTest(
         }
     }
 
-    context("unique constraint on issuer & subject") {
+    context("uq_users_issuer_subject constraint") {
         should("reject a second user with the same issuer & subject") {
             // given
             val existing = cut.saveAndFlush(newUser.copy())

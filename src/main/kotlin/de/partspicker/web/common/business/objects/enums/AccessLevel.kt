@@ -11,7 +11,8 @@ import de.partspicker.web.common.persistence.entities.enums.AccessLevelEntity
 enum class AccessLevel {
     NONE,
     READ,
-    EDIT,
+    USE,
+    CONFIGURE,
     MAINTAIN;
 
     infix fun isAtLeast(other: AccessLevel) = this >= other
@@ -19,7 +20,8 @@ enum class AccessLevel {
     companion object {
         fun from(accessLevelEntity: AccessLevelEntity?) = when (accessLevelEntity) {
             AccessLevelEntity.READ -> READ
-            AccessLevelEntity.EDIT -> EDIT
+            AccessLevelEntity.USE -> USE
+            AccessLevelEntity.CONFIGURE -> CONFIGURE
             AccessLevelEntity.MAINTAIN -> MAINTAIN
             null -> NONE
         }

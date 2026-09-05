@@ -1,11 +1,11 @@
 info:
-  name: POST advance instance state by edgeId
+  name: POST orgUnit
   type: http
   seq: 3
 
 http:
   method: POST
-  url: "{{base_url}}/instance/1/edges/1"
+  url: "{{base_url}}/org-units"
   auth: inherit
   headers:
     - name: Content-Type
@@ -14,11 +14,15 @@ http:
     type: json
     data: |-
       {
-      	"values": {
-      		"owner2": "user",
-      		"test": 9
-      	}
+      	"name": "POSTED ORG UNIT",
+      	"shortDescription": "POST WORKED"
       }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("org_unit_id", res.body._links.self.href.split("/").pop());
 
 settings:
   encodeUrl: true

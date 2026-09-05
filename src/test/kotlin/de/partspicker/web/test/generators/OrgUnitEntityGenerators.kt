@@ -22,7 +22,8 @@ class OrgUnitEntityGenerators private constructor() {
                 id = Arb.long(0).bind(),
                 name = Arb.string(range = IntRange(3, 16)).bind(),
                 shortDescription = Arb.descriptionLikeString().orNull().bind(),
-                owner = owner
+                owner = owner,
+                creation = CreationInfoGenerators.generatorFor(owner).bind()
             )
         }
     }

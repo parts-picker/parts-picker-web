@@ -3,12 +3,12 @@ package de.partspicker.web.item.api.resources
 import de.partspicker.web.common.hal.DefaultName
 import de.partspicker.web.common.hal.RelationName
 import de.partspicker.web.common.hal.generateGetAllItemsLink
+import de.partspicker.web.common.hal.generatePostItemLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
 import de.partspicker.web.item.api.ItemController
 import de.partspicker.web.item.api.ItemTypeController
 import de.partspicker.web.item.api.requests.ItemGeneralPatchRequest
-import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.responses.ItemConditionResponse
 import de.partspicker.web.item.api.responses.ItemStatusResponse
 import de.partspicker.web.item.business.objects.Item
@@ -30,23 +30,27 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             links = generateDefaultLinks(
                 itemId = item.id,
                 itemTypeId = item.type.id,
-                assignedProjectId = item.assignedProjectId
+                assignedProjectId = item.assignedProjectId,
+                orgUnitId = item.orgUnitId
             )
         )
     }
 
-    private fun generateDefaultLinks(itemId: Long, itemTypeId: Long, assignedProjectId: Long?): List<Link> {
+    private fun generateDefaultLinks(
+        itemId: Long,
+        itemTypeId: Long,
+        assignedProjectId: Long?,
+        orgUnitId: Long
+    ): List<Link> {
         val links = mutableListOf(
             linkTo<ItemController> { handleGetItemById(itemId) }
                 .withSelfRel()
                 .withName(DefaultName.READ),
-            generateGetAllItemsLink(IanaLinkRelations.COLLECTION),
+            generateGetAllItemsLink(IanaLinkRelations.COLLECTION, orgUnitId),
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withRel(IanaLinkRelations.DESCRIBED_BY)
                 .withName(DefaultName.READ),
-            linkTo<ItemController> { handlePostItem(itemTypeId, ItemPostRequest.DUMMY) }
-                .withRel(IanaLinkRelations.COLLECTION)
-                .withName(DefaultName.CREATE),
+            generatePostItemLink(IanaLinkRelations.DESCRIBES, itemTypeId),
             linkTo<ItemController> { handleDeleteItemById(itemId) }
                 .withSelfRel()
                 .withName(DefaultName.DELETE),
