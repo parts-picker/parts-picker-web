@@ -8,6 +8,7 @@ import de.partspicker.web.item.api.requests.ItemPostRequest
 import de.partspicker.web.item.api.resources.ItemResource
 import de.partspicker.web.item.api.resources.ItemResourceAssembler
 import de.partspicker.web.item.business.ItemService
+import de.partspicker.web.item.business.objects.CreateItem
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.business.objects.enums.ItemCondition
 import org.springframework.data.domain.Pageable
@@ -40,16 +41,19 @@ class ItemController(
     ): ResponseEntity<ItemResource> {
         logger.info("=> POST request for new item")
 
-        val createdItem = this.itemService.create(Item.from(body, itemTypeId))
+        val createdItem = this.itemService.create(CreateItem.from(body, itemTypeId))
 
         return ResponseEntity(itemResourceAssembler.toModel(createdItem), HttpStatus.OK)
     }
 
-    @GetMapping("/items")
-    fun handleGetAllItems(pageable: Pageable): ResponseEntity<PagedModel<ItemResource>> {
-        logger.info("=> GET request for all items")
+    @GetMapping("/org-units/{orgUnitId}/items")
+    fun handleGetAllItems(
+        @PathVariable orgUnitId: Long,
+        pageable: Pageable
+    ): ResponseEntity<PagedModel<ItemResource>> {
+        logger.info("=> GET request for all items of org unit with id ")
 
-        val items = this.itemService.getItems(pageable)
+        val items = this.itemService.findAllForOrgUnit(orgUnitId, pageable)
         val pagedResource = this.pagedResourcesAssembler.toModel(items, itemResourceAssembler)
 
         return ResponseEntity(pagedResource, HttpStatus.OK)
@@ -59,7 +63,7 @@ class ItemController(
     fun handleGetItemById(@PathVariable id: Long): ResponseEntity<ItemResource> {
         logger.info("=> GET request for item with id $id")
 
-        val itemResource = itemResourceAssembler.toModel(this.itemService.getItemById(id))
+        val itemResource = itemResourceAssembler.toModel(this.itemService.getById(id))
 
         return ResponseEntity(itemResource, HttpStatus.OK)
     }
@@ -71,7 +75,7 @@ class ItemController(
     ): ResponseEntity<PagedModel<ItemResource>> {
         logger.info("=> GET request for all items with itemTypeId $id")
 
-        val pagedItems = this.itemService.getItemsForItemType(id, pageable)
+        val pagedItems = this.itemService.findAllForItemType(id, pageable)
         val itemResources = this.pagedResourcesAssembler.toModel(pagedItems, itemResourceAssembler)
 
         return ResponseEntity(itemResources, HttpStatus.OK)

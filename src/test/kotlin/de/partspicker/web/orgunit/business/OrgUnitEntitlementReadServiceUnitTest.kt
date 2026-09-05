@@ -22,24 +22,6 @@ class OrgUnitEntitlementReadServiceUnitTest : ShouldSpec({
         clearMocks(orgUnitEntitlementRepositoryMock)
     }
 
-    context("isMember") {
-        should("return true when the given user holds an entitlement within the given org unit") {
-            // given
-            every { orgUnitEntitlementRepositoryMock.existsByOrgUnitIdAndUserId(1L, 2L) } returns true
-
-            // when & then
-            cut.isMember(1L, 2L) shouldBe true
-        }
-
-        should("return false when the given user holds no entitlement within the given org unit") {
-            // given
-            every { orgUnitEntitlementRepositoryMock.existsByOrgUnitIdAndUserId(1L, 2L) } returns false
-
-            // when & then
-            cut.isMember(1L, 2L) shouldBe false
-        }
-    }
-
     context("accessLevelOf") {
         should("return the level the given user holds within the given org unit") {
             // given

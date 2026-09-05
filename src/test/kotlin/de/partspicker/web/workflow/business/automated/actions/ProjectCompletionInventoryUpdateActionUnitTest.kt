@@ -29,7 +29,7 @@ class ProjectCompletionInventoryUpdateActionUnitTest : ShouldSpec({
             val instance = InstanceGenerators.generator.single()
             val project = ProjectGenerators.generator.single()
 
-            every { projectServiceMock.readByInstanceId(instance.id) } returns project
+            every { projectServiceMock.findByInstanceId(instance.id) } returns project
             every { itemRepositoryMock.updateSetStatusUsedByAssignedProjectId(project.id) } just runs
 
             // when
@@ -45,7 +45,7 @@ class ProjectCompletionInventoryUpdateActionUnitTest : ShouldSpec({
             // given
             val instance = InstanceGenerators.generator.single()
 
-            every { projectServiceMock.readByInstanceId(instance.id) } returns null
+            every { projectServiceMock.findByInstanceId(instance.id) } returns null
 
             // when
             val exception = shouldThrow<InstanceNotRelatedToProjectException> { cut.execute(instance, emptyList()) }

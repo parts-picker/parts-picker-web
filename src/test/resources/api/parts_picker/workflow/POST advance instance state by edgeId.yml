@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{base_url}}/instance/1/edges/1"
+  url: "{{base_url}}/projects/1/instance/edges/1"
   auth: inherit
   headers:
     - name: Content-Type

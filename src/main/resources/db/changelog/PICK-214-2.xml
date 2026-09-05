@@ -43,7 +43,30 @@
             <column name="owner_id" type="BIGINT">
                 <constraints nullable="false" unique="true" uniqueConstraintName="uq_org_unit_name_per_owner"/>
             </column>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="PICK-214:addForeignKeyConstraintToCreatedByInOrgUnitsTable" author="RobinGuth">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_created_by_of_org_unit"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseTableName="org_units"
+                baseColumnNames="created_by"
+                constraintName="fk_created_by_of_org_unit"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"
+        />
     </changeSet>
 
     <changeSet id="PICK-214:addForeignKeyConstraintToOwnerInOrgUnitsTable" author="RobinGuth">

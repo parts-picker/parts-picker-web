@@ -5,13 +5,13 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = AssignableItemResource.collectionRelationName)
+@Relation(collectionRelation = AssignableItemResource.COLLECTION_RELATION_NAME)
 class AssignableItemResource(
     val condition: InventoryItemConditionResponse,
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<AssignableItemResource>(links) {
     companion object {
-        const val collectionRelationName = "assignableItems"
+        const val COLLECTION_RELATION_NAME = "assignableItems"
     }
 
     override fun equals(other: Any?): Boolean {

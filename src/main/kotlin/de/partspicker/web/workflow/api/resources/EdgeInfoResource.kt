@@ -4,7 +4,7 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = EdgeInfoResource.collectionRelationName)
+@Relation(collectionRelation = EdgeInfoResource.COLLECTION_RELATION_NAME)
 class EdgeInfoResource(
     val name: String,
     val displayName: String,
@@ -12,7 +12,7 @@ class EdgeInfoResource(
 ) : RepresentationModel<EdgeInfoResource>(links) {
 
     companion object {
-        const val collectionRelationName = "edges"
+        const val COLLECTION_RELATION_NAME = "edges"
     }
 
     override fun equals(other: Any?): Boolean {

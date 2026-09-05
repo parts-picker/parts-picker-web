@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository
 interface OrgUnitRepository : JpaRepository<OrgUnitEntity, Long> {
 
     /**
-     * Loads the org unit together with its owner.
+     * Loads the org unit together with its owner & its creator, both of which the full view names.
      */
-    @EntityGraph(attributePaths = ["owner"])
-    fun findWithOwnerById(id: Long): OrgUnitEntity?
+    @EntityGraph(attributePaths = ["owner", "creation.createdBy"])
+    fun findWithOwnerAndCreatorById(id: Long): OrgUnitEntity?
 }

@@ -4,7 +4,7 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = NodeResource.collectionRelationName)
+@Relation(collectionRelation = NodeResource.COLLECTION_RELATION_NAME)
 sealed class NodeResource(
     val id: Long,
     val name: String,
@@ -12,7 +12,7 @@ sealed class NodeResource(
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<NodeResource>(links) {
     companion object {
-        const val collectionRelationName = "nodes"
+        const val COLLECTION_RELATION_NAME = "nodes"
     }
 
     override fun equals(other: Any?): Boolean {

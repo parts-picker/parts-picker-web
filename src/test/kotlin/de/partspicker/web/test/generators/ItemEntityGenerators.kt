@@ -82,7 +82,9 @@ class ItemEntityGenerators private constructor() {
                     type = itemType,
                     condition = condition,
                     status = status,
-                    note = note
+                    note = note,
+                    orgUnit = itemType.orgUnit,
+                    creation = itemType.creation
                 )
             }
         }

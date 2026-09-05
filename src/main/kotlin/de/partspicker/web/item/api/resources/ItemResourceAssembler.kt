@@ -30,17 +30,23 @@ class ItemResourceAssembler : RepresentationModelAssembler<Item, ItemResource> {
             links = generateDefaultLinks(
                 itemId = item.id,
                 itemTypeId = item.type.id,
-                assignedProjectId = item.assignedProjectId
+                assignedProjectId = item.assignedProjectId,
+                orgUnitId = item.orgUnitId
             )
         )
     }
 
-    private fun generateDefaultLinks(itemId: Long, itemTypeId: Long, assignedProjectId: Long?): List<Link> {
+    private fun generateDefaultLinks(
+        itemId: Long,
+        itemTypeId: Long,
+        assignedProjectId: Long?,
+        orgUnitId: Long
+    ): List<Link> {
         val links = mutableListOf(
             linkTo<ItemController> { handleGetItemById(itemId) }
                 .withSelfRel()
                 .withName(DefaultName.READ),
-            generateGetAllItemsLink(IanaLinkRelations.COLLECTION),
+            generateGetAllItemsLink(IanaLinkRelations.COLLECTION, orgUnitId),
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withRel(IanaLinkRelations.DESCRIBED_BY)
                 .withName(DefaultName.READ),

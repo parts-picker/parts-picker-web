@@ -1,7 +1,6 @@
 package de.partspicker.web.orgunit.business
 
 import de.partspicker.web.common.persistence.entities.enums.AccessLevelEntity
-import de.partspicker.web.orgunit.business.exceptions.OrgUnitNotFoundException
 import de.partspicker.web.orgunit.business.objects.CreateOrgUnit
 import de.partspicker.web.orgunit.persistence.OrgUnitEntitlementRepository
 import de.partspicker.web.orgunit.persistence.OrgUnitRepository
@@ -52,7 +51,7 @@ class OrgUnitServiceUnitTest : ShouldSpec({
             val ownerEntity = UserEntityGenerators.humanGenerator.next()
             val orgUnitEntity = OrgUnitEntityGenerators.generatorFor(ownerEntity).next()
             every { userRepositoryMock.findByIdOrNull(ownerEntity.id) } returns ownerEntity
-            every { orgUnitRepositoryMock.save(any()) } returns orgUnitEntity
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } returns orgUnitEntity
             val entitlementSlot = slot<OrgUnitEntitlementEntity>()
             every { orgUnitEntitlementRepositoryMock.save(capture(entitlementSlot)) } returns
                 OrgUnitEntitlementEntity(
@@ -86,32 +85,6 @@ class OrgUnitServiceUnitTest : ShouldSpec({
             // when & then
             shouldThrow<UserNotFoundException> {
                 cut.create(CreateOrgUnit(name = "some org unit", ownerId = 404L))
-            }
-        }
-    }
-
-    context("findById") {
-        should("return the org unit with the given id") {
-            // given
-            val ownerEntity = UserEntityGenerators.humanGenerator.next()
-            val orgUnitEntity = OrgUnitEntityGenerators.generatorFor(ownerEntity).next()
-            every { orgUnitRepositoryMock.findWithOwnerById(orgUnitEntity.id) } returns orgUnitEntity
-
-            // when
-            val returnedOrgUnit = cut.findById(orgUnitEntity.id)
-
-            // then
-            returnedOrgUnit.id shouldBe orgUnitEntity.id
-            returnedOrgUnit.shortDescription shouldBe orgUnitEntity.shortDescription
-        }
-
-        should("throw OrgUnitNotFoundException when no org unit with the given id exists") {
-            // given
-            every { orgUnitRepositoryMock.findWithOwnerById(any()) } returns null
-
-            // when & then
-            shouldThrow<OrgUnitNotFoundException> {
-                cut.findById(404L)
             }
         }
     }

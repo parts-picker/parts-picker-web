@@ -4,6 +4,8 @@ import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemT
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.item.business.ItemService
 import de.partspicker.web.item.business.ItemTypeService
+import de.partspicker.web.item.business.objects.CreateItem
+import de.partspicker.web.item.business.objects.CreateItemType
 import de.partspicker.web.item.business.objects.Item
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.item.business.objects.enums.ItemCondition
@@ -11,6 +13,7 @@ import de.partspicker.web.item.business.objects.enums.ItemStatus
 import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.test.util.TestSetupHelper
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
@@ -19,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 
+@Suppress("LongParameterList")
 @SpringBootTest
 @ActiveProfiles("integration")
 @Transactional
@@ -29,7 +33,8 @@ class InventoryItemReadServiceIntTest(
     private val itemTypeService: ItemTypeService,
     private val itemService: ItemService,
     private val requiredItemTypeService: RequiredItemTypeService,
-    private val entityManager: EntityManager
+    private val entityManager: EntityManager,
+    private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
     // helpers
     fun flushAndClear() {
@@ -39,6 +44,7 @@ class InventoryItemReadServiceIntTest(
 
     fun setupProject(): Project {
         val project = projectService.create(
+            testSetupHelper.currentOrgUnitId(),
             CreateProject(
                 "Test Project",
                 ""
@@ -51,15 +57,15 @@ class InventoryItemReadServiceIntTest(
 
     fun setupItemType(name: String = "itemType"): ItemType {
         return itemTypeService.create(
-            ItemType(id = 0, name = name, description = "")
+            testSetupHelper.currentOrgUnitId(),
+            CreateItemType(name = name, description = "")
         )
     }
 
     fun setupItemForType(itemType: ItemType, projectId: Long? = null): Item {
         return itemService.create(
-            Item(
-                id = 0,
-                type = itemType,
+            CreateItem(
+                itemTypeId = itemType.id,
                 assignedProjectId = projectId,
                 status = if (projectId == null) ItemStatus.IN_STOCK else ItemStatus.RESERVED,
                 condition = ItemCondition.NEW,

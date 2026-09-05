@@ -13,13 +13,13 @@ class AvailableItemTypeService(
     private val projectService: ProjectService
 ) {
     fun searchByName(queryName: String, projectId: Long): List<AvailableItemType> {
-        val project = this.projectService.read(projectId)
+        val project = this.projectService.getById(projectId)
 
         NodeNameEqualsRule(project.status, "planning").valid()
         ProjectActiveRule(project).valid()
 
         return AvailableItemType.AsList.from(
-            this.availableItemTypeSearchRepository.searchByNameFilterRequired(queryName, projectId),
+            this.availableItemTypeSearchRepository.searchByNameFilterRequired(queryName, projectId, project.orgUnitId),
             projectId,
             project.status
         )

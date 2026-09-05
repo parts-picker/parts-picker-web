@@ -3,10 +3,12 @@ package de.partspicker.web.inventory.business
 import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.item.business.ItemTypeService
+import de.partspicker.web.item.business.objects.CreateItemType
 import de.partspicker.web.item.business.objects.ItemType
 import de.partspicker.web.project.business.ProjectService
 import de.partspicker.web.project.business.objects.CreateProject
 import de.partspicker.web.project.business.objects.Project
+import de.partspicker.web.test.util.TestSetupHelper
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.collections.shouldHaveSize
@@ -27,8 +29,8 @@ class RequiredItemTypeReadServiceIntTest(
     private val projectService: ProjectService,
     private val itemTypeService: ItemTypeService,
     private val requiredItemTypeService: RequiredItemTypeService,
-    private val entityManager: EntityManager
-
+    private val entityManager: EntityManager,
+    private val testSetupHelper: TestSetupHelper
 ) : ShouldSpec({
     // helpers
     fun flushAndClear() {
@@ -38,6 +40,7 @@ class RequiredItemTypeReadServiceIntTest(
 
     fun setupProject(): Project {
         val project = projectService.create(
+            testSetupHelper.currentOrgUnitId(),
             CreateProject(
                 "Test Project",
                 ""
@@ -50,7 +53,8 @@ class RequiredItemTypeReadServiceIntTest(
 
     fun setupItemType(name: String = "itemType"): ItemType {
         return itemTypeService.create(
-            ItemType(id = 0, name = name, description = "")
+            testSetupHelper.currentOrgUnitId(),
+            CreateItemType(name = name, description = "")
         )
     }
 

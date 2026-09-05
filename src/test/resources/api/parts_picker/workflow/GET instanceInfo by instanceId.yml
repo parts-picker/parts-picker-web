@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{base_url}}/instance/7/node"
+  url: "{{base_url}}/projects/7/instance/node"
   auth: inherit
 
 settings:

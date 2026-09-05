@@ -1,6 +1,9 @@
 package de.partspicker.web.inventory.business
 
+import de.partspicker.web.common.business.exceptions.CrossOrgUnitReferenceException
+import de.partspicker.web.common.business.objects.enums.AccessLevel
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
+import de.partspicker.web.common.util.elseThrow
 import de.partspicker.web.inventory.business.objects.CreateOrUpdateRequiredItemType
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.inventory.business.rules.RequiredItemTypeAmountNotSmallerAssignedRule
@@ -8,12 +11,17 @@ import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.inventory.persistence.entities.RequiredItemTypeEntity
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
+import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.business.rules.ProjectActiveRule
 import de.partspicker.web.project.persistance.ProjectRepository
 import de.partspicker.web.workflow.business.WorkflowInteractionService
+import org.springframework.data.domain.Pageable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList")
@@ -25,11 +33,14 @@ class RequiredItemTypeService(
     private val itemTypeRepository: ItemTypeRepository,
     private val workflowInteractionService: WorkflowInteractionService,
     private val inventoryItemReadService: InventoryItemReadService,
-    private val inventoryItemService: InventoryItemService
+    private val itemRepository: ItemRepository,
+    private val orgUnitAccessService: OrgUnitAccessService
 ) {
     fun createOrUpdate(requiredItemTypeToUpdate: CreateOrUpdateRequiredItemType): RequiredItemType {
         val projectEntity = this.projectRepository.getNullableReferenceById(requiredItemTypeToUpdate.projectId)
             ?: throw ProjectNotFoundException(projectId = requiredItemTypeToUpdate.projectId)
+
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.EDIT)
 
         val assignedAmount = this.inventoryItemReadService.countAssignedForItemTypeAndProject(
             projectId = requiredItemTypeToUpdate.projectId,
@@ -41,14 +52,16 @@ class RequiredItemTypeService(
         NodeNameEqualsRule(project.status, "planning").valid()
         ProjectActiveRule(project).valid()
 
-        if (!this.itemTypeRepository.existsById(requiredItemTypeToUpdate.itemTypeId)) {
-            throw ItemTypeNotFoundException(requiredItemTypeToUpdate.itemTypeId)
-        }
+        val itemTypeEntity = this.itemTypeRepository.findByIdOrNull(requiredItemTypeToUpdate.itemTypeId)
+            ?: throw ItemTypeNotFoundException(requiredItemTypeToUpdate.itemTypeId)
+
+        (itemTypeEntity.orgUnit.id == projectEntity.orgUnit.id) elseThrow
+            CrossOrgUnitReferenceException(projectEntity.orgUnit.id, itemTypeEntity.orgUnit.id)
 
         val createdRequiredItemType = this.requiredItemTypeRepository.save(
             RequiredItemTypeEntity(
                 projectEntity = projectEntity,
-                itemTypeId = requiredItemTypeToUpdate.itemTypeId,
+                itemTypeEntity = itemTypeEntity,
                 requiredAmount = requiredItemTypeToUpdate.requiredAmount
             )
         )
@@ -57,9 +70,9 @@ class RequiredItemTypeService(
     }
 
     fun delete(projectId: Long, itemTypeId: Long) {
-        if (!this.projectRepository.existsById(projectId)) {
-            throw ProjectNotFoundException(projectId = projectId)
-        }
+        val projectEntity = this.projectRepository.getNullableReferenceById(projectId)
+            ?: throw ProjectNotFoundException(projectId = projectId)
+        this.orgUnitAccessService.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.EDIT)
 
         val projectStatus = this.workflowInteractionService.readProjectStatus(projectId)
         NodeNameEqualsRule(projectStatus, "planning").valid()
@@ -68,7 +81,7 @@ class RequiredItemTypeService(
             throw ItemTypeNotFoundException(itemTypeId)
         }
 
-        this.inventoryItemService.removeAllWithTypeFromProject(itemTypeId = itemTypeId, projectId = projectId)
+        this.unassignAllItemsOfTypeFromProject(itemTypeId = itemTypeId, projectId = projectId)
         this.requiredItemTypeRepository.deleteById(RequiredItemTypeId(projectId, itemTypeId))
     }
 
@@ -100,5 +113,25 @@ class RequiredItemTypeService(
             .forEach {
                 this.createOrUpdate(it)
             }
+    }
+
+    /**
+     * Puts every item of the given type back into stock. Part of removing the requirement it belongs to,
+     * which is the operation that carries the check.
+     */
+    private fun unassignAllItemsOfTypeFromProject(itemTypeId: Long, projectId: Long) {
+        val itemsToUpdate = this.itemRepository.findAllByAssignedProjectIdAndTypeId(
+            projectId = projectId,
+            itemTypeId = itemTypeId,
+            Pageable.unpaged()
+        )
+
+        val updatedItems = itemsToUpdate.map {
+            it.assignedProject = null
+            it.status = ItemStatusEntity.IN_STOCK
+            it
+        }
+
+        this.itemRepository.saveAll(updatedItems)
     }
 }

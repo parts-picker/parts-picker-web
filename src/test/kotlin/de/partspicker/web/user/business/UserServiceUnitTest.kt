@@ -1,5 +1,8 @@
 package de.partspicker.web.user.business
 
+import de.partspicker.web.orgunit.business.OrgUnitService
+import de.partspicker.web.orgunit.business.objects.CreateOrgUnit
+import de.partspicker.web.test.generators.OrgUnitGenerators
 import de.partspicker.web.test.generators.UserEntityGenerators
 import de.partspicker.web.test.generators.UserIdentityGenerators
 import de.partspicker.web.user.business.exceptions.UserAlreadyProvisionedException
@@ -20,10 +23,15 @@ import org.springframework.dao.DataIntegrityViolationException
 
 class UserServiceUnitTest : ShouldSpec({
     val userRepositoryMock = mockk<UserRepository>()
-    val cut = UserService(userRepository = userRepositoryMock)
+    val orgUnitServiceMock = mockk<OrgUnitService>()
+    val cut = UserService(userRepository = userRepositoryMock, orgUnitService = orgUnitServiceMock)
+
+    beforeTest {
+        every { orgUnitServiceMock.create(any()) } returns OrgUnitGenerators.generator.next()
+    }
 
     afterTest {
-        clearMocks(userRepositoryMock)
+        clearMocks(userRepositoryMock, orgUnitServiceMock)
     }
 
     context("resolve") {
@@ -62,6 +70,57 @@ class UserServiceUnitTest : ShouldSpec({
             savedSlot.captured.username shouldBe identity.username
             savedSlot.captured.displayName shouldBe identity.displayName
             savedSlot.captured.type shouldBe UserTypeEntity.HUMAN
+        }
+
+        should("give a newly created user an org unit named after their display name") {
+            // given
+            val identity = UserIdentityGenerators.generator.next().copy(displayName = "Robin")
+            val created = UserEntityGenerators.generatorFor(identity).next()
+            every { userRepositoryMock.findByIssuerAndSubject(identity.issuer, identity.subject) } returns null
+            every { userRepositoryMock.saveAndFlush(any()) } returns created
+
+            val createOrgUnitSlot = slot<CreateOrgUnit>()
+            every { orgUnitServiceMock.create(capture(createOrgUnitSlot)) } returns
+                OrgUnitGenerators.generator.next()
+
+            // when
+            cut.resolve(identity)
+
+            // then
+            createOrgUnitSlot.captured.name shouldBe "Robin's Workshop"
+            createOrgUnitSlot.captured.ownerId shouldBe created.id
+        }
+
+        should("name the org unit after the username when the token carries no display name") {
+            // given
+            val identity = UserIdentityGenerators.generator.next()
+                .copy(username = "robin", displayName = null)
+            every { userRepositoryMock.findByIssuerAndSubject(identity.issuer, identity.subject) } returns null
+            every { userRepositoryMock.saveAndFlush(any()) } returns
+                UserEntityGenerators.generatorFor(identity).next()
+
+            val createOrgUnitSlot = slot<CreateOrgUnit>()
+            every { orgUnitServiceMock.create(capture(createOrgUnitSlot)) } returns
+                OrgUnitGenerators.generator.next()
+
+            // when
+            cut.resolve(identity)
+
+            // then
+            createOrgUnitSlot.captured.name shouldBe "robin's Workshop"
+        }
+
+        should("create no org unit for a user that already exists") {
+            // given
+            val identity = UserIdentityGenerators.generator.next()
+            every { userRepositoryMock.findByIssuerAndSubject(identity.issuer, identity.subject) } returns
+                UserEntityGenerators.generatorFor(identity).next()
+
+            // when
+            cut.resolve(identity)
+
+            // then
+            verify(exactly = 0) { orgUnitServiceMock.create(any()) }
         }
 
         should("throw DataIntegrityViolationException when user with issuer and subject already exists") {

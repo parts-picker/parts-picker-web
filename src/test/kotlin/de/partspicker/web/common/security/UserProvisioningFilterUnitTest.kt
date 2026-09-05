@@ -64,6 +64,9 @@ class UserProvisioningFilterUnitTest : ShouldSpec({
         }
 
         should("pass the request on without resolving when it carries no authentication") {
+            // given
+            SecurityContextHolder.clearContext()
+
             // when
             cut.doFilter(MockHttpServletRequest(), MockHttpServletResponse(), filterChainMock)
 

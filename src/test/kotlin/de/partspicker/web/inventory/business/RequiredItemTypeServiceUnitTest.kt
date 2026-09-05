@@ -5,9 +5,15 @@ import de.partspicker.web.inventory.business.exceptions.RequiredItemTypeAmountSm
 import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
+import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.ItemEntity
+import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.ItemEntityGenerators
+import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
@@ -32,6 +38,10 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import java.util.Optional
 import java.util.stream.Stream
 
 class RequiredItemTypeServiceUnitTest : ShouldSpec({
@@ -42,7 +52,8 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
     val workflowInteractionsServiceMock = mockk<WorkflowInteractionService>()
     val inventoryItemReadServiceMock = mockk<InventoryItemReadService>()
-    val inventoryItemServiceMock = mockk<InventoryItemService>()
+    val itemRepositoryMock = mockk<ItemRepository>()
+    val orgUnitAccessServiceMock = mockk<OrgUnitAccessService>()
     val cut = RequiredItemTypeService(
         requiredItemTypeRepository = requiredItemTypeRepositoryMock,
         requiredItemTypeReadService = requiredItemTypeReadServiceMock,
@@ -50,11 +61,16 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
         itemTypeRepository = itemTypeRepositoryMock,
         workflowInteractionService = workflowInteractionsServiceMock,
         inventoryItemReadService = inventoryItemReadServiceMock,
-        inventoryItemService = inventoryItemServiceMock
+        itemRepository = itemRepositoryMock,
+        orgUnitAccessService = orgUnitAccessServiceMock
     )
 
+    beforeTest {
+        every { orgUnitAccessServiceMock.requireAtLeast(any(), any()) } returns Unit
+    }
+
     afterTest {
-        clearMocks(requiredItemTypeRepositoryMock)
+        clearMocks(requiredItemTypeRepositoryMock, orgUnitAccessServiceMock)
     }
 
     context("createOrUpdate") {
@@ -71,13 +87,20 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity).copy(
                 active = true
             )
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
 
-            every { itemTypeRepositoryMock.existsById(createOrUpdateRequiredItemType.itemTypeId) } returns true
+            every { itemTypeRepositoryMock.findById(createOrUpdateRequiredItemType.itemTypeId) } returns Optional.of(
+                ItemTypeEntityGenerators.generator.single().copy(
+                    id = createOrUpdateRequiredItemType.itemTypeId,
+                    orgUnit = projectEntity.orgUnit
+                )
+            )
             every { requiredItemTypeRepositoryMock.save(any()) } returnsArgument 0
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -136,7 +159,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     id = createOrUpdateRequiredItemType.projectId
                 )
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -171,7 +194,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     id = createOrUpdateRequiredItemType.projectId
                 )
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -209,7 +232,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     id = createOrUpdateRequiredItemType.projectId
                 )
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -236,7 +259,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             )
 
             every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                mockk()
+                ProjectEntityGenerators.generator.single()
 
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -269,7 +292,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                     id = createOrUpdateRequiredItemType.projectId
                 )
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -290,18 +313,17 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns true
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns
+                ProjectEntityGenerators.generator.single()
             every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
             every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
             every {
                 workflowInteractionsServiceMock.readProjectStatus(projectId)
             } returns "planning"
             every {
-                inventoryItemServiceMock.removeAllWithTypeFromProject(
-                    itemTypeId = itemTypeId,
-                    projectId = projectId
-                )
-            } returns Unit
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
+            } returns Page.empty()
+            every { itemRepositoryMock.saveAll(any<Iterable<ItemEntity>>()) } returns emptyList()
 
             // when
             cut.delete(projectId, itemTypeId)
@@ -309,11 +331,32 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // then
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId))
-                inventoryItemServiceMock.removeAllWithTypeFromProject(
-                    itemTypeId = itemTypeId,
-                    projectId = projectId
-                )
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
             }
+        }
+
+        should("put every item of the type back into stock when deleting the requirement") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+            val assignedItem = ItemEntityGenerators.assignedGenerator.next()
+
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns
+                ProjectEntityGenerators.generator.single()
+            every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
+            every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
+            every { workflowInteractionsServiceMock.readProjectStatus(projectId) } returns "planning"
+            every {
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
+            } returns PageImpl(listOf(assignedItem))
+            every { itemRepositoryMock.saveAll(any<Iterable<ItemEntity>>()) } returns emptyList()
+
+            // when
+            cut.delete(projectId, itemTypeId)
+
+            // then
+            assignedItem.assignedProject shouldBe null
+            assignedItem.status shouldBe ItemStatusEntity.IN_STOCK
         }
 
         should("throw ProjectNotFoundException when given non-existent id") {
@@ -321,7 +364,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns false
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -341,7 +384,8 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns true
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns
+                ProjectEntityGenerators.generator.single()
             every {
                 workflowInteractionsServiceMock.readProjectStatus(projectId)
             } returns "planning"

@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/workflowInteractionServiceIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/workflowInteractionServiceIntTest.sql")
 class WorkflowInteractionServiceIntTest(
     private val cut: WorkflowInteractionService,
     // support classes

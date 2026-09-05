@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 
 interface ItemRepository : JpaRepository<ItemEntity, Long> {
+    fun findAllByOrgUnitId(orgUnitId: Long, pageable: Pageable): Page<ItemEntity>
     fun findAllByTypeId(itemTypeId: Long, pageable: Pageable): Page<ItemEntity>
     fun deleteAllByTypeId(itemTypeId: Long): Long
 

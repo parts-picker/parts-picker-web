@@ -31,10 +31,10 @@ data class RequiredItemTypeEntity(
     @Column(nullable = false)
     val requiredAmount: Long
 ) {
-    constructor(projectEntity: ProjectEntity, itemTypeId: Long, requiredAmount: Long) : this(
-        id = RequiredItemTypeId(projectId = projectEntity.id, itemTypeId = itemTypeId),
+    constructor(projectEntity: ProjectEntity, itemTypeEntity: ItemTypeEntity, requiredAmount: Long) : this(
+        id = RequiredItemTypeId(projectId = projectEntity.id, itemTypeId = itemTypeEntity.id),
         project = projectEntity,
-        itemType = ItemTypeEntity(id = itemTypeId),
+        itemType = itemTypeEntity,
         requiredAmount = requiredAmount
     )
 }

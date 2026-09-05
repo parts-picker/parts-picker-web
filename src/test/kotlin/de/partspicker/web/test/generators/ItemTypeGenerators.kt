@@ -13,12 +13,14 @@ class ItemTypeGenerators private constructor() {
         val generator: Arb<ItemType> = Arb.bind(
             Arb.long(0),
             Arb.string(range = IntRange(6, 20)),
-            Arb.descriptionLikeString()
-        ) { id, name, description ->
+            Arb.descriptionLikeString(),
+            Arb.long(1)
+        ) { id, name, description, orgUnitId ->
             ItemType(
                 id = id,
                 name = name,
-                description = description
+                description = description,
+                orgUnitId = orgUnitId
             )
         }
     }

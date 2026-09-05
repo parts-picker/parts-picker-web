@@ -25,19 +25,19 @@ class ItemTypeResourceAssembler : RepresentationModelAssembler<ItemType, ItemTyp
         return ItemTypeResource(
             name = itemType.name!!,
             description = itemType.description!!,
-            links = generateDefaultLinks(itemTypeId = itemType.id)
+            links = generateDefaultLinks(itemTypeId = itemType.id, orgUnitId = itemType.orgUnitId)
         )
     }
 
-    private fun generateDefaultLinks(itemTypeId: Long): List<Link> {
+    private fun generateDefaultLinks(itemTypeId: Long, orgUnitId: Long): List<Link> {
         return listOf(
-            linkTo<ItemTypeController> { handlePostItemType(ItemTypePostRequest.DUMMY) }
+            linkTo<ItemTypeController> { handlePostItemType(orgUnitId, ItemTypePostRequest.DUMMY) }
                 .withRel(IanaLinkRelations.COLLECTION)
                 .withName(CREATE),
             linkTo<ItemTypeController> { handleGetItemTypeById(itemTypeId) }
                 .withSelfRel()
                 .withName(READ),
-            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION),
+            generateGetAllItemTypesLink(IanaLinkRelations.COLLECTION, orgUnitId),
             linkTo<ItemTypeController> { handlePutItemTypeById(itemTypeId, ItemTypePutRequest.DUMMY) }
                 .withSelfRel()
                 .withName(UPDATE),

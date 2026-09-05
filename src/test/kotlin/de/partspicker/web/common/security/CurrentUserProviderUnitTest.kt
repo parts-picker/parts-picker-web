@@ -98,6 +98,9 @@ class CurrentUserProviderUnitTest :
             }
 
             should("throw NoAuthenticatedUserException when the context holds no authentication") {
+                // given
+                SecurityContextHolder.clearContext()
+
                 // when & then
                 shouldThrow<NoAuthenticatedUserException> {
                     CurrentUserProvider(userServiceMock).getCurrentUser()

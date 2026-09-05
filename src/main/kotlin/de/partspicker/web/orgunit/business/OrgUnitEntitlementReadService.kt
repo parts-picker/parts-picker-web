@@ -8,9 +8,6 @@ import org.springframework.stereotype.Service
 class OrgUnitEntitlementReadService(
     private val orgUnitEntitlementRepository: OrgUnitEntitlementRepository
 ) {
-    fun isMember(orgUnitId: Long, userId: Long) =
-        this.orgUnitEntitlementRepository.existsByOrgUnitIdAndUserId(orgUnitId, userId)
-
     /**
      * The level the given user holds within the given org unit, or [AccessLevel.NONE] if they hold none.
      */

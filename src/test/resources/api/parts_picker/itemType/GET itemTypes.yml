@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{base_url}}/item-types?page=0"
+  url: "{{base_url}}/org-units/{{org_unit_id}}/item-types?page=0"
   auth: inherit
 
 settings:

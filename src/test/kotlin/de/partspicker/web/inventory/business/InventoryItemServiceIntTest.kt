@@ -30,7 +30,8 @@ class InventoryItemServiceIntTest(
     // helpers
     private val itemService: ItemService,
     private val workflowMigrationService: WorkflowMigrationService,
-    private val testSetupHelper: TestSetupHelper
+    private val testSetupHelper: TestSetupHelper,
+    private val requiredItemTypeService: RequiredItemTypeService
 ) : ShouldSpec({
     context("readAllAssignableForItemTypeAndProject") {
         should("return only items of the given type that are assignable to the given project") {
@@ -182,7 +183,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(item.id)
+            val itemToCheck = itemService.getById(item.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -201,7 +202,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(itemToAssign.id)
+            val itemToCheck = itemService.getById(itemToAssign.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -219,7 +220,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(itemToAssign.id)
+            val itemToCheck = itemService.getById(itemToAssign.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -238,7 +239,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not reassigned
-            val itemToCheck = itemService.getItemById(assignedItem.id)
+            val itemToCheck = itemService.getById(assignedItem.id)
             itemToCheck.assignedProjectId shouldBe otherProject.id
         }
     }
@@ -275,12 +276,12 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not removed
-            val itemToCheck = itemService.getItemById(item.id)
+            val itemToCheck = itemService.getById(item.id)
             itemToCheck.assignedProjectId shouldBe project.id
         }
     }
 
-    context("removeAllWithTypeFromProject") {
+    context("removeAllWithTypeFromProject through deleting the requirement") {
         should("remove each item of the given type from the project with the given id") {
             // given
             val project = testSetupHelper.setupProject()
@@ -291,7 +292,7 @@ class InventoryItemServiceIntTest(
             testSetupHelper.setupItemsForType(amountToCreate = itemAmount, itemType = itemType, projectId = project.id)
 
             // when
-            cut.removeAllWithTypeFromProject(itemTypeId = itemType.id, projectId = project.id)
+            requiredItemTypeService.delete(projectId = project.id, itemTypeId = itemType.id)
 
             // then
             val itemsForProject = cut.readAllAssignedForItemTypeAndProject(
@@ -322,7 +323,7 @@ class InventoryItemServiceIntTest(
 
             // when
             shouldThrow<WrongNodeNameRuleException> {
-                cut.removeAllWithTypeFromProject(itemTypeId = itemType.id, projectId = project.id)
+                requiredItemTypeService.delete(projectId = project.id, itemTypeId = itemType.id)
             }
 
             // then

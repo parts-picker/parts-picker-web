@@ -37,11 +37,14 @@ class ProjectController(
         val logger = logger()
     }
 
-    @PostMapping("/projects")
-    fun handlePostProject(@RequestBody body: ProjectPostRequest): ResponseEntity<ProjectResource> {
-        logger.info("=> POST request for new project")
+    @PostMapping("/org-units/{orgUnitId}/projects")
+    fun handlePostProject(
+        @PathVariable orgUnitId: Long,
+        @RequestBody body: ProjectPostRequest
+    ): ResponseEntity<ProjectResource> {
+        logger.info("=> POST request for new project in org unit with id ")
 
-        val createdProject = this.projectService.create(CreateProject.from(body))
+        val createdProject = this.projectService.create(orgUnitId, CreateProject.from(body))
 
         return ResponseEntity(projectResourceAssembler.toModel(createdProject), HttpStatus.OK)
     }
@@ -58,11 +61,14 @@ class ProjectController(
         return ResponseEntity(projectResourceAssembler.toModel(copiedProject), HttpStatus.OK)
     }
 
-    @GetMapping("/projects")
-    fun handleGetAllProjects(pageable: Pageable): ResponseEntity<PagedModel<ProjectResource>> {
-        logger.info("=> GET request for all projects")
+    @GetMapping("/org-units/{orgUnitId}/projects")
+    fun handleGetAllProjects(
+        @PathVariable orgUnitId: Long,
+        pageable: Pageable
+    ): ResponseEntity<PagedModel<ProjectResource>> {
+        logger.info("=> GET request for all projects of org unit with id ")
 
-        val projects = this.projectService.readAll(pageable)
+        val projects = this.projectService.findAllForOrgUnit(orgUnitId, pageable)
         val pagedResource = this.pagedResourcesAssembler.toModel(projects, projectResourceAssembler)
 
         return ResponseEntity(pagedResource, HttpStatus.OK)
@@ -72,7 +78,7 @@ class ProjectController(
     fun handleGetProjectById(@PathVariable id: Long): ResponseEntity<ProjectResource> {
         logger.info("=> GET request for project with id $id")
 
-        val projectResource = projectResourceAssembler.toModel(this.projectService.read(id))
+        val projectResource = projectResourceAssembler.toModel(this.projectService.getById(id))
 
         return ResponseEntity(projectResource, HttpStatus.OK)
     }

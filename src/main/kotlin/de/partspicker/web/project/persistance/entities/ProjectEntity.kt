@@ -1,7 +1,9 @@
 package de.partspicker.web.project.persistance.entities
 
-import de.partspicker.web.project.business.objects.CreateProject
+import de.partspicker.web.common.persistence.entities.CreationInfo
+import de.partspicker.web.orgunit.persistence.entities.OrgUnitEntity
 import de.partspicker.web.workflow.persistence.entities.InstanceEntity
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.ForeignKey
@@ -43,17 +45,12 @@ data class ProjectEntity(
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_project_id", foreignKey = ForeignKey(name = "fk_source_project"))
-    val sourceProject: ProjectEntity?
-) {
-    companion object {
-        fun from(project: CreateProject, instanceEntity: InstanceEntity, sourceProject: ProjectEntity?) = ProjectEntity(
-            id = 0L,
-            name = project.name,
-            shortDescription = project.shortDescription,
-            description = project.description,
-            group = project.groupId?.let { groupId -> GroupEntity(id = groupId) },
-            workflowInstance = instanceEntity,
-            sourceProject = sourceProject
-        )
-    }
-}
+    val sourceProject: ProjectEntity?,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_unit_id", foreignKey = ForeignKey(name = "fk_org_unit_of_project"))
+    var orgUnit: OrgUnitEntity,
+
+    @Embedded
+    var creation: CreationInfo
+)

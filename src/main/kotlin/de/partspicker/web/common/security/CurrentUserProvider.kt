@@ -26,6 +26,11 @@ class CurrentUserProvider(
 
     fun getCurrentUser() = this.resolvedUser
 
+    /**
+     * The current user as a reference for writing foreign keys, without loading the row again.
+     */
+    fun getCurrentUserEntity() = this.userService.getReference(this.resolvedUser.id)
+
     // helpers
     private fun resolveWithRetry(userIdentity: UserIdentity) = try {
         this.userService.resolve(userIdentity)

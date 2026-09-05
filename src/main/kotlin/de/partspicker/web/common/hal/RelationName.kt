@@ -13,7 +13,8 @@ enum class RelationName(val displayName: String) {
     STATUS("status"), // RFC8631
     SUBSET_OF("subsetOf"),
     COPIES("copies"),
-    COPIED_FROM("copiedFrom")
+    COPIED_FROM("copiedFrom"),
+    GROUP("group")
 }
 
 fun WebMvcLinkBuilder.withRel(rel: RelationName) = this.withRel(rel.displayName)

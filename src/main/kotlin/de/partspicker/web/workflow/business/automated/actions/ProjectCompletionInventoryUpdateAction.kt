@@ -25,7 +25,7 @@ class ProjectCompletionInventoryUpdateAction(
     }
 
     override fun execute(instance: Instance, instanceValues: List<InstanceValue>): AutomatedActionResult {
-        val projectId = this.projectService.readByInstanceId(instanceId = instance.id)?.id
+        val projectId = this.projectService.findByInstanceId(instanceId = instance.id)?.id
             ?: throw InstanceNotRelatedToProjectException(instanceId = instance.id)
 
         logger.info("Updating inventory for project with id $projectId, setting status of all assigned items to used")

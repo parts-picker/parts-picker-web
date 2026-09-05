@@ -22,16 +22,16 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/workflowInteractionControllerIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/workflowInteractionControllerIntTest.sql")
 class WorkflowInteractionControllerIntTest(
     private val mockMvc: MockMvc
 ) : ShouldSpec({
 
     context("GET current instance info") {
         should("return status 200 & the resource with the instance info belonging to the requested id when called") {
-            val id = 100
+            val projectId = 100
 
-            mockMvc.get("/instance/$id/node")
+            mockMvc.get("/projects/$projectId/instance/node")
                 .andExpect {
                     status { isOk() }
                     content {
@@ -50,7 +50,7 @@ class WorkflowInteractionControllerIntTest(
         should("return status 404 when no instance with the requested id exists") {
             val nonExistentId = 666
 
-            val path = "/instance/$nonExistentId/node"
+            val path = "/projects/$nonExistentId/instance/node"
 
             mockMvc.get(path)
                 .andExpect {
@@ -62,7 +62,7 @@ class WorkflowInteractionControllerIntTest(
                         jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
                         jsonPath(
                             "$.message",
-                            `is`("Workflow instance with id $nonExistentId could not be found")
+                            `is`("Project with id $nonExistentId could not be found")
                         )
                         jsonPath("$.path", `is`(path))
                         jsonPath("$.timestamp", notNullValue())
@@ -73,7 +73,7 @@ class WorkflowInteractionControllerIntTest(
 
     context("POST instance state advance") {
         should("return status 200 & the new current instance info") {
-            mockMvc.post("/instance/100/edges/100")
+            mockMvc.post("/projects/100/instance/edges/100")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
@@ -89,7 +89,7 @@ class WorkflowInteractionControllerIntTest(
 
         should("return status 404 when given non-existent instance id") {
             val nonExistentId = 666L
-            val path = "/instance/$nonExistentId/edges/1"
+            val path = "/projects/$nonExistentId/instance/edges/1"
 
             mockMvc.post(path)
                 .andExpect {
@@ -100,7 +100,7 @@ class WorkflowInteractionControllerIntTest(
                     jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
                     jsonPath(
                         "$.message",
-                        `is`("Workflow instance with id $nonExistentId could not be found")
+                        `is`("Project with id $nonExistentId could not be found")
                     )
                     jsonPath("$.path", `is`(path))
                     jsonPath("$.timestamp", notNullValue())
@@ -108,8 +108,9 @@ class WorkflowInteractionControllerIntTest(
         }
 
         should("return status 422 when given inactive instance") {
+            val projectId = 400L
             val instanceId = 400L
-            val path = "/instance/$instanceId/edges/100"
+            val path = "/projects/$projectId/instance/edges/100"
 
             mockMvc.post(path)
                 .andExpect {
@@ -129,7 +130,7 @@ class WorkflowInteractionControllerIntTest(
 
         should("return status 404 when given non-existent edge id") {
             val nonExistentId = 666L
-            val path = "/instance/100/edges/$nonExistentId"
+            val path = "/projects/100/instance/edges/$nonExistentId"
 
             mockMvc.post(path)
                 .andExpect {
@@ -149,7 +150,7 @@ class WorkflowInteractionControllerIntTest(
 
         should("return status 422 when current node & edge source node not matching") {
             val edgeId = 3L
-            val path = "/instance/100/edges/$edgeId"
+            val path = "/projects/100/instance/edges/$edgeId"
 
             mockMvc.post(path)
                 .andExpect {

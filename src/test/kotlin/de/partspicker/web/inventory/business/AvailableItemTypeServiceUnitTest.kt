@@ -33,9 +33,13 @@ class AvailableItemTypeServiceUnitTest : ShouldSpec({
 
             val itemToReturn = AvailableItemTypeResult(1, "item")
 
-            every { projectServiceMock.read(projectId) } returns project
+            every { projectServiceMock.getById(projectId) } returns project
             every {
-                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(queryName, projectId)
+                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(
+                    queryName,
+                    projectId,
+                    project.orgUnitId
+                )
             } returns listOf(itemToReturn)
 
             // when
@@ -43,7 +47,11 @@ class AvailableItemTypeServiceUnitTest : ShouldSpec({
 
             // then
             verify(exactly = 1) {
-                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(queryName, projectId)
+                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(
+                    queryName,
+                    projectId,
+                    project.orgUnitId
+                )
             }
 
             returnedItems shouldContainOnly listOf(
@@ -64,9 +72,13 @@ class AvailableItemTypeServiceUnitTest : ShouldSpec({
 
             val itemToReturn = AvailableItemTypeResult(1, "item")
 
-            every { projectServiceMock.read(projectId) } returns project
+            every { projectServiceMock.getById(projectId) } returns project
             every {
-                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(queryName, projectId)
+                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(
+                    queryName,
+                    projectId,
+                    project.orgUnitId
+                )
             } returns listOf(itemToReturn)
 
             // when
@@ -84,9 +96,13 @@ class AvailableItemTypeServiceUnitTest : ShouldSpec({
 
             val itemToReturn = AvailableItemTypeResult(1, "item")
 
-            every { projectServiceMock.read(projectId) } returns project
+            every { projectServiceMock.getById(projectId) } returns project
             every {
-                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(queryName, projectId)
+                availableItemTypeSearchRepositoryMock.searchByNameFilterRequired(
+                    queryName,
+                    projectId,
+                    project.orgUnitId
+                )
             } returns listOf(itemToReturn)
 
             // when

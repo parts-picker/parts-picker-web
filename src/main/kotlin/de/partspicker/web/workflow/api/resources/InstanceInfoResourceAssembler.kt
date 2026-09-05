@@ -6,28 +6,27 @@ import de.partspicker.web.workflow.api.WorkflowInteractionController
 import de.partspicker.web.workflow.api.resources.enums.DisplayTypeInfoResource
 import de.partspicker.web.workflow.business.objects.InstanceInfo
 import org.springframework.hateoas.Link
-import org.springframework.hateoas.server.RepresentationModelAssembler
 import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.stereotype.Component
 
 @Component
 class InstanceInfoResourceAssembler(
     private val edgeInfoResourceAssembler: EdgeInfoResourceAssembler
-) : RepresentationModelAssembler<InstanceInfo, InstanceInfoResource> {
-    override fun toModel(instanceInfo: InstanceInfo): InstanceInfoResource {
+) {
+    fun toModel(instanceInfo: InstanceInfo, projectId: Long): InstanceInfoResource {
         return InstanceInfoResource(
             name = instanceInfo.name,
             displayName = instanceInfo.displayName,
-            options = instanceInfo.options.map { edgeInfoResourceAssembler.toModel(it) },
+            options = instanceInfo.options.map { edgeInfoResourceAssembler.toModel(it, projectId) },
             message = instanceInfo.message,
             displayType = DisplayTypeInfoResource.from(instanceInfo.displayType),
-            links = generateDefaultLinks(instanceInfo.instanceId)
+            links = generateDefaultLinks(projectId)
         )
     }
 
-    private fun generateDefaultLinks(instanceId: Long): List<Link> {
+    private fun generateDefaultLinks(projectId: Long): List<Link> {
         return mutableListOf(
-            linkTo<WorkflowInteractionController> { handleGetInstanceInfo(instanceId) }
+            linkTo<WorkflowInteractionController> { handleGetInstanceInfo(projectId) }
                 .withSelfRel()
                 .withName(READ)
         )
