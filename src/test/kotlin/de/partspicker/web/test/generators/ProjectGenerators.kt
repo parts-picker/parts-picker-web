@@ -31,7 +31,8 @@ class ProjectGenerators private constructor() {
                 status = status,
                 displayStatus = displayStatus,
                 active = active,
-                sourceProjectId = null
+                sourceProjectId = null,
+                orgUnitId = group.orgUnitId
             )
         }
     }

@@ -204,7 +204,7 @@ class InventoryItemControllerIntTest(
                     status { isNoContent() }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe project.id
         }
 
@@ -240,7 +240,7 @@ class InventoryItemControllerIntTest(
                     }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe null
         }
 
@@ -271,7 +271,7 @@ class InventoryItemControllerIntTest(
                     }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe null
         }
 
@@ -299,7 +299,7 @@ class InventoryItemControllerIntTest(
                     }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe null
         }
 
@@ -329,7 +329,7 @@ class InventoryItemControllerIntTest(
                     }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe otherProject.id
         }
     }
@@ -349,7 +349,7 @@ class InventoryItemControllerIntTest(
                     status { isNoContent() }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe null
         }
 
@@ -381,7 +381,7 @@ class InventoryItemControllerIntTest(
                     }
                 }
 
-            val patchedItem = itemService.getItemById(item.id)
+            val patchedItem = itemService.getById(item.id)
             patchedItem.assignedProjectId shouldBe project.id
         }
     }

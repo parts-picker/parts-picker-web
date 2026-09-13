@@ -1,5 +1,6 @@
 package de.partspicker.web.workflow.business.automated
 
+import de.partspicker.web.common.security.SystemContext
 import de.partspicker.web.common.util.LoggingUtil
 import de.partspicker.web.common.util.logger
 import kotlinx.coroutines.launch
@@ -13,7 +14,8 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(prefix = "workflow.automated-action", name = ["active"], matchIfMissing = true)
 @Component
 class AutomatedActionRunner(
-    private val automatedActionService: AutomatedActionService
+    private val automatedActionService: AutomatedActionService,
+    private val systemContext: SystemContext
 ) {
 
     companion object : LoggingUtil {
@@ -36,8 +38,10 @@ class AutomatedActionRunner(
         if (applicationReady) {
             logger.trace("Starting automated action runner #$counter")
             try {
-                runBlocking {
-                    launch { automatedActionService.executeBatch() }
+                this.systemContext.runAsSystem {
+                    runBlocking {
+                        launch { automatedActionService.executeBatch() }
+                    }
                 }
             } catch (_: InterruptedException) {
                 logger.info("Canceling automated action runner #$counter")

@@ -1,10 +1,9 @@
 package de.partspicker.web.entrylinks.api
 
-import de.partspicker.web.entrylinks.api.resources.EntryLinksResource
+import de.partspicker.web.orgunit.api.resources.OrgUnitResource
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
 import org.hamcrest.Matchers.hasSize
-import org.hamcrest.Matchers.notNullValue
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -26,10 +25,8 @@ class EntryLinksControllerIntTest(
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(1))
-                    jsonPath("$._links.*", hasSize<Any>(3))
-                    jsonPath("$._links.${EntryLinksResource.ITEMS_RELATION}", notNullValue())
-                    jsonPath("$._links.${EntryLinksResource.ITEM_TYPES_RELATION}", notNullValue())
-                    jsonPath("$._links.${EntryLinksResource.PROJECTS_RELATION}", notNullValue())
+                    jsonPath("$._links.*", hasSize<Any>(1))
+                    jsonPath("$._links.${OrgUnitResource.COLLECTION_RELATION_NAME}", hasSize<Any>(2))
                 }
         }
     }

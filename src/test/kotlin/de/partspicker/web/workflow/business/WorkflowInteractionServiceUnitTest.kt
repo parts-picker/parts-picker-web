@@ -1,6 +1,11 @@
 package de.partspicker.web.workflow.business
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitAccessDeniedException
+import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.workflow.EdgeEntityGenerators
 import de.partspicker.web.test.generators.workflow.InstanceEntityGenerators
 import de.partspicker.web.test.generators.workflow.NodeEntityGenerators
@@ -15,15 +20,12 @@ import de.partspicker.web.workflow.persistence.EdgeRepository
 import de.partspicker.web.workflow.persistence.InstanceRepository
 import de.partspicker.web.workflow.persistence.NodeRepository
 import de.partspicker.web.workflow.persistence.WorkflowRepository
-import de.partspicker.web.workflow.persistence.entities.InstanceEntity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.property.Arb
-import io.kotest.property.arbitrary.long
-import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.single
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -37,6 +39,7 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
     val edgeRepositoryMock = mockk<EdgeRepository>()
     val instanceValueServiceMock = mockk<InstanceValueService>()
     val projectRepositoryMock = mockk<ProjectRepository>()
+    val orgUnitAccessServiceMock = mockk<OrgUnitAccessService>()
 
     val cut = WorkflowInteractionService(
         workflowRepository = workflowRepositoryMock,
@@ -44,10 +47,37 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
         nodeRepository = nodeRepositoryMock,
         edgeRepository = edgeRepositoryMock,
         instanceValueService = instanceValueServiceMock,
-        projectRepository = projectRepositoryMock
+        projectRepository = projectRepositoryMock,
+        orgUnitAccessService = orgUnitAccessServiceMock
     )
 
-    context("read instance info") {
+    afterTest {
+        clearMocks(
+            workflowRepositoryMock,
+            instanceRepositoryMock,
+            nodeRepositoryMock,
+            edgeRepositoryMock,
+            instanceValueServiceMock,
+            projectRepositoryMock,
+            orgUnitAccessServiceMock
+        )
+    }
+
+    context("readProjectStatus") {
+        should("refuse when the caller may not read the org unit of the given project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.readProjectStatus(projectEntity.id) }
+        }
+    }
+
+    context("readProjectInstanceInfo") {
         should("return instance info") {
             // given
             val currentNodeEntity = NodeEntityGenerators.userActionNodeEntityGenerator.single()
@@ -59,11 +89,16 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
                 EdgeEntityGenerators.generator.single()
             )
 
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = instanceEntity)
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } returns Unit
             every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
             every { edgeRepositoryMock.findAllBySourceId(currentNodeEntity.id) } returns options
 
             // when
-            val returnedNodeInfo = cut.readInstanceInfo(instanceEntity.id)
+            val returnedNodeInfo = cut.readProjectInstanceInfo(projectEntity.id)
 
             // then
             returnedNodeInfo.nodeId shouldBe instanceEntity.currentNode.id
@@ -72,18 +107,46 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
             returnedNodeInfo.options shouldHaveSize options.size
         }
 
-        should("throw WorkflowInstanceNotFoundException when given non-existent id") {
+        should("throw WorkflowInstanceNotFoundException when the project references a non-existent instance") {
             // given
-            val randomId = Arb.long(1).next()
-            every { instanceRepositoryMock.findById(randomId) } returns Optional.empty()
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } returns Unit
+            every { instanceRepositoryMock.findById(any()) } returns Optional.empty()
 
             // when
             val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.readInstanceInfo(randomId)
+                cut.readProjectInstanceInfo(projectEntity.id)
             }
 
             // then
-            exception.message shouldBe "Workflow instance with id $randomId could not be found"
+            exception.message shouldBe
+                "Workflow instance with id ${projectEntity.workflowInstance.id} could not be found"
+        }
+
+        should("refuse & not read when the caller may not read the org unit of the given project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.READ)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.READ)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.readProjectInstanceInfo(projectEntity.id) }
+
+            verify(exactly = 0) { instanceRepositoryMock.findById(any()) }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent project id") {
+            // given
+            val nonExistentId = 666L
+            every { projectRepositoryMock.findById(nonExistentId) } returns Optional.empty()
+
+            // when & then
+            shouldThrow<ProjectNotFoundException> { cut.readProjectInstanceInfo(nonExistentId) }
         }
     }
 
@@ -141,58 +204,7 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
         }
     }
 
-    context("advanceInstanceNodeByUser") {
-        should("call advanceInstanceNodeBySystem when given current node with type user action") {
-            // given
-            val instanceEntityMock = mockk<InstanceEntity>()
-            every { instanceEntityMock.currentNode } returns
-                NodeEntityGenerators.userActionNodeEntityGenerator.single()
-            every { instanceRepositoryMock.findById(any()) } returns Optional.of(instanceEntityMock)
-
-            val edgeId = 1L
-            val cutSpy = spyk(cut)
-            every { cutSpy.advanceInstanceNodeBySystem(instanceEntityMock, edgeId, null) } returns mockk()
-
-            // when
-            cutSpy.advanceInstanceNodeByUser(1L, edgeId)
-
-            // then
-            verify { cutSpy.advanceInstanceNodeBySystem(instanceEntityMock, edgeId, null) }
-        }
-
-        should("throw WorkflowInstanceNotFoundException when given non-existent instance id") {
-            // given
-            val instanceId = 1L
-            every { instanceRepositoryMock.findById(any()) } returns Optional.empty()
-
-            // when
-            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
-                cut.advanceInstanceNodeByUser(instanceId, 1L)
-            }
-
-            // then
-            exception.message shouldBe "Workflow instance with id $instanceId could not be found"
-        }
-
-        should("throw NodeNotAdvanceableByUserRuleException when given current node without type user action") {
-            // given
-            val instanceEntityMock = mockk<InstanceEntity>()
-            every { instanceEntityMock.currentNode } returns
-                NodeEntityGenerators.automatedActionNodeEntityGenerator.single()
-            every { instanceRepositoryMock.findById(any()) } returns Optional.of(instanceEntityMock)
-
-            // when
-            val exception = shouldThrow<NodeNotAdvanceableByUserRuleException> {
-                cut.advanceInstanceNodeByUser(1L, 1L)
-            }
-
-            // then
-            exception.message shouldBe "Node of type ${AutomatedActionNode::class.simpleName} " +
-                "cannot be advanced by a user"
-        }
-    }
-
-    context("advanceInstanceNodeBySystem (given instance id)") {
+    context("advanceInstanceNodeBySystem") {
         should("call advanceInstanceNodeBySystem when given existing instance id") {
             // given
             val instanceEntity = InstanceEntityGenerators.generator.single()
@@ -221,6 +233,87 @@ class WorkflowInteractionServiceUnitTest : ShouldSpec({
 
             // then
             exception.message shouldBe "Workflow instance with id $instanceId could not be found"
+        }
+    }
+
+    context("advanceProjectStateByUser") {
+        should("advance the instance of the given project when its current node is a user action") {
+            // given
+            val instanceEntity = InstanceEntityGenerators.generator.single()
+                .copy(currentNode = NodeEntityGenerators.userActionNodeEntityGenerator.single())
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = instanceEntity)
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } returns Unit
+            every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
+
+            val edgeId = 1L
+            val cutSpy = spyk(cut)
+            every { cutSpy.advanceInstanceNodeBySystem(instanceEntity, edgeId, null) } returns mockk()
+
+            // when
+            cutSpy.advanceProjectStateByUser(projectEntity.id, edgeId)
+
+            // then
+            verify { cutSpy.advanceInstanceNodeBySystem(instanceEntity, edgeId, null) }
+        }
+
+        should("throw NodeNotAdvanceableByUserRuleException when the current node is no user action") {
+            // given
+            val instanceEntity = InstanceEntityGenerators.generator.single()
+                .copy(currentNode = NodeEntityGenerators.automatedActionNodeEntityGenerator.single())
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(workflowInstance = instanceEntity)
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } returns Unit
+            every { instanceRepositoryMock.findById(instanceEntity.id) } returns Optional.of(instanceEntity)
+
+            // when
+            val exception = shouldThrow<NodeNotAdvanceableByUserRuleException> {
+                cut.advanceProjectStateByUser(projectEntity.id, 1L)
+            }
+
+            // then
+            exception.message shouldBe "Node of type ${AutomatedActionNode::class.simpleName} " +
+                "cannot be advanced by a user"
+        }
+
+        should("throw WorkflowInstanceNotFoundException when the project references a non-existent instance") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } returns Unit
+            every { instanceRepositoryMock.findById(any()) } returns Optional.empty()
+
+            // when
+            val exception = shouldThrow<WorkflowInstanceNotFoundException> {
+                cut.advanceProjectStateByUser(projectEntity.id, 1L)
+            }
+
+            // then
+            exception.message shouldBe
+                "Workflow instance with id ${projectEntity.workflowInstance.id} could not be found"
+        }
+
+        should("refuse & not advance when the caller may not edit the org unit of the given project") {
+            // given
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.findById(projectEntity.id) } returns Optional.of(projectEntity)
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.advanceProjectStateByUser(projectEntity.id, 1L) }
+
+            verify(exactly = 0) { instanceRepositoryMock.save(any()) }
+        }
+
+        should("throw ProjectNotFoundException when given non-existent project id") {
+            // given
+            val nonExistentId = 666L
+            every { projectRepositoryMock.findById(nonExistentId) } returns Optional.empty()
+
+            // when & then
+            shouldThrow<ProjectNotFoundException> { cut.advanceProjectStateByUser(nonExistentId, 1L) }
         }
     }
 })

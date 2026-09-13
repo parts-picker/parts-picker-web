@@ -33,7 +33,7 @@ class InstanceInfoResource(
         result = 31 * result + name.hashCode()
         result = 31 * result + displayName.hashCode()
         result = 31 * result + options.hashCode()
-        result = 31 * result + (message?.hashCode() ?: 0)
+        result = 31 * result + message.hashCode()
         result = 31 * result + displayType.hashCode()
         return result
     }

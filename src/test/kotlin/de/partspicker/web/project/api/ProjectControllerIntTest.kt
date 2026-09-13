@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/projectControllerIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/projectControllerIntTest.sql")
 class ProjectControllerIntTest(
     private val mockMvc: MockMvc,
     private val mapper: ObjectMapper,
@@ -54,21 +54,21 @@ class ProjectControllerIntTest(
                 groupId = 1L
             )
 
-            mockMvc.post("/projects") {
+            mockMvc.post("/org-units/1000/projects") {
                 contentType = MediaType.APPLICATION_JSON
                 content = mapper.writeValueAsString(postRequestBody)
             }.andExpect {
                 status { isOk() }
                 content {
                     contentType("application/hal+json")
-                    jsonPath("$.*", hasSize<Any>(8))
+                    jsonPath("$.*", hasSize<Any>(7))
                     jsonPath("$.id", notNullValue())
                     jsonPath("$.name", `is`(postRequestBody.name))
                     jsonPath("$.status", `is`("planning"))
                     jsonPath("$.displayStatus", `is`("Planning"))
                     jsonPath("$.shortDescription", `is`(postRequestBody.shortDescription))
                     jsonPath("$.description", nullValue())
-                    jsonPath("$.groupId", `is`(1))
+                    jsonPath("$._links.group.href", endsWith("groups/1"))
                     jsonPath("$._links", notNullValue())
                 }
             }
@@ -95,14 +95,13 @@ class ProjectControllerIntTest(
                     status { isOk() }
                     content {
                         contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(8))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.id", notNullValue())
                         jsonPath("$.name", `is`(projectCopyRequest.name))
                         jsonPath("$.status", `is`("planning"))
                         jsonPath("$.displayStatus", `is`("Planning"))
                         jsonPath("$.shortDescription", `is`(sourceProject.shortDescription))
                         jsonPath("$.description", `is`(sourceProject.description))
-                        jsonPath("$.groupId", `is`(sourceProject.group?.id))
                         jsonPath("$._links", notNullValue())
                         jsonPath("$._links.copiedFrom", notNullValue())
                         jsonPath("$._links.copiedFrom.href", endsWith("projects/${sourceProject.id}"))
@@ -170,12 +169,12 @@ class ProjectControllerIntTest(
 
     context("GET all projects") {
         should("return status 200 & all projects when called") {
-            mockMvc.get("/projects")
+            mockMvc.get("/org-units/1000/projects")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.${ProjectResource.collectionRelationName}", hasSize<Any>(4))
+                    jsonPath("$._embedded.${ProjectResource.COLLECTION_RELATION_NAME}", hasSize<Any>(4))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(20))
                     jsonPath("$.page.totalPages", `is`(1))
@@ -188,12 +187,12 @@ class ProjectControllerIntTest(
             val size = 2
             val page = 1
 
-            mockMvc.get("/projects?=page=$page&size=$size")
+            mockMvc.get("/org-units/1000/projects?=page=$page&size=$size")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.${ProjectResource.collectionRelationName}", hasSize<Any>(2))
+                    jsonPath("$._embedded.${ProjectResource.COLLECTION_RELATION_NAME}", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(size))
                     jsonPath("$.page.totalPages", `is`(2))
@@ -212,14 +211,14 @@ class ProjectControllerIntTest(
                     status { isOk() }
                     content {
                         contentType("application/hal+json")
-                        jsonPath("$.*", hasSize<Any>(8))
+                        jsonPath("$.*", hasSize<Any>(7))
                         jsonPath("$.id", `is`(id))
                         jsonPath("$.name", `is`("PROJECT 1"))
                         jsonPath("$.status", `is`("start"))
                         jsonPath("$.displayStatus", `is`("Start"))
                         jsonPath("$.shortDescription", `is`("Description for project 1"))
                         jsonPath("$.description", nullValue())
-                        jsonPath("$.groupId", `is`(1))
+                        jsonPath("$._links.group.href", endsWith("groups/1"))
                         jsonPath("$._links", notNullValue())
                     }
                 }
@@ -261,14 +260,14 @@ class ProjectControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(8))
+                    jsonPath("$.*", hasSize<Any>(7))
                     jsonPath("$.id", `is`(id))
                     jsonPath("$.name", `is`("PROJECT 3"))
                     jsonPath("$.status", `is`("start"))
                     jsonPath("$.displayStatus", `is`("Start"))
                     jsonPath("$.shortDescription", `is`(requestBody.shortDescription))
                     jsonPath("$.description", nullValue())
-                    jsonPath("$.groupId", `is`(2))
+                    jsonPath("$._links.group.href", endsWith("groups/2"))
                     jsonPath("$._links", notNullValue())
                 }
         }
@@ -317,7 +316,7 @@ class ProjectControllerIntTest(
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(8))
+                    jsonPath("$.*", hasSize<Any>(7))
                 }
                 .andReturn()
 
@@ -329,7 +328,6 @@ class ProjectControllerIntTest(
             responseResource.displayStatus shouldBe project.displayStatus
             responseResource.shortDescription shouldBe project.shortDescription
             responseResource.description shouldBe requestBody.description
-            responseResource.groupId shouldBe project.group?.id
             responseResource.links shouldNotBe null
         }
 

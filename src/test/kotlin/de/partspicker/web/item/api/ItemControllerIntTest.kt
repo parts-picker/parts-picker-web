@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("integration")
 @Transactional
-@Sql("classpath:/init-sql/itemControllerIntTest.sql")
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/itemControllerIntTest.sql")
 class ItemControllerIntTest(
     private val mockMvc: MockMvc,
     private val mapper: ObjectMapper
@@ -140,12 +140,12 @@ class ItemControllerIntTest(
     context("GET all items") {
 
         should("return status 200 & all items when called") {
-            mockMvc.get("/items")
+            mockMvc.get("/org-units/1000/items")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(6))
+                    jsonPath("$._embedded.${ItemResource.COLLECTION_RELATION_NAME}", hasSize<Any>(6))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(20))
                     jsonPath("$.page.totalPages", `is`(1))
@@ -158,12 +158,12 @@ class ItemControllerIntTest(
             val size = 2
             val page = 1
 
-            mockMvc.get("/items?page=$page&size=$size")
+            mockMvc.get("/org-units/1000/items?page=$page&size=$size")
                 .andExpect {
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(2))
+                    jsonPath("$._embedded.${ItemResource.COLLECTION_RELATION_NAME}", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(size))
                     jsonPath("$.page.totalPages", `is`(3))
@@ -181,7 +181,7 @@ class ItemControllerIntTest(
                     status { isOk() }
                     content { contentType("application/hal+json") }
                     jsonPath("$.*", hasSize<Any>(3))
-                    jsonPath("$._embedded.${ItemResource.collectionRelationName}", hasSize<Any>(2))
+                    jsonPath("$._embedded.${ItemResource.COLLECTION_RELATION_NAME}", hasSize<Any>(2))
                     jsonPath("$._links", notNullValue())
                     jsonPath("$.page.size", `is`(20))
                     jsonPath("$.page.totalPages", `is`(1))
@@ -204,17 +204,11 @@ class ItemControllerIntTest(
                 }
         }
 
-        should("return status 200 & no items when called with non-existent itemType") {
+        should("return status 404 when called with non-existent itemType") {
             mockMvc.get("/item-types/666/items")
                 .andExpect {
-                    status { isOk() }
-                    content { contentType("application/hal+json") }
-                    jsonPath("$.*", hasSize<Any>(2))
-                    jsonPath("$._links", notNullValue())
-                    jsonPath("$.page.size", `is`(20))
-                    jsonPath("$.page.totalPages", `is`(0))
-                    jsonPath("$.page.totalElements", `is`(0))
-                    jsonPath("$.page.number", `is`(0))
+                    status { isNotFound() }
+                    jsonPath("$.message", `is`("ItemType with id 666 could not be found"))
                 }
         }
     }

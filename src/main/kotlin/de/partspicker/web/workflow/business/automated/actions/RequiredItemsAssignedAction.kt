@@ -29,7 +29,7 @@ class RequiredItemsAssignedAction(
     }
 
     override fun execute(instance: Instance, instanceValues: List<InstanceValue>): AutomatedActionResult {
-        val projectId = this.projectService.readByInstanceId(instanceId = instance.id)?.id
+        val projectId = this.projectService.findByInstanceId(instanceId = instance.id)?.id
             ?: throw InstanceNotRelatedToProjectException(instanceId = instance.id)
         val checkResult = this.inventoryItemService.checkRequiredItemsAssignedToProject(projectId = projectId)
 

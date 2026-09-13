@@ -22,7 +22,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
                 RequiredItemType(
                     projectId = 1L,
                     projectStatus = "planning",
-                    itemType = ItemType(id = 1L),
+                    itemType = ItemType(id = 1L, orgUnitId = 1L),
                     assignedAmount = 0,
                     requiredAmount = 0
                 )
@@ -34,7 +34,7 @@ class RequiredItemTypeUnitTest : ShouldSpec({
                 RequiredItemType(
                     projectId = 1L,
                     projectStatus = "planning",
-                    itemType = ItemType(id = 1L),
+                    itemType = ItemType(id = 1L, orgUnitId = 1L),
                     assignedAmount = -1,
                     requiredAmount = 1
                 )

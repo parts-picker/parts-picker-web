@@ -76,7 +76,7 @@ class WorkflowMigrationService(
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     @Suppress("ThrowsCount")
     fun create(
         migrationPlanCreate: MigrationPlanCreate,
@@ -135,7 +135,7 @@ class WorkflowMigrationService(
         }
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun migrateAllToLatestVersion(): Map<String, Long> {
         logMigrationStartForAll()
 
@@ -148,7 +148,7 @@ class WorkflowMigrationService(
         return migratedAmount
     }
 
-    @Transactional(rollbackFor = [Exception::class])
+    @Transactional
     fun migrateAllToLatestVersion(workflowName: String): Long {
         val migratedAmount = this.workflowRepository.findAllByNameOrderByVersionAsc(workflowName)
             .zipWithNext()
