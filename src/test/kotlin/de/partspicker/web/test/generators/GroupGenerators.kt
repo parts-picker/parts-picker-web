@@ -11,12 +11,16 @@ class GroupGenerators private constructor() {
         val generator: Arb<Group> = Arb.bind(
             Arb.long(0),
             Arb.string(range = IntRange(3, 16)),
-            Arb.descriptionLikeString()
-        ) { id, name, description ->
+            Arb.descriptionLikeString(),
+            Arb.long(1),
+            Arb.long(1)
+        ) { id, name, description, orgUnitId, createdById ->
             Group(
                 id = id,
                 name = name,
-                description = description
+                description = description,
+                orgUnitId = orgUnitId,
+                createdById = createdById
             )
         }
     }

@@ -1,5 +1,7 @@
 package de.partspicker.web.project.api.resources
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel.MAINTAIN
+import de.partspicker.web.common.business.objects.enums.AccessLevel.USE
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.business.rules.or
 import de.partspicker.web.common.hal.DefaultName.CREATE
@@ -16,13 +18,15 @@ import de.partspicker.web.common.hal.generateGetAllRequiredItemTypesLink
 import de.partspicker.web.common.hal.generateSearchItemsByNameLink
 import de.partspicker.web.common.hal.withName
 import de.partspicker.web.common.hal.withRel
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.project.api.GroupController
 import de.partspicker.web.project.api.ProjectController
 import de.partspicker.web.project.api.requests.ProjectCopyRequest
 import de.partspicker.web.project.api.requests.ProjectMetaInfoPatchRequest
 import de.partspicker.web.project.api.requests.ProjectPostRequest
 import de.partspicker.web.project.business.objects.Project
 import de.partspicker.web.project.business.rules.ProjectActiveRule
-import de.partspicker.web.workflow.api.WorkflowInteractionController
+import de.partspicker.web.workflow.api.ProjectWorkflowInteractionController
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.Link
 import org.springframework.hateoas.server.RepresentationModelAssembler
@@ -30,7 +34,9 @@ import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.stereotype.Component
 
 @Component
-class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectResource> {
+class ProjectResourceAssembler(
+    private val orgUnitAccessService: OrgUnitAccessService
+) : RepresentationModelAssembler<Project, ProjectResource> {
     override fun toModel(project: Project): ProjectResource {
         return ProjectResource(
             id = project.id,
@@ -39,19 +45,20 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             displayStatus = project.displayStatus,
             shortDescription = project.shortDescription,
             description = project.description,
-            groupId = project.group?.id,
             links = generateDefaultLinks(project)
         )
     }
 
+    @Suppress("LongMethod")
     private fun generateDefaultLinks(project: Project): List<Link> {
         return LinkListBuilder()
             .with(
-                linkTo<ProjectController> { handlePostProject(ProjectPostRequest.DUMMY) }
+                linkTo<ProjectController> { handlePostProject(project.orgUnitId, ProjectPostRequest.DUMMY) }
                     .withRel(IanaLinkRelations.COLLECTION)
-                    .withName(CREATE)
+                    .withName(CREATE),
+                this.orgUnitAccessService.atLeast(project.orgUnitId, USE)
             )
-            .with(generateGetAllProjectsLink(IanaLinkRelations.COLLECTION))
+            .with(generateGetAllProjectsLink(IanaLinkRelations.COLLECTION, project.orgUnitId))
             .with(
                 linkTo<ProjectController> { handleGetProjectById(project.id) }
                     .withSelfRel()
@@ -61,15 +68,16 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
                 linkTo<ProjectController> { handlePatchProject(project.id, ProjectMetaInfoPatchRequest.DUMMY) }
                     .withSelfRel()
                     .withName(UPDATE),
-                ProjectActiveRule(project)
+                ProjectActiveRule(project),
+                this.orgUnitAccessService.atLeast(project.orgUnitId, USE)
             )
             .with(
                 linkTo<ProjectController> { handleDeleteProject(project.id) }
                     .withSelfRel()
                     .withName(DELETE),
                 NodeNameEqualsRule(project.status, "planning") or
-                    NodeNameEqualsRule(project.status, "implementation")
-
+                    NodeNameEqualsRule(project.status, "implementation"),
+                this.orgUnitAccessService.memberCreatorOrAtLeast(project.orgUnitId, project.createdById, MAINTAIN)
             )
             // source project
             .withCondition(
@@ -78,11 +86,19 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
                     .withName(READ),
                 project.sourceProjectId != null
             )
+            // group
+            .withCondition(
+                linkTo<GroupController> { handleGetGroupById(project.group?.id ?: 0L) }
+                    .withRel(RelationName.GROUP)
+                    .withName(READ),
+                project.group != null
+            )
             // copies
             .with(
                 linkTo<ProjectController> { handleCopyProject(project.id, ProjectCopyRequest.DUMMY) }
                     .withRel(RelationName.COPIES)
-                    .withName(CREATE)
+                    .withName(CREATE),
+                this.orgUnitAccessService.atLeast(project.orgUnitId, USE)
             )
             // availableItemType
             .with(
@@ -96,8 +112,8 @@ class ProjectResourceAssembler : RepresentationModelAssembler<Project, ProjectRe
             )
             // workflow
             .with(
-                linkTo<WorkflowInteractionController> {
-                    handleGetInstanceInfo(project.workflowInstanceId)
+                linkTo<ProjectWorkflowInteractionController> {
+                    handleGetInstanceInfo(project.id)
                 }
                     .withRel(RelationName.STATUS)
                     .withName(READ)

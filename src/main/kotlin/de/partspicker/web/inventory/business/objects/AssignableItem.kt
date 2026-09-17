@@ -18,6 +18,7 @@ data class AssignableItem(
     val assignableToProjectId: Long,
     val assignableToProjectStatus: String?,
     val condition: InventoryItemCondition,
+    val orgUnitId: Long
 ) {
     init {
         require(requiredAmount >= 0)
@@ -58,6 +59,7 @@ data class AssignableItem(
                 assignableToProjectId = assignableToProjectId,
                 assignableToProjectStatus = assignableToProjectNodeName,
                 condition = InventoryItemCondition.from(itemEntity.condition),
+                orgUnitId = itemEntity.orgUnit.id
             )
         }
     }

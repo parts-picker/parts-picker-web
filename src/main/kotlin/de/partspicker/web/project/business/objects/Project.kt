@@ -13,7 +13,9 @@ data class Project(
     val status: String,
     val displayStatus: String,
     val active: Boolean,
-    val sourceProjectId: Long?
+    val sourceProjectId: Long?,
+    val orgUnitId: Long,
+    val createdById: Long
 ) {
     companion object {
         fun from(projectEntity: ProjectEntity) = Project(
@@ -26,7 +28,9 @@ data class Project(
             status = projectEntity.workflowInstance.currentNode.name,
             displayStatus = projectEntity.workflowInstance.currentNode.displayName,
             active = projectEntity.workflowInstance.active,
-            sourceProjectId = projectEntity.sourceProject?.id
+            sourceProjectId = projectEntity.sourceProject?.id,
+            orgUnitId = projectEntity.orgUnit.id,
+            createdById = projectEntity.creation.createdBy.id
         )
     }
 

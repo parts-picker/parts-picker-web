@@ -4,14 +4,14 @@ import org.springframework.hateoas.Link
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation
 
-@Relation(collectionRelation = ItemTypeResource.collectionRelationName)
+@Relation(collectionRelation = ItemTypeResource.COLLECTION_RELATION_NAME)
 class ItemTypeResource(
     val name: String,
     val description: String,
     links: Iterable<Link> = emptyList()
 ) : RepresentationModel<ItemTypeResource>(links) {
     companion object {
-        const val collectionRelationName = "itemTypes"
+        const val COLLECTION_RELATION_NAME = "itemTypes"
     }
 
     override fun equals(other: Any?): Boolean {

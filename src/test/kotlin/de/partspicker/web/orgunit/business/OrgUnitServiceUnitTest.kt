@@ -1,0 +1,120 @@
+package de.partspicker.web.orgunit.business
+
+import de.partspicker.web.common.persistence.entities.enums.AccessLevelEntity
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitNameAlreadyUsedException
+import de.partspicker.web.orgunit.business.objects.CreateOrgUnit
+import de.partspicker.web.orgunit.persistence.OrgUnitEntitlementRepository
+import de.partspicker.web.orgunit.persistence.OrgUnitRepository
+import de.partspicker.web.orgunit.persistence.entities.OrgUnitEntitlementEntity
+import de.partspicker.web.test.generators.OrgUnitEntityGenerators
+import de.partspicker.web.test.generators.UserEntityGenerators
+import de.partspicker.web.test.util.ConstraintViolations
+import de.partspicker.web.test.util.TestConstants.CRUD_REPOSITORY_EXTENSIONS
+import de.partspicker.web.user.business.exceptions.UserNotFoundException
+import de.partspicker.web.user.persistence.UserRepository
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.property.arbitrary.next
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.repository.findByIdOrNull
+import java.time.Instant
+
+class OrgUnitServiceUnitTest : ShouldSpec({
+    val orgUnitRepositoryMock = mockk<OrgUnitRepository>()
+    val orgUnitEntitlementRepositoryMock = mockk<OrgUnitEntitlementRepository>()
+    val userRepositoryMock = mockk<UserRepository>()
+    val cut = OrgUnitService(
+        orgUnitRepository = orgUnitRepositoryMock,
+        orgUnitEntitlementRepository = orgUnitEntitlementRepositoryMock,
+        userRepository = userRepositoryMock
+    )
+
+    beforeSpec {
+        mockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
+    afterSpec {
+        unmockkStatic(CRUD_REPOSITORY_EXTENSIONS)
+    }
+
+    afterTest {
+        clearMocks(orgUnitRepositoryMock, orgUnitEntitlementRepositoryMock, userRepositoryMock)
+    }
+
+    context("create") {
+        should("store the org unit & entitle its owner to maintain it") {
+            // given
+            val ownerEntity = UserEntityGenerators.humanGenerator.next()
+            val orgUnitEntity = OrgUnitEntityGenerators.generatorFor(ownerEntity).next()
+            every { userRepositoryMock.findByIdOrNull(ownerEntity.id) } returns ownerEntity
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } returns orgUnitEntity
+            val entitlementSlot = slot<OrgUnitEntitlementEntity>()
+            every { orgUnitEntitlementRepositoryMock.save(capture(entitlementSlot)) } returns
+                OrgUnitEntitlementEntity(
+                    orgUnit = orgUnitEntity,
+                    user = ownerEntity,
+                    accessLevel = AccessLevelEntity.MAINTAIN,
+                    joinedOn = Instant.now()
+                )
+
+            // when
+            val returnedOrgUnit = cut.create(
+                CreateOrgUnit(
+                    name = orgUnitEntity.name,
+                    shortDescription = orgUnitEntity.shortDescription,
+                    ownerId = ownerEntity.id
+                )
+            )
+
+            // then
+            returnedOrgUnit.name shouldBe orgUnitEntity.name
+            returnedOrgUnit.owner.id shouldBe ownerEntity.id
+            entitlementSlot.captured.orgUnit shouldBe orgUnitEntity
+            entitlementSlot.captured.user shouldBe ownerEntity
+            entitlementSlot.captured.accessLevel shouldBe AccessLevelEntity.MAINTAIN
+        }
+
+        should("throw UserNotFoundException when no user with the given owner id exists") {
+            // given
+            every { userRepositoryMock.findByIdOrNull(any()) } returns null
+
+            // when & then
+            shouldThrow<UserNotFoundException> {
+                cut.create(CreateOrgUnit(name = "some org unit", ownerId = 404L))
+            }
+        }
+
+        should("throw OrgUnitNameAlreadyUsedException when the owner already uses the given name") {
+            // given
+            val owner = UserEntityGenerators.humanGenerator.next()
+            every { userRepositoryMock.findByIdOrNull(owner.id) } returns owner
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } throws
+                ConstraintViolations.of(OrgUnitRepository.OWNER_NAME_CONSTRAINT)
+
+            // when & then
+            shouldThrow<OrgUnitNameAlreadyUsedException> {
+                cut.create(CreateOrgUnit(name = "some org unit", ownerId = owner.id))
+            }
+        }
+
+        should("rethrow when another constraint is violated") {
+            // given
+            val owner = UserEntityGenerators.humanGenerator.next()
+            every { userRepositoryMock.findByIdOrNull(owner.id) } returns owner
+            every { orgUnitRepositoryMock.saveAndFlush(any()) } throws
+                ConstraintViolations.of("fk_created_by_of_org_unit")
+
+            // when & then
+            shouldThrow<DataIntegrityViolationException> {
+                cut.create(CreateOrgUnit(name = "some org unit", ownerId = owner.id))
+            }
+        }
+    }
+})

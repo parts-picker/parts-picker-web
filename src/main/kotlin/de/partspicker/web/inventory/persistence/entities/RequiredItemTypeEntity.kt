@@ -3,7 +3,6 @@ package de.partspicker.web.inventory.persistence.entities
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.persistance.entities.ItemTypeEntity
 import de.partspicker.web.project.persistance.entities.ProjectEntity
-import jakarta.persistence.Column
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.JoinColumn
@@ -28,13 +27,12 @@ data class RequiredItemTypeEntity(
     @JoinColumn(name = "item_type_id", referencedColumnName = "id")
     val itemType: ItemTypeEntity,
 
-    @Column(nullable = false)
     val requiredAmount: Long
 ) {
-    constructor(projectEntity: ProjectEntity, itemTypeId: Long, requiredAmount: Long) : this(
-        id = RequiredItemTypeId(projectId = projectEntity.id, itemTypeId = itemTypeId),
+    constructor(projectEntity: ProjectEntity, itemTypeEntity: ItemTypeEntity, requiredAmount: Long) : this(
+        id = RequiredItemTypeId(projectId = projectEntity.id, itemTypeId = itemTypeEntity.id),
         project = projectEntity,
-        itemType = ItemTypeEntity(id = itemTypeId),
+        itemType = itemTypeEntity,
         requiredAmount = requiredAmount
     )
 }

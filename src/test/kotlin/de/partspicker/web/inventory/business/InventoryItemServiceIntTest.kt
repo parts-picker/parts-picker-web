@@ -13,7 +13,6 @@ import de.partspicker.web.workflow.business.WorkflowMigrationService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.extensions.spring.SpringExtension
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -182,7 +181,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(item.id)
+            val itemToCheck = itemService.getById(item.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -201,7 +200,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(itemToAssign.id)
+            val itemToCheck = itemService.getById(itemToAssign.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -219,7 +218,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not assigned
-            val itemToCheck = itemService.getItemById(itemToAssign.id)
+            val itemToCheck = itemService.getById(itemToAssign.id)
             itemToCheck.assignedProjectId shouldBe null
         }
 
@@ -238,7 +237,7 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not reassigned
-            val itemToCheck = itemService.getItemById(assignedItem.id)
+            val itemToCheck = itemService.getById(assignedItem.id)
             itemToCheck.assignedProjectId shouldBe otherProject.id
         }
     }
@@ -275,63 +274,8 @@ class InventoryItemServiceIntTest(
             }
 
             // check that project id was not removed
-            val itemToCheck = itemService.getItemById(item.id)
+            val itemToCheck = itemService.getById(item.id)
             itemToCheck.assignedProjectId shouldBe project.id
-        }
-    }
-
-    context("removeAllWithTypeFromProject") {
-        should("remove each item of the given type from the project with the given id") {
-            // given
-            val project = testSetupHelper.setupProject()
-            val itemType = testSetupHelper.setupItemType()
-
-            val itemAmount = 5
-            testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id, 5)
-            testSetupHelper.setupItemsForType(amountToCreate = itemAmount, itemType = itemType, projectId = project.id)
-
-            // when
-            cut.removeAllWithTypeFromProject(itemTypeId = itemType.id, projectId = project.id)
-
-            // then
-            val itemsForProject = cut.readAllAssignedForItemTypeAndProject(
-                itemTypeId = itemType.id,
-                projectId = project.id,
-                Pageable.unpaged()
-            )
-            itemsForProject.shouldBeEmpty()
-        }
-
-        should("throw WrongNodeNameRuleException when project status not 'planning'") {
-            // given
-            val project = testSetupHelper.setupProject()
-            val itemType = testSetupHelper.setupItemType()
-
-            val itemAmount = 5
-            testSetupHelper.setupRequiredItemType(projectId = project.id, itemTypeId = itemType.id, 5)
-
-            testSetupHelper.setupItemsForType(
-                amountToCreate = itemAmount,
-                itemType = itemType,
-                projectId = project.id
-            )
-            workflowMigrationService.forceSetInstanceNodeWithinWorkflow(
-                project.workflowInstanceId,
-                "implementation"
-            )
-
-            // when
-            shouldThrow<WrongNodeNameRuleException> {
-                cut.removeAllWithTypeFromProject(itemTypeId = itemType.id, projectId = project.id)
-            }
-
-            // then
-            val itemsForProject = cut.readAllAssignedForItemTypeAndProject(
-                itemTypeId = itemType.id,
-                projectId = project.id,
-                Pageable.unpaged()
-            )
-            itemsForProject shouldHaveSize itemAmount
         }
     }
 }) {

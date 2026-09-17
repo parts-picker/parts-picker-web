@@ -1,0 +1,176 @@
+package de.partspicker.web.workflow.api
+
+import de.partspicker.web.common.exceptions.ErrorCode
+import de.partspicker.web.workflow.business.objects.enums.DisplayTypeInfo
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.extensions.spring.SpringExtension
+import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.jdbc.Sql
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
+import org.springframework.transaction.annotation.Transactional
+
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("integration")
+@Transactional
+@Sql("classpath:/init-sql/testUser.sql", "classpath:/init-sql/workflowInteractionControllerIntTest.sql")
+class ProjectWorkflowInteractionControllerIntTest(
+    private val mockMvc: MockMvc
+) : ShouldSpec({
+
+    context("GET current instance info") {
+        should("return status 200 & the resource with the instance info belonging to the requested id when called") {
+            val projectId = 100
+
+            mockMvc.get("/projects/$projectId/instance/node")
+                .andExpect {
+                    status { isOk() }
+                    content {
+                        contentType("application/hal+json")
+                        jsonPath("$.*", hasSize<Any>(6))
+                        jsonPath("$.name", `is`("planning"))
+                        jsonPath("$.displayName", `is`("Planning"))
+                        jsonPath("$.options", hasSize<Any>(1))
+                        jsonPath("$.message", nullValue())
+                        jsonPath("$.displayType", `is`(DisplayTypeInfo.DEFAULT.toString()))
+                        jsonPath("$._links", notNullValue())
+                    }
+                }
+        }
+
+        should("return status 404 when no instance with the requested id exists") {
+            val nonExistentId = 666
+
+            val path = "/projects/$nonExistentId/instance/node"
+
+            mockMvc.get(path)
+                .andExpect {
+                    status { isNotFound() }
+                    content {
+                        jsonPath("$.*", hasSize<Any>(7))
+                        jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                        jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                        jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                        jsonPath(
+                            "$.message",
+                            `is`("Project with id $nonExistentId could not be found")
+                        )
+                        jsonPath("$.path", `is`(path))
+                        jsonPath("$.timestamp", notNullValue())
+                    }
+                }
+        }
+    }
+
+    context("POST instance state advance") {
+        should("return status 200 & the new current instance info") {
+            mockMvc.post("/projects/100/instance/edges/100")
+                .andExpect {
+                    status { isOk() }
+                    content { contentType("application/hal+json") }
+                    jsonPath("$.*", hasSize<Any>(6))
+                    jsonPath("$.name", `is`("implementation"))
+                    jsonPath("$.displayName", `is`("Implementation"))
+                    jsonPath("$.options", hasSize<Any>(1))
+                    jsonPath("$.message", nullValue())
+                    jsonPath("$.displayType", `is`(DisplayTypeInfo.DEFAULT.toString()))
+                    jsonPath("$._links", notNullValue())
+                }
+        }
+
+        should("return status 404 when given non-existent instance id") {
+            val nonExistentId = 666L
+            val path = "/projects/$nonExistentId/instance/edges/1"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath(
+                        "$.message",
+                        `is`("Project with id $nonExistentId could not be found")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 422 when given inactive instance") {
+            val projectId = 400L
+            val instanceId = 400L
+            val path = "/projects/$projectId/instance/edges/100"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                    jsonPath("$.errorCode") { nullValue() }
+                    jsonPath(
+                        "$.message",
+                        `is`("The instance with the given id $instanceId is inactive & cannot be modified")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 404 when given non-existent edge id") {
+            val nonExistentId = 666L
+            val path = "/projects/100/instance/edges/$nonExistentId"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isNotFound() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.NOT_FOUND.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.NOT_FOUND.value()))
+                    jsonPath("$.errorCode", `is`(ErrorCode.EntityNotFound.code))
+                    jsonPath(
+                        "$.message",
+                        `is`("Workflow edge with id $nonExistentId could not be found")
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+
+        should("return status 422 when current node & edge source node not matching") {
+            val edgeId = 3L
+            val path = "/projects/100/instance/edges/$edgeId"
+
+            mockMvc.post(path)
+                .andExpect {
+                    status { isUnprocessableEntity() }
+                    jsonPath("$.*", hasSize<Any>(7))
+                    jsonPath("$.status", `is`(HttpStatus.UNPROCESSABLE_ENTITY.name))
+                    jsonPath("$.statusCode", `is`(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+                    jsonPath("$.errorCode") { nullValue() }
+                    jsonPath(
+                        "$.message",
+                        `is`(
+                            "The current instance node with id 100 does not match the source node with " +
+                                "id 3 of the given edge with id $edgeId to advance the instance state"
+                        )
+                    )
+                    jsonPath("$.path", `is`(path))
+                    jsonPath("$.timestamp", notNullValue())
+                }
+        }
+    }
+}) {
+    override fun extensions() = listOf(SpringExtension)
+}

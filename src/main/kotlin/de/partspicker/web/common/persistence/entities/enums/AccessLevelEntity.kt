@@ -1,0 +1,8 @@
+package de.partspicker.web.common.persistence.entities.enums
+
+enum class AccessLevelEntity {
+    READ,
+    USE,
+    CONFIGURE,
+    MAINTAIN
+}

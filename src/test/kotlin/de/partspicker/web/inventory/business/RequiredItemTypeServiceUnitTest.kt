@@ -1,13 +1,21 @@
 package de.partspicker.web.inventory.business
 
 import de.partspicker.web.common.business.exceptions.WrongNodeNameRuleException
+import de.partspicker.web.common.business.objects.enums.AccessLevel
 import de.partspicker.web.inventory.business.exceptions.RequiredItemTypeAmountSmallerThanAssignedException
 import de.partspicker.web.inventory.persistence.RequiredItemTypeRepository
 import de.partspicker.web.inventory.persistence.embeddableids.RequiredItemTypeId
 import de.partspicker.web.item.business.exceptions.ItemTypeNotFoundException
+import de.partspicker.web.item.persistance.ItemRepository
 import de.partspicker.web.item.persistance.ItemTypeRepository
+import de.partspicker.web.item.persistance.entities.ItemEntity
+import de.partspicker.web.item.persistance.entities.enums.ItemStatusEntity
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
+import de.partspicker.web.orgunit.business.exceptions.OrgUnitAccessDeniedException
 import de.partspicker.web.project.business.exceptions.ProjectNotFoundException
 import de.partspicker.web.project.persistance.ProjectRepository
+import de.partspicker.web.test.generators.ItemEntityGenerators
+import de.partspicker.web.test.generators.ItemTypeEntityGenerators
 import de.partspicker.web.test.generators.ProjectEntityGenerators
 import de.partspicker.web.test.generators.id
 import de.partspicker.web.test.generators.inventory.CreateOrUpdateRequiredItemTypeGenerators
@@ -32,6 +40,10 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import java.util.Optional
 import java.util.stream.Stream
 
 class RequiredItemTypeServiceUnitTest : ShouldSpec({
@@ -42,7 +54,8 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
     val itemTypeRepositoryMock = mockk<ItemTypeRepository>()
     val workflowInteractionsServiceMock = mockk<WorkflowInteractionService>()
     val inventoryItemReadServiceMock = mockk<InventoryItemReadService>()
-    val inventoryItemServiceMock = mockk<InventoryItemService>()
+    val itemRepositoryMock = mockk<ItemRepository>()
+    val orgUnitAccessServiceMock = mockk<OrgUnitAccessService>()
     val cut = RequiredItemTypeService(
         requiredItemTypeRepository = requiredItemTypeRepositoryMock,
         requiredItemTypeReadService = requiredItemTypeReadServiceMock,
@@ -50,11 +63,21 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
         itemTypeRepository = itemTypeRepositoryMock,
         workflowInteractionService = workflowInteractionsServiceMock,
         inventoryItemReadService = inventoryItemReadServiceMock,
-        inventoryItemService = inventoryItemServiceMock
+        itemRepository = itemRepositoryMock,
+        orgUnitAccessService = orgUnitAccessServiceMock
     )
 
     afterTest {
-        clearMocks(requiredItemTypeRepositoryMock)
+        clearMocks(
+            requiredItemTypeRepositoryMock,
+            requiredItemTypeReadServiceMock,
+            projectRepositoryMock,
+            itemTypeRepositoryMock,
+            workflowInteractionsServiceMock,
+            inventoryItemReadServiceMock,
+            itemRepositoryMock,
+            orgUnitAccessServiceMock
+        )
     }
 
     context("createOrUpdate") {
@@ -71,13 +94,21 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity).copy(
                 active = true
             )
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
-            every { itemTypeRepositoryMock.existsById(createOrUpdateRequiredItemType.itemTypeId) } returns true
+            every { itemTypeRepositoryMock.findById(createOrUpdateRequiredItemType.itemTypeId) } returns Optional.of(
+                ItemTypeEntityGenerators.generator.single().copy(
+                    id = createOrUpdateRequiredItemType.itemTypeId,
+                    orgUnit = projectEntity.orgUnit
+                )
+            )
             every { requiredItemTypeRepositoryMock.save(any()) } returnsArgument 0
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -130,13 +161,16 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 currentNode = nodeEntity,
                 active = true
             )
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -165,13 +199,16 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 displayName = "displayName"
             )
             val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -203,13 +240,16 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 currentNode = nodeEntity,
                 active = false
             )
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -235,8 +275,11 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 requiredAmount = requiredAmount
             )
 
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                mockk()
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
@@ -263,13 +306,16 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 displayName = "displayName"
             )
             val instanceEntity = InstanceEntityGenerators.generator.single().copy(currentNode = nodeEntity)
-            every { projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId) } returns
-                ProjectEntityGenerators.generator.single().copy(
-                    workflowInstance = instanceEntity,
-                    id = createOrUpdateRequiredItemType.projectId
-                )
+            val projectEntity = ProjectEntityGenerators.generator.single().copy(
+                workflowInstance = instanceEntity,
+                id = createOrUpdateRequiredItemType.projectId
+            )
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
 
-            every { itemTypeRepositoryMock.existsById(any()) } returns false
+            every { itemTypeRepositoryMock.findById(any()) } returns Optional.empty()
             every {
                 inventoryItemReadServiceMock.countAssignedForItemTypeAndProject(
                     createOrUpdateRequiredItemType.itemTypeId,
@@ -282,6 +328,23 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
                 cut.createOrUpdate(createOrUpdateRequiredItemType)
             }
         }
+
+        should("refuse & not store when the caller may not use the org unit of the project") {
+            // given
+            val createOrUpdateRequiredItemType = CreateOrUpdateRequiredItemTypeGenerators.generator.single()
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every {
+                projectRepositoryMock.getNullableReferenceById(createOrUpdateRequiredItemType.projectId)
+            } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.createOrUpdate(createOrUpdateRequiredItemType) }
+
+            verify(exactly = 0) { requiredItemTypeRepositoryMock.save(any()) }
+        }
     }
 
     context("delete") {
@@ -290,18 +353,18 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns true
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
             every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
             every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
             every {
                 workflowInteractionsServiceMock.readProjectStatus(projectId)
             } returns "planning"
             every {
-                inventoryItemServiceMock.removeAllWithTypeFromProject(
-                    itemTypeId = itemTypeId,
-                    projectId = projectId
-                )
-            } returns Unit
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
+            } returns Page.empty()
+            every { itemRepositoryMock.saveAll(any<Iterable<ItemEntity>>()) } returns emptyList()
 
             // when
             cut.delete(projectId, itemTypeId)
@@ -309,10 +372,37 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             // then
             verify(exactly = 1) {
                 requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId))
-                inventoryItemServiceMock.removeAllWithTypeFromProject(
-                    itemTypeId = itemTypeId,
-                    projectId = projectId
-                )
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
+            }
+        }
+
+        should("put every item of the type back into stock when deleting the requirement") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+            val assignedItems = List(3) { ItemEntityGenerators.assignedGenerator.next() }
+
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
+            every { itemTypeRepositoryMock.existsById(itemTypeId) } returns true
+            every { requiredItemTypeRepositoryMock.deleteById(RequiredItemTypeId(projectId, itemTypeId)) } returns Unit
+            every { workflowInteractionsServiceMock.readProjectStatus(projectId) } returns "planning"
+            every {
+                itemRepositoryMock.findAllByAssignedProjectIdAndTypeId(projectId, itemTypeId, Pageable.unpaged())
+            } returns PageImpl(assignedItems)
+            every { itemRepositoryMock.saveAll(any<Iterable<ItemEntity>>()) } returns emptyList()
+
+            // when
+            cut.delete(projectId, itemTypeId)
+
+            // then
+            assignedItems.forEach {
+                it.assignedProject shouldBe null
+                it.status shouldBe ItemStatusEntity.IN_STOCK
+            }
+            verify(exactly = 1) {
+                itemRepositoryMock.saveAll(match<Iterable<ItemEntity>> { it.toList() == assignedItems })
             }
         }
 
@@ -321,7 +411,7 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns false
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns null
 
             // when
             val exception = shouldThrow<ProjectNotFoundException> {
@@ -341,7 +431,9 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
             val projectId = Arb.long(min = 1).next()
             val itemTypeId = Arb.long(min = 1).next()
 
-            every { projectRepositoryMock.existsById(projectId) } returns true
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns projectEntity
+            every { orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE) } just runs
             every {
                 workflowInteractionsServiceMock.readProjectStatus(projectId)
             } returns "planning"
@@ -357,6 +449,25 @@ class RequiredItemTypeServiceUnitTest : ShouldSpec({
 
             verify(exactly = 0) {
                 requiredItemTypeRepositoryMock.deleteById(any())
+            }
+        }
+
+        should("refuse & not delete when the caller may not use the org unit of the project") {
+            // given
+            val projectId = Arb.long(min = 1).next()
+            val itemTypeId = Arb.long(min = 1).next()
+            val projectEntity = ProjectEntityGenerators.generator.single()
+            every { projectRepositoryMock.getNullableReferenceById(projectId) } returns projectEntity
+            every {
+                orgUnitAccessServiceMock.requireAtLeast(projectEntity.orgUnit.id, AccessLevel.USE)
+            } throws OrgUnitAccessDeniedException(projectEntity.orgUnit.id, AccessLevel.USE)
+
+            // when & then
+            shouldThrow<OrgUnitAccessDeniedException> { cut.delete(projectId, itemTypeId) }
+
+            verify(exactly = 0) {
+                requiredItemTypeRepositoryMock.deleteById(any())
+                itemRepositoryMock.saveAll(any<Iterable<ItemEntity>>())
             }
         }
     }

@@ -13,7 +13,8 @@ data class AssignedItem(
     val itemTypeId: Long,
     val projectId: Long,
     val projectStatus: String,
-    val condition: InventoryItemCondition
+    val condition: InventoryItemCondition,
+    val orgUnitId: Long
 ) {
     init {
         require(projectStatus.isNotBlank())
@@ -36,7 +37,8 @@ data class AssignedItem(
                 itemTypeId = itemEntity.type.id,
                 projectId = itemEntity.assignedProject!!.id,
                 condition = InventoryItemCondition.from(itemEntity.condition),
-                projectStatus = itemEntity.assignedProject!!.workflowInstance.currentNode.name
+                projectStatus = itemEntity.assignedProject!!.workflowInstance.currentNode.name,
+                orgUnitId = itemEntity.orgUnit.id
             )
         }
     }

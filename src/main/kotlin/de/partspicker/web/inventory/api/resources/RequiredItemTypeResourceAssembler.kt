@@ -1,5 +1,6 @@
 package de.partspicker.web.inventory.api.resources
 
+import de.partspicker.web.common.business.objects.enums.AccessLevel.USE
 import de.partspicker.web.common.business.rules.NodeNameEqualsRule
 import de.partspicker.web.common.hal.DefaultName.CREATE
 import de.partspicker.web.common.hal.DefaultName.DELETE
@@ -19,6 +20,7 @@ import de.partspicker.web.inventory.api.requests.RequiredItemTypePatchRequest
 import de.partspicker.web.inventory.api.requests.RequiredItemTypePostRequest
 import de.partspicker.web.inventory.business.objects.RequiredItemType
 import de.partspicker.web.item.api.ItemTypeController
+import de.partspicker.web.orgunit.business.OrgUnitAccessService
 import de.partspicker.web.project.api.ProjectController
 import org.springframework.hateoas.IanaLinkRelations.COLLECTION
 import org.springframework.hateoas.IanaLinkRelations.DESCRIBED_BY
@@ -28,7 +30,9 @@ import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.stereotype.Component
 
 @Component
-class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredItemType, RequiredItemTypeResource> {
+class RequiredItemTypeResourceAssembler(
+    private val orgUnitAccessService: OrgUnitAccessService
+) : RepresentationModelAssembler<RequiredItemType, RequiredItemTypeResource> {
     override fun toModel(requiredItemType: RequiredItemType): RequiredItemTypeResource {
         return RequiredItemTypeResource(
             itemTypeName = requiredItemType.itemType.name!!,
@@ -43,6 +47,7 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
     @Suppress("LongMethod")
     private fun generateDefaultLinks(requiredItemType: RequiredItemType): List<Link> {
         val projectStatusPlanningRule = NodeNameEqualsRule(requiredItemType.projectStatus, "planning")
+        val accessAtLeastUseRule = this.orgUnitAccessService.atLeast(requiredItemType.itemType.orgUnitId, USE)
 
         return LinkListBuilder()
             .with(
@@ -67,6 +72,7 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
                     .withRel(COLLECTION)
                     .withName(CREATE),
                 projectStatusPlanningRule,
+                accessAtLeastUseRule
             )
             .with(generateGetAllRequiredItemTypesLink(COLLECTION, requiredItemType.projectId))
             // self-related links
@@ -80,7 +86,8 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
                 }
                     .withSelfRel()
                     .withName(UPDATE),
-                projectStatusPlanningRule
+                projectStatusPlanningRule,
+                accessAtLeastUseRule
             )
             .with(
                 linkTo<RequiredItemTypeController> {
@@ -91,7 +98,8 @@ class RequiredItemTypeResourceAssembler : RepresentationModelAssembler<RequiredI
                 }
                     .withSelfRel()
                     .withName(DELETE),
-                projectStatusPlanningRule
+                projectStatusPlanningRule,
+                accessAtLeastUseRule
             )
             // item related links
             .with(

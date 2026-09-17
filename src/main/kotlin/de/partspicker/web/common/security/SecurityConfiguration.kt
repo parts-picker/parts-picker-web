@@ -7,13 +7,19 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
 class SecurityConfiguration {
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(
+        http: HttpSecurity,
+        jwtAuthenticationConverter: JwtAuthenticationConverter,
+        userProvisioningFilter: UserProvisioningFilter
+    ): SecurityFilterChain {
         http {
             cors { }
             csrf { disable() }
@@ -25,9 +31,20 @@ class SecurityConfiguration {
                 authorize(anyRequest, authenticated)
             }
             oauth2ResourceServer {
-                jwt { }
+                jwt {
+                    this.jwtAuthenticationConverter = jwtAuthenticationConverter
+                }
             }
+            // must run once the token has been turned into an authentication
+            addFilterAfter<BearerTokenAuthenticationFilter>(userProvisioningFilter)
         }
         return http.build()
     }
+
+    @Bean
+    fun jwtAuthenticationConverter(realmRoleAuthoritiesConverter: RealmRoleAuthoritiesConverter) =
+        JwtAuthenticationConverter().apply {
+            setJwtGrantedAuthoritiesConverter(realmRoleAuthoritiesConverter)
+            setPrincipalClaimName(JwtClaims.SUBJECT)
+        }
 }
